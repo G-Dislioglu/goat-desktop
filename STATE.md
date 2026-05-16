@@ -14,17 +14,24 @@ run_0c_completed_2026_05_17:
 v1_1_published_2026_05_17:
 "GOAT Desktop Vision v1.1 ist die neue kanonische Master-Spec. Aenderungen gegenueber v1.0: UFO2 raus (Run 0b: 2.27 s Latenz und Python-Pin-Konflikte in dieser Umgebung), Slim Stack rein (mss + pywinauto + optionale OCR/Vision-LLM), Coordinate Broker mit Local Verifier als Geometrie-Autoritaet (Run 0c: IoU 0.9714/0.98 auf Chrome HTML-Test), Authority-Split: Vision-LLM kann niemals allein accept. Provider-Versionen werden erst nach separater Verifikation als Default festgeschrieben. Phase 1 startet mit Run A."
 
+run_a_started_2026_05_17:
+"Run A gestartet am 2026-05-17. Scope: native PyQt6-Tray-App mit verschiebbarem Mini-Popup, ohne Overlay, Bridge, Vision, UIA oder Aktionen."
+
+run_a_code_ready_2026_05_17:
+"Run A Code-Stand angelegt am 2026-05-17. Erstes natives PyQt6-Projekt mit src/goat_desktop, Tray-Icon, Rechtsklick-Menue mit Beenden, Linksklick/DoubleClick oeffnet Popup, verschiebbares Status-Popup mit offline-Verbindung, leerem Screen-Kontext, Pause/Stop-Button und LiveTalk-Platzhalter. Compile-Check bestanden. Acceptance-Screenshot wurde nicht committed, weil im Desktop-Hintergrund ein sensibles .env-Notepad sichtbar war. Run A ist erst nach sauberem Screenshot vollstaendig completed."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. No application code exists yet.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell code exists; visual acceptance screenshot is still pending.
 
 ## Verified
 
 - Documentation-only repository scaffold exists.
 - Canonical spec v1.1 is stored at `docs/GOAT-DESKTOP-VISION.md`.
 - AICOS references are listed at `docs/AICOS-REFERENCES.md`.
+- Run A native PyQt6 tray app and mini-popup code compile successfully.
 
 ## Not Yet Verified
 
 - OCR and Vision-LLM provider defaults are not selected yet.
-- Overlay, tray, popup, LiveTalk, and action gating do not exist yet.
+- Overlay, bridge, LiveTalk implementation, and action gating do not exist yet.

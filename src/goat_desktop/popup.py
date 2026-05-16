@@ -1,0 +1,124 @@
+from __future__ import annotations
+
+from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtGui import QMouseEvent
+from PyQt6.QtWidgets import (
+    QApplication,
+    QFrame,
+    QGridLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+
+
+class GoatPopup(QWidget):
+    """Small native status popup for Run A."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._drag_start: QPoint | None = None
+
+        self.setWindowTitle("GOAT Desktop")
+        self.setMinimumSize(320, 200)
+        self.resize(340, 220)
+        self.setWindowFlag(Qt.WindowType.Window, True)
+
+        self._build_ui()
+
+    def place_near_tray(self) -> None:
+        screen = self.screen() or QApplication.primaryScreen()
+        if screen is None:
+            return
+        area = screen.availableGeometry()
+        margin = 18
+        self.move(
+            area.right() - self.width() - margin,
+            area.bottom() - self.height() - margin,
+        )
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_start = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        if self._drag_start is not None and event.buttons() & Qt.MouseButton.LeftButton:
+            self.move(event.globalPosition().toPoint() - self._drag_start)
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        self._drag_start = None
+        super().mouseReleaseEvent(event)
+
+    def _build_ui(self) -> None:
+        root = QVBoxLayout(self)
+        root.setContentsMargins(16, 14, 16, 14)
+        root.setSpacing(12)
+
+        title = QLabel("GOAT Desktop")
+        title.setObjectName("title")
+        root.addWidget(title)
+
+        panel = QFrame()
+        panel.setObjectName("panel")
+        grid = QGridLayout(panel)
+        grid.setContentsMargins(12, 10, 12, 10)
+        grid.setHorizontalSpacing(12)
+        grid.setVerticalSpacing(8)
+
+        grid.addWidget(QLabel("Verbindung"), 0, 0)
+        grid.addWidget(QLabel("offline"), 0, 1)
+        grid.addWidget(QLabel("Screen-Kontext"), 1, 0)
+        grid.addWidget(QLabel("-"), 1, 1)
+        grid.addWidget(QLabel("Maya"), 2, 0)
+        grid.addWidget(QLabel("bereit, pausiert"), 2, 1)
+
+        root.addWidget(panel)
+
+        actions = QGridLayout()
+        actions.setHorizontalSpacing(10)
+
+        stop_button = QPushButton("Pause / Stop")
+        stop_button.setEnabled(False)
+        talk_button = QPushButton("LiveTalk")
+        talk_button.setEnabled(False)
+
+        actions.addWidget(stop_button, 0, 0)
+        actions.addWidget(talk_button, 0, 1)
+        root.addLayout(actions)
+
+        self.setStyleSheet(
+            """
+            QWidget {
+                background: #17191f;
+                color: #f2f4f8;
+                font-family: Segoe UI;
+                font-size: 12px;
+            }
+            QLabel#title {
+                font-size: 16px;
+                font-weight: 600;
+            }
+            QFrame#panel {
+                border: 1px solid #3a3f4b;
+                border-radius: 6px;
+                background: #20232b;
+            }
+            QPushButton {
+                background: #2d3340;
+                border: 1px solid #4a5364;
+                border-radius: 5px;
+                padding: 7px 10px;
+                color: #d7dce6;
+            }
+            QPushButton:disabled {
+                color: #8d95a3;
+            }
+            """
+        )
