@@ -11,17 +11,20 @@ run_0b_completed_2026_05_16:
 run_0c_completed_2026_05_17:
 "Coordinate Broker Core Spike durchgefuehrt am 2026-05-17. Ergebnis: zweistufiger Broker (Candidate Builder + Local Verifier) ist als Architektur tragfaehig, wenn mindestens eine lokale Geometriequelle valide Bounds liefert. Chrome-Testseite mit --force-renderer-accessibility: UIA traf Senden-Button und Search-Input gegen DOM-Ground-Truth mit IoU 0.9714/0.98 bei ca. 547 ms Screenshot+UIA+Broker. OCR war nicht verfuegbar (Tesseract-Binary fehlt), Vision-LLM wurde bewusst uebersprungen. Notepad-Menue zeigte einen sauberen Stop-Fall, weil Save-As nicht exponiert wurde. Empfehlung: v1.1 auf Slim Stack + Coordinate Broker schreiben; OmniParser nur als separater Run 0d fuer UIA-Luecken testen. Detail-Bericht: docs/run-0c-coordinate-broker-spike-2026-05-17.md."
 
+v1_1_published_2026_05_17:
+"GOAT Desktop Vision v1.1 ist die neue kanonische Master-Spec. Aenderungen gegenueber v1.0: UFO2 raus (Run 0b: 2.27 s Latenz und Python-Pin-Konflikte in dieser Umgebung), Slim Stack rein (mss + pywinauto + optionale OCR/Vision-LLM), Coordinate Broker mit Local Verifier als Geometrie-Autoritaet (Run 0c: IoU 0.9714/0.98 auf Chrome HTML-Test), Authority-Split: Vision-LLM kann niemals allein accept. Provider-Versionen werden erst nach separater Verifikation als Default festgeschrieben. Phase 1 startet mit Run A."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.0. No application code exists yet.
+Repo initialized from GOAT Desktop Vision v1.1. No application code exists yet.
 
 ## Verified
 
 - Documentation-only repository scaffold exists.
-- Canonical spec is stored at `docs/GOAT-DESKTOP-VISION.md`.
+- Canonical spec v1.1 is stored at `docs/GOAT-DESKTOP-VISION.md`.
 - AICOS references are listed at `docs/AICOS-REFERENCES.md`.
 
 ## Not Yet Verified
 
-- UFO2 can be used as a pure Python library in this Windows environment without dependency and latency issues.
+- OCR and Vision-LLM provider defaults are not selected yet.
 - Overlay, tray, popup, LiveTalk, and action gating do not exist yet.

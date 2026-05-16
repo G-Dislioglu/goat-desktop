@@ -6,6 +6,7 @@ These references are required reading before touching the affected runs.
 |---|---|---|
 | [`err-dev-002`](https://raw.githubusercontent.com/G-Dislioglu/aicos-registry/master/cards/errors/err-dev-002.json) | Run B | Overlay click-through, kill switch, desktop-first guardrails |
 | [`sol-cross-062`](https://raw.githubusercontent.com/G-Dislioglu/aicos-registry/master/cards/solutions/sol-cross-062.json) | Run C, Run G | CNC Anchor Protocol |
+| [`sol-cross-063`](https://raw.githubusercontent.com/G-Dislioglu/aicos-registry/master/cards/solutions/sol-cross-063.json) | Run C, Run G | Multi-source coordinate broker with local verifier |
 | [`sol-cross-042`](https://raw.githubusercontent.com/G-Dislioglu/aicos-registry/master/cards/solutions/sol-cross-042.json) | Run G | UI-aware self-correction |
 | [`sol-cross-038`](https://raw.githubusercontent.com/G-Dislioglu/aicos-registry/master/cards/solutions/sol-cross-038.json) | Run G | Agent capability assumptions |
 | [`sol-cross-014`](https://raw.githubusercontent.com/G-Dislioglu/aicos-registry/master/cards/solutions/sol-cross-014.json) | Run G | Agent self-correction protocol |
