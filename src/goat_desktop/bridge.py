@@ -10,7 +10,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 from goat_desktop.broker import build_candidate, verify_candidate
 from goat_desktop.screen import capture_active_window, get_active_window
-from goat_desktop.vision_hint import get_configured_provider, get_vision_hint
+from goat_desktop.vision_hint import load_vision_hint_config, get_vision_hint
 
 
 class CueDispatcher(QObject):
@@ -47,7 +47,7 @@ def create_app(dispatch_cue: Callable[[int, int], None] | None = None) -> FastAP
         if not capture.get("ok"):
             return {
                 "ok": False,
-                "provider": get_configured_provider(),
+                "provider": load_vision_hint_config().provider.value,
                 "error": capture.get("error", "screen capture failed"),
                 "capture": capture,
             }
@@ -64,7 +64,7 @@ def create_app(dispatch_cue: Callable[[int, int], None] | None = None) -> FastAP
         except Exception as exc:  # noqa: BLE001 - reported to spike output
             return {
                 "ok": False,
-                "provider": get_configured_provider(),
+                "provider": load_vision_hint_config().provider.value,
                 "error": repr(exc),
                 "capture": capture,
                 "authority": "semantic_hint_only",

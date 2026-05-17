@@ -59,9 +59,12 @@ run_f_started_2026_05_17:
 run_f_code_ready_2026_05_17:
 "Run F Code-Stand angelegt am 2026-05-17. Implementiert: livetalk.py mit deterministischem Mock-Half-Duplex-Roundtrip, aktivierter LiveTalk-Button im Popup, Statusanzeige fuer Transkript und Maya-Antwort. Mock-Acceptance verifiziert: Button triggert Roundtrip, Transkript 'zeig mir das Suchfeld' und Antwort 'Ich zeige das Suchfeld nur nach Freigabe.' erscheinen lesbar im Popup. Artefakte: docs/run-f-code-ready-report-2026-05-17.md und docs/screenshots/run-f-livetalk-mock-2026-05-17.png. Run F ist nicht completed, weil kein echtes Audio aufgenommen/abgespielt und kein STT/TTS-Provider validiert wurde."
 
+run_e_multi_provider_code_ready_2026_05_17:
+"vision_hint.py wurde um Multi-Provider-Vision-Hint erweitert (gemini_flash_lite, grok_4_3, gemini_flash). Reasoning-Level konfigurierbar (minimal, low, medium, high). User-Wahl im Popup ueber zwei Dropdowns, Persistierung in vision_config.json unter APPDATA/GoatDesktop. Default: gemini_flash_lite + minimal. Builder-Proxy-Modus nutzt GOAT_VISION_MODE=builder_proxy, GOAT_BUILDER_URL, GOAT_BUILDER_TOKEN, GOAT_VISION_PROVIDER und GOAT_VISION_REASONING. Unit-Tests mit Mock-Server gruen: 8 passed. Acceptance gegen echten /api/goat/vision-hint folgt sobald Soulmatch-Builder den Endpoint gepusht hat. Fail-Safe bei Builder-Offline/Timeout/HTTP-Fehler: uncertain-Hint, kein stiller Mock-Switch. run_e_completed bleibt bewusst nicht gesetzt."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E provider wiring is code-ready, but real provider verification is pending. Run F LiveTalk shell is code-ready, but real audio verification is pending.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E provider wiring and multi-provider UI are code-ready, but real provider verification is pending. Run F LiveTalk shell is code-ready, but real audio verification is pending.
 
 ## Verified
 
@@ -76,6 +79,7 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run C popup-triggered acceptance is committed at `docs/run-c-completion-report-2026-05-17.md`.
 - Run D outbound WebSocket bridge connects to a test Builder, receives a test cue, requires user approval, then renders the ball through the local Broker path.
 - Run E mock provider wiring preserves the authority boundary: Vision hint is logged as semantic context, while Broker accept remains local-geometry based.
+- Run E multi-provider Builder-proxy tests pass against a local Mock-Server; Vision-only remains `uncertain`, never `accept`.
 - Run F mock LiveTalk path shows a half-duplex transcript and Maya response in the popup.
 
 ## Not Yet Verified

@@ -75,9 +75,14 @@ def verify_candidate(candidate: Candidate, window: WindowInfo) -> dict[str, Any]
         reasons.append("vision source alone cannot accept")
 
     if reasons:
-        status = "stop"
-        confidence = min(candidate.confidence, 0.0)
-        fusion_path = "local_verifier_rejected"
+        if candidate.source == "vision":
+            status = "uncertain"
+            confidence = min(max(candidate.confidence, 0.0), 0.4)
+            fusion_path = "vision_only_uncertain"
+        else:
+            status = "stop"
+            confidence = min(candidate.confidence, 0.0)
+            fusion_path = "local_verifier_rejected"
     else:
         status = "accept"
         confidence = min(max(candidate.confidence, 0.0), 0.95)

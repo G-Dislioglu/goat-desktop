@@ -16,6 +16,7 @@ from goat_desktop.hotkey import EmergencyHotkey
 from goat_desktop.livetalk import LiveTalkSession
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
+from goat_desktop.vision_config import load_vision_config, save_vision_config
 
 
 class GoatTrayApp:
@@ -48,6 +49,7 @@ class GoatTrayApp:
         self.tray.show()
         self.bridge.start()
         self._start_builder_bridge_if_configured()
+        self._load_vision_config()
 
     def show_popup(self) -> None:
         if not self.popup.isVisible():
@@ -119,6 +121,23 @@ class GoatTrayApp:
         self.popup.cue_approve.clicked.connect(self.approve_pending_cue)
         self.popup.cue_reject.clicked.connect(self.reject_pending_cue)
         self.popup.talk_button.clicked.connect(self.run_livetalk_once)
+        self.popup.vision_provider.currentIndexChanged.connect(self._save_vision_config)
+        self.popup.vision_reasoning.currentIndexChanged.connect(self._save_vision_config)
+
+    def _load_vision_config(self) -> None:
+        config = load_vision_config()
+        provider_index = self.popup.vision_provider.findData(config["provider"])
+        reasoning_index = self.popup.vision_reasoning.findData(config["reasoning_level"])
+        if provider_index >= 0:
+            self.popup.vision_provider.setCurrentIndex(provider_index)
+        if reasoning_index >= 0:
+            self.popup.vision_reasoning.setCurrentIndex(reasoning_index)
+
+    def _save_vision_config(self, *_args) -> None:
+        save_vision_config(
+            str(self.popup.vision_provider.currentData()),
+            str(self.popup.vision_reasoning.currentData()),
+        )
 
     def run_livetalk_once(self) -> None:
         self.popup.talk_button.setEnabled(False)

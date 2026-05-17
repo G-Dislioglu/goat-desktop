@@ -5,6 +5,7 @@ from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import (
     QApplication,
     QFrame,
+    QComboBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -108,6 +109,28 @@ class GoatPopup(QWidget):
         actions.addWidget(self.cue_reject, 2, 1)
         root.addLayout(actions)
 
+        vision_panel = QFrame()
+        vision_panel.setObjectName("panel")
+        vision_grid = QGridLayout(vision_panel)
+        vision_grid.setContentsMargins(12, 10, 12, 10)
+        vision_grid.setHorizontalSpacing(12)
+        vision_grid.setVerticalSpacing(8)
+        vision_grid.addWidget(QLabel("Vision-Modell"), 0, 0)
+        self.vision_provider = QComboBox()
+        self.vision_provider.addItem("Gemini Flash Lite", "gemini_flash_lite")
+        self.vision_provider.addItem("Grok 4.3", "grok_4_3")
+        self.vision_provider.addItem("Gemini Flash", "gemini_flash")
+        vision_grid.addWidget(self.vision_provider, 0, 1)
+        vision_grid.addWidget(QLabel("Denk-Tiefe"), 1, 0)
+        self.vision_reasoning = QComboBox()
+        self.vision_reasoning.addItem("Minimal", "minimal")
+        self.vision_reasoning.addItem("Niedrig", "low")
+        self.vision_reasoning.addItem("Mittel", "medium")
+        self.vision_reasoning.addItem("Hoch", "high")
+        vision_grid.addWidget(self.vision_reasoning, 1, 1)
+        root.addWidget(vision_panel)
+        self._set_reasoning_tooltips()
+
         overlay_controls = QHBoxLayout()
         overlay_controls.setSpacing(8)
         self.ball_left = QPushButton("Ball <")
@@ -146,5 +169,18 @@ class GoatPopup(QWidget):
             QPushButton:disabled {
                 color: #8d95a3;
             }
+            QComboBox {
+                background: #2d3340;
+                border: 1px solid #4a5364;
+                border-radius: 5px;
+                padding: 5px 8px;
+                color: #d7dce6;
+            }
             """
         )
+
+    def _set_reasoning_tooltips(self) -> None:
+        self.vision_reasoning.setItemData(0, "Schnellste Antwort (ca. 700ms), Standard", Qt.ItemDataRole.ToolTipRole)
+        self.vision_reasoning.setItemData(1, "Mehr Nachdenken (1-2s)", Qt.ItemDataRole.ToolTipRole)
+        self.vision_reasoning.setItemData(2, "Tiefes Verstaendnis (3-5s)", Qt.ItemDataRole.ToolTipRole)
+        self.vision_reasoning.setItemData(3, "Maximale Praezision (5-10s), nur fuer komplexe Faelle", Qt.ItemDataRole.ToolTipRole)
