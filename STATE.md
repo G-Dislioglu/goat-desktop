@@ -59,6 +59,9 @@ run_f_started_2026_05_17:
 run_f_code_ready_2026_05_17:
 "Run F Code-Stand angelegt am 2026-05-17. Implementiert: livetalk.py mit deterministischem Mock-Half-Duplex-Roundtrip, aktivierter LiveTalk-Button im Popup, Statusanzeige fuer Transkript und Maya-Antwort. Mock-Acceptance verifiziert: Button triggert Roundtrip, Transkript 'zeig mir das Suchfeld' und Antwort 'Ich zeige das Suchfeld nur nach Freigabe.' erscheinen lesbar im Popup. Artefakte: docs/run-f-code-ready-report-2026-05-17.md und docs/screenshots/run-f-livetalk-mock-2026-05-17.png. Run F ist nicht completed, weil kein echtes Audio aufgenommen/abgespielt und kein STT/TTS-Provider validiert wurde."
 
+run_f_windows_audio_probe_2026_05_17:
+"Windows-Audio-Probe fuer Run F durchgefuehrt am 2026-05-17. Implementiert: windows_sapi LiveTalk-Provider mit lokaler WAV-Aufnahme via Windows MCI und Sprachausgabe via Windows SAPI. Lokal verifiziert: audio_recorded=true, audio_played=true, tts_provider=windows_sapi. STT ist weiterhin nicht echt validiert: stt_provider=manual, completion_ready=false. Mikrofon-WAV wurde aus Datenschutzgruenden nicht committed; JSON enthaelt nur Metadaten. Artefakte: docs/run-f-windows-audio-probe-report-2026-05-17.md und docs/run-f-windows-audio-probe-2026-05-17.json. Run F bleibt code_ready, nicht completed."
+
 run_e_multi_provider_code_ready_2026_05_17:
 "vision_hint.py wurde um Multi-Provider-Vision-Hint erweitert (gemini_flash_lite, grok_4_3, gemini_flash). Reasoning-Level konfigurierbar (minimal, low, medium, high). User-Wahl im Popup ueber zwei Dropdowns, Persistierung in vision_config.json unter APPDATA/GoatDesktop. Default: gemini_flash_lite + minimal. Builder-Proxy-Modus nutzt GOAT_VISION_MODE=builder_proxy, GOAT_BUILDER_URL, GOAT_BUILDER_TOKEN, GOAT_VISION_PROVIDER und GOAT_VISION_REASONING. Unit-Tests mit Mock-Server gruen: 8 passed. Acceptance gegen echten /api/goat/vision-hint folgt sobald Soulmatch-Builder den Endpoint gepusht hat. Fail-Safe bei Builder-Offline/Timeout/HTTP-Fehler: uncertain-Hint, kein stiller Mock-Switch. run_e_completed bleibt bewusst nicht gesetzt."
 
@@ -91,7 +94,7 @@ run_g_integration_completed_2026_05_17:
 
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready, but real audio verification is pending. Run G1 action-gating skeleton is code-ready. Run G2 controlled Stage-1 executor is completed for hover and scroll only. Run G3 Stage-2 text input is completed for one-line safe-context input only. Run G4 Stage-3 hard approval review is completed without OS execution. Run G5 classification hardening is completed. G1-G5 integration chain is completed.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready with Windows audio record/playback probe, but real STT verification is pending. Run G1 action-gating skeleton is code-ready. Run G2 controlled Stage-1 executor is completed for hover and scroll only. Run G3 Stage-2 text input is completed for one-line safe-context input only. Run G4 Stage-3 hard approval review is completed without OS execution. Run G5 classification hardening is completed. G1-G5 integration chain is completed.
 
 ## Verified
 
@@ -109,6 +112,7 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run E multi-provider Builder-proxy tests pass against a local Mock-Server; Vision-only remains `uncertain`, never `accept`.
 - Run E real Builder-proxy smoke passes for gemini_flash_lite, gemini_flash, and grok_4_3 using semantic hints only.
 - Run F mock LiveTalk path shows a half-duplex transcript and Maya response in the popup.
+- Run F Windows audio probe records a local WAV and plays a SAPI response; real STT remains unverified.
 - Run G1 action-gate tests pass and audit lineage is written for dry-run decisions.
 - Run G2 Stage-1 executor tests pass and mock-backend audit lineage is written for executed scroll/hover plus blocked non-scope actions.
 - Run G2 real desktop acceptance executed hover and scroll in a dedicated safe Tk window, with visually clean before/after screenshots.
@@ -121,6 +125,6 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 ## Not Yet Verified
 
 - OCR defaults are not selected yet.
-- Run F real microphone/STT/TTS acceptance is pending.
+- Run F real STT acceptance is pending.
 - Stage 3 real OS-level action execution does not exist yet.
 - Stage 4 remains a technical lock.

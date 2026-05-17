@@ -71,3 +71,6 @@
 - Verified Run G5 with 60 tests passing and a versioned classification matrix artifact.
 - Added a G1-G5 integration test that exercises Stage 1, Stage 2 preview/execution, Stage 3 approval review, Stage 4 lock, and Unknown=Stage3 in one audited chain.
 - Verified the integration run with 61 tests passing; no new OS-action capability was added.
+- Returned to Run F and added a `windows_sapi` LiveTalk provider shell.
+- Verified local Windows audio loop: MCI records a short WAV and SAPI speaks the response. A first MCI format-setting attempt failed closed and was simplified to default Windows wave format; long-path MCI save was worked around via short temp WAV plus copy.
+- Kept Run F not completed because STT is still manual/unverified; the real microphone recording file was deleted and not committed.

@@ -1,0 +1,15 @@
+﻿{
+    "provider":  "windows_sapi",
+    "mode":  "half_duplex",
+    "transcript":  "zeige das suchfeld",
+    "response_text":  "Gehoert: zeige das suchfeld. Ich handle nur nach Freigabe.",
+    "time_ms":  14146.82,
+    "audio_recorded":  true,
+    "audio_played":  true,
+    "stt_provider":  "manual",
+    "tts_provider":  "windows_sapi",
+    "audio_path":  "C:\\Users\\guerc\\Documents\\Codex\\2026-05-16\\files-mentioned-by-the-user-files\\goat-desktop\\docs\\livetalk-audio\\livetalk-last-recording.wav",
+    "completion_ready":  false,
+    "audio_file_size_bytes":  10708,
+    "audio_artifact_committed":  false
+}
