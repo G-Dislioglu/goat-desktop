@@ -74,9 +74,12 @@ run_g2_code_ready_2026_05_17:
 run_g2_completed_2026_05_17:
 "Run G2 abgeschlossen am 2026-05-17. Kontrollierte reale Stage-1-Acceptance auf dediziertem Tk-Testfenster 'GOAT G2 Safe Acceptance Window' durchgefuehrt. Ausgefuehrt wurden nur Hover/Pointer-Move zum Broker-accepted bbox center und Scroll im harmlosen Dummy-Textfenster. Kein Click, keine Texteingabe, kein File-Dialog, keine Stage-2/3/4-Action. Der erste Notepad-Screenshot-Versuch wurde wegen sichtbarer .env-Tabnamen verworfen und nicht committed. Finale Artefakte: docs/run-g2-completion-report-2026-05-17.md, docs/run-g2-real-acceptance-results.json, docs/run-g2-real-acceptance-audit.jsonl, docs/screenshots/run-g2-stage1-before-2026-05-17.png und docs/screenshots/run-g2-stage1-after-2026-05-17.png."
 
+run_g3_code_ready_2026_05_17:
+"Run G3 Code-Stand angelegt am 2026-05-17. Implementiert: stage2_executor.py fuer einzeilige Stage-2-Texteingabe nach Preview-Approval, Broker-accept, user_approved=true und safe_text_context=true. Text ist auf 120 Zeichen begrenzt, Mehrzeilen sind geblockt. Stage 3 und Stage 4 werden im Executor auch dann geblockt, wenn ein Caller ihn direkt erreicht. /action/stage2/text Bridge-Endpunkt defaults auf dry_run=true. Tests gruen: 34 passed. Artefakte: docs/run-g3-code-ready-report-2026-05-17.md, docs/run-g3-stage2-executor-results.json, docs/run-g3-stage2-audit-sample.jsonl. Evidence nutzt RecordingTextBackend; keine echte Desktop-OS-Texteingabe wurde in diesem Code-ready-Sample ausgefuehrt. Run G3 ist code_ready, nicht completed."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready, but real audio verification is pending. Run G1 action-gating skeleton is code-ready. Run G2 controlled Stage-1 executor is completed for hover and scroll only.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready, but real audio verification is pending. Run G1 action-gating skeleton is code-ready. Run G2 controlled Stage-1 executor is completed for hover and scroll only. Run G3 Stage-2 text input is code-ready, with real desktop acceptance pending.
 
 ## Verified
 
@@ -97,9 +100,11 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run G1 action-gate tests pass and audit lineage is written for dry-run decisions.
 - Run G2 Stage-1 executor tests pass and mock-backend audit lineage is written for executed scroll/hover plus blocked non-scope actions.
 - Run G2 real desktop acceptance executed hover and scroll in a dedicated safe Tk window, with visually clean before/after screenshots.
+- Run G3 Stage-2 text input tests pass and mock-backend audit lineage is written for preview, executed, and blocked paths.
 
 ## Not Yet Verified
 
 - OCR defaults are not selected yet.
 - Run F real microphone/STT/TTS acceptance is pending.
-- Stage 2/3/4 real OS-level action execution does not exist yet.
+- Run G3 real desktop acceptance for harmless Stage-2 text input is pending.
+- Stage 3/4 real OS-level action execution does not exist yet.

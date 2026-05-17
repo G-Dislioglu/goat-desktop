@@ -56,3 +56,7 @@
 - Verified Run G2 code-ready with 24 tests passing, using a recording mouse backend for evidence generation; no real desktop OS action was executed in this Codex run.
 - Attempted a Notepad-based Run G2 acceptance, then discarded the screenshots because Windows reused a tabbed Notepad instance with `.env` tab names visible.
 - Completed Run G2 with a dedicated Tk test window containing only generated safe text; executed real hover and scroll only, with clean before/after screenshots and audit log.
+- Started Run G3 as a narrow Stage-2 text-input path.
+- Added `stage2_executor.py` with preview approval, `safe_text_context`, one-line text validation, and hard blocks for Stage 3/4.
+- Added `/action/stage2/text` with `dry_run=true` as the bridge default.
+- Verified Run G3 code-ready with 34 tests passing, using a recording text backend for evidence generation; no real desktop text input was executed in the code-ready sample.
