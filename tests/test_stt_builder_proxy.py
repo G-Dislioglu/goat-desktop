@@ -10,7 +10,7 @@ import pytest
 
 from goat_desktop import livetalk
 from goat_desktop.livetalk import LiveTalkSession
-from goat_desktop.stt_hint import transcribe_audio
+from goat_desktop.stt_hint import SttMode, load_stt_config, transcribe_audio
 
 
 class SttHandler(BaseHTTPRequestHandler):
@@ -86,6 +86,14 @@ def test_builder_stt_success(mock_stt_server, audio_path: Path) -> None:
     assert result.http_status == 200
     assert SttHandler.last_request is not None
     assert SttHandler.last_request["mime_type"] == "audio/wav"
+
+
+def test_builder_stt_auto_enables_when_builder_credentials_exist(monkeypatch) -> None:
+    monkeypatch.delenv("GOAT_STT_MODE", raising=False)
+    monkeypatch.setenv("GOAT_BUILDER_URL", "https://builder.example")
+    monkeypatch.setenv("GOAT_BUILDER_TOKEN", "test-token")
+
+    assert load_stt_config().mode == SttMode.BUILDER_PROXY
 
 
 def test_builder_stt_http_500_returns_uncertain(mock_stt_server, audio_path: Path) -> None:

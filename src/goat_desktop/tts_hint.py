@@ -49,12 +49,14 @@ class TtsResult:
 
 
 def load_tts_config() -> TtsConfig:
-    mode = _parse_mode(os.environ.get("GOAT_TTS_MODE"), TtsMode.DISABLED)
+    builder_url = os.environ.get("GOAT_BUILDER_URL")
+    builder_token = os.environ.get("GOAT_BUILDER_TOKEN")
+    mode = _parse_mode(os.environ.get("GOAT_TTS_MODE"), _default_tts_mode(builder_url, builder_token))
     timeout = float(os.environ.get("GOAT_TTS_TIMEOUT_SECONDS", "20.0"))
     return TtsConfig(
         mode=mode,
-        builder_url=os.environ.get("GOAT_BUILDER_URL"),
-        builder_token=os.environ.get("GOAT_BUILDER_TOKEN"),
+        builder_url=builder_url,
+        builder_token=builder_token,
         provider=os.environ.get("GOAT_TTS_PROVIDER", "builder_default"),
         voice=os.environ.get("GOAT_TTS_VOICE", "maya_de"),
         language=os.environ.get("GOAT_TTS_LANGUAGE", "de-DE"),
@@ -143,6 +145,12 @@ def _parse_mode(value: str | None, default: TtsMode) -> TtsMode:
         return TtsMode(value.strip().lower())
     except ValueError:
         return default
+
+
+def _default_tts_mode(builder_url: str | None, builder_token: str | None) -> TtsMode:
+    if builder_url and builder_token:
+        return TtsMode.BUILDER_PROXY
+    return TtsMode.DISABLED
 
 
 def _uncertain_result(

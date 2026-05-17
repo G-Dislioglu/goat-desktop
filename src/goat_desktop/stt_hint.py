@@ -45,12 +45,14 @@ class SttResult:
 
 
 def load_stt_config() -> SttConfig:
-    mode = _parse_mode(os.environ.get("GOAT_STT_MODE"), SttMode.DISABLED)
+    builder_url = os.environ.get("GOAT_BUILDER_URL")
+    builder_token = os.environ.get("GOAT_BUILDER_TOKEN")
+    mode = _parse_mode(os.environ.get("GOAT_STT_MODE"), _default_stt_mode(builder_url, builder_token))
     timeout = float(os.environ.get("GOAT_STT_TIMEOUT_SECONDS", "8.0"))
     return SttConfig(
         mode=mode,
-        builder_url=os.environ.get("GOAT_BUILDER_URL"),
-        builder_token=os.environ.get("GOAT_BUILDER_TOKEN"),
+        builder_url=builder_url,
+        builder_token=builder_token,
         provider=os.environ.get("GOAT_STT_PROVIDER", "builder_default"),
         timeout_seconds=max(0.5, timeout),
     )
@@ -118,6 +120,12 @@ def _parse_mode(value: str | None, default: SttMode) -> SttMode:
         return SttMode(value.strip().lower())
     except ValueError:
         return default
+
+
+def _default_stt_mode(builder_url: str | None, builder_token: str | None) -> SttMode:
+    if builder_url and builder_token:
+        return SttMode.BUILDER_PROXY
+    return SttMode.DISABLED
 
 
 def _uncertain_result(

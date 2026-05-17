@@ -90,3 +90,4 @@
 - Attempted final Run F full path. First attempt found another Windows MCI long-path issue when playing Builder-TTS WAV; fixed playback by copying to a short temp WAV path.
 - Retried full path successfully through microphone, Builder STT, Builder TTS, and local playback, but STT recognized only `So`, so Run F remains not completed.
 - Added a clear LiveTalk recording cue after user feedback that recording start was invisible: popup status now shows preparation/listening states, a short beep fires immediately before recording, and default recording duration is 5 seconds.
+- Fixed LiveTalk Builder audio config fallback after UI test showed STT disabled in the visible app: STT/TTS now auto-enable `builder_proxy` when Builder URL and token are present.

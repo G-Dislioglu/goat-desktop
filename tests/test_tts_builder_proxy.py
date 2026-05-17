@@ -11,7 +11,7 @@ import pytest
 
 from goat_desktop import livetalk
 from goat_desktop.livetalk import LiveTalkSession
-from goat_desktop.tts_hint import synthesize_speech
+from goat_desktop.tts_hint import TtsMode, load_tts_config, synthesize_speech
 
 
 WAV_BYTES = b"RIFF" + b"\0" * 256
@@ -106,6 +106,14 @@ def test_builder_tts_success(mock_tts_server, tmp_path: Path) -> None:
     assert result.http_status == 200
     assert TtsHandler.last_request is not None
     assert TtsHandler.last_request["pronunciation_hints"]["GOAT"] == "Goat"
+
+
+def test_builder_tts_auto_enables_when_builder_credentials_exist(monkeypatch) -> None:
+    monkeypatch.delenv("GOAT_TTS_MODE", raising=False)
+    monkeypatch.setenv("GOAT_BUILDER_URL", "https://builder.example")
+    monkeypatch.setenv("GOAT_BUILDER_TOKEN", "test-token")
+
+    assert load_tts_config().mode == TtsMode.BUILDER_PROXY
 
 
 def test_builder_tts_unauthorized_returns_uncertain(monkeypatch, mock_tts_server, tmp_path: Path) -> None:
