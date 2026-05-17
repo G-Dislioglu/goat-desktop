@@ -62,9 +62,12 @@ run_f_code_ready_2026_05_17:
 run_e_multi_provider_code_ready_2026_05_17:
 "vision_hint.py wurde um Multi-Provider-Vision-Hint erweitert (gemini_flash_lite, grok_4_3, gemini_flash). Reasoning-Level konfigurierbar (minimal, low, medium, high). User-Wahl im Popup ueber zwei Dropdowns, Persistierung in vision_config.json unter APPDATA/GoatDesktop. Default: gemini_flash_lite + minimal. Builder-Proxy-Modus nutzt GOAT_VISION_MODE=builder_proxy, GOAT_BUILDER_URL, GOAT_BUILDER_TOKEN, GOAT_VISION_PROVIDER und GOAT_VISION_REASONING. Unit-Tests mit Mock-Server gruen: 8 passed. Acceptance gegen echten /api/goat/vision-hint folgt sobald Soulmatch-Builder den Endpoint gepusht hat. Fail-Safe bei Builder-Offline/Timeout/HTTP-Fehler: uncertain-Hint, kein stiller Mock-Switch. run_e_completed bleibt bewusst nicht gesetzt."
 
+run_e_completed_2026_05_17:
+"Run E abgeschlossen am 2026-05-17. Echter Builder-Proxy-Smoke gegen https://soulmatch-1.onrender.com/api/goat/vision-hint durchgefuehrt mit gesetztem GOAT_BUILDER_TOKEN. Alle drei Provider liefern nutzbare semantische Hints ohne Pixel-Koordinatenautoritaet: gemini_flash_lite minimal 1617ms, gemini_flash minimal 1580ms, grok_4_3 requested minimal / used none 1300ms. Alle Antworten http_status=200, Labels zeigen semantisch auf den Manual-Deploy-Button. Artefakt: docs/run-e-completion-report-2026-05-17.md. Lokaler DNS-Resolver brauchte fuer den Test GOAT_BUILDER_RESOLVE_IP=216.24.57.7; Code unterstuetzt diesen optionalen Override, bleibt aber standardmaessig bei normaler DNS-Aufloesung."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E provider wiring and multi-provider UI are code-ready, but real provider verification is pending. Run F LiveTalk shell is code-ready, but real audio verification is pending.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready, but real audio verification is pending.
 
 ## Verified
 
@@ -80,11 +83,11 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run D outbound WebSocket bridge connects to a test Builder, receives a test cue, requires user approval, then renders the ball through the local Broker path.
 - Run E mock provider wiring preserves the authority boundary: Vision hint is logged as semantic context, while Broker accept remains local-geometry based.
 - Run E multi-provider Builder-proxy tests pass against a local Mock-Server; Vision-only remains `uncertain`, never `accept`.
+- Run E real Builder-proxy smoke passes for gemini_flash_lite, gemini_flash, and grok_4_3 using semantic hints only.
 - Run F mock LiveTalk path shows a half-duplex transcript and Maya response in the popup.
 
 ## Not Yet Verified
 
-- OCR and real Vision-LLM provider defaults are not selected yet.
-- Run E real-provider benchmark is pending because no provider API key is configured in the visible environment.
+- OCR defaults are not selected yet.
 - Run F real microphone/STT/TTS acceptance is pending.
 - Action gating does not exist yet.

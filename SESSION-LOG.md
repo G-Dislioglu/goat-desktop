@@ -43,3 +43,6 @@
 - Added `vision_config.py` for `%APPDATA%/GoatDesktop/vision_config.json` persistence.
 - Added tests for Builder-proxy success, Grok reasoning, HTTP 500, timeout, invalid token, config persistence/load, and Vision-only `uncertain`.
 - Kept Run E not completed; real Builder endpoint acceptance is still pending.
+- Completed Run E after the Soulmatch Builder endpoint went live and local User env exposed the Builder token.
+- Verified real Builder-proxy responses for gemini_flash_lite, gemini_flash, and grok_4_3 on the Run E desktop screenshot; all returned semantic hints only with HTTP 200.
+- Added optional GOAT_BUILDER_RESOLVE_IP support because this local Codex process had DNS resolution trouble for the Render hostname while explicit Cloudflare resolution worked.

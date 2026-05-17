@@ -3,12 +3,15 @@ from __future__ import annotations
 import base64
 import json
 import os
+import socket
 import time
 import urllib.error
 import urllib.request
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from pathlib import Path
+from urllib.parse import urlparse
 from typing import Any
 
 
@@ -202,7 +205,9 @@ def _builder_proxy_hint(image_path: Path, prompt: str, config: VisionHintConfig)
         method="POST",
     )
     try:
-        with urllib.request.urlopen(request, timeout=config.timeout_seconds) as response:
+        with _temporary_resolve_override(config.builder_url):
+            response_context = urllib.request.urlopen(request, timeout=config.timeout_seconds)
+        with response_context as response:
             payload = json.loads(response.read().decode("utf-8"))
             http_status = int(response.status)
     except urllib.error.HTTPError as exc:
@@ -337,3 +342,29 @@ def _uncertain_hint(
             "fallback": "uncertain_hint",
         },
     )
+
+
+@contextmanager
+def _temporary_resolve_override(url: str | None):
+    override_ip = os.environ.get("GOAT_BUILDER_RESOLVE_IP")
+    if not url or not override_ip:
+        yield
+        return
+
+    hostname = urlparse(url).hostname
+    if not hostname:
+        yield
+        return
+
+    original_getaddrinfo = socket.getaddrinfo
+
+    def patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+        if host == hostname:
+            return original_getaddrinfo(override_ip, port, family, type, proto, flags)
+        return original_getaddrinfo(host, port, family, type, proto, flags)
+
+    socket.getaddrinfo = patched_getaddrinfo
+    try:
+        yield
+    finally:
+        socket.getaddrinfo = original_getaddrinfo

@@ -269,7 +269,7 @@ Unveraendert gegenueber v1.0:
 - Run B: ✅ done. Globales Overlay + statischer gelber Ball. Always-on-top, `WS_EX_TRANSPARENT`, click-through, vom Popup verschiebbar. Pflicht: Kill-Switch in derselben Iteration testen.
 - Run C: ✅ done. Lokale Bridge + Slim Stack + Coordinate Broker + Verifier. FastAPI auf 127.0.0.1. Endpoints `/healthz`, `/screen-cue`, `/screen-capture`, `/active-window`. Cue-Schema enthaelt `safety_state`, `anchors[]`, `broker_decision`.
 - Run D: ✅ done. Builder-Bruecke. WebSocket Outbound, Token-Auth, Reconnect.
-- **Run E:** Vision-LLM-Konfiguration. Provider-Spike, Default-Auswahl und Fallback-Kette. Nur als semantischer Helfer, niemals als Koordinaten-Quelle. Ohne echte Provider-Keys nur `code_ready`, nicht `completed`.
+- Run E: ✅ done. Vision-LLM-Konfiguration via Builder-Proxy. Provider-Spike fuer gemini_flash_lite, gemini_flash und grok_4_3 abgeschlossen. Nur als semantischer Helfer, niemals als Koordinaten-Quelle.
 - **Run F:** LiveTalk. Mikrofon, STT, TTS. Half-Duplex. Ohne echten STT/TTS-Provider nur `code_ready`, nicht `completed`. Mock-Schale ist code-ready.
 - **Run G1–G5:** Action Layer in fuenf Sub-Phasen, Stufen 1 bis 4 plus Klassifikator-Pipeline.
 
