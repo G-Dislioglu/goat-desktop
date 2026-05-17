@@ -32,9 +32,15 @@ run_b_code_ready_2026_05_17:
 run_b_completed_2026_05_17:
 "Run B abgeschlossen am 2026-05-17. Acceptance-Evidenz committed unter docs/run-b-acceptance-report-2026-05-17.md sowie docs/screenshots/run-b-acceptance-context-1.png und docs/screenshots/run-b-acceptance-context-2.png. Verifiziert: gelber Ball sichtbar ueber externer Chrome/Render-UI in zwei Positionen, WS_EX_TRANSPARENT=True, WS_EX_LAYERED=True, Hit-Tests resolve nicht auf das Overlay, Ctrl+Alt+Esc versteckt Overlay und Popup. Der sicherere kleine Cue-Window-Ansatz bleibt bewusst gesetzt; kein Fullscreen-Overlay."
 
+run_c_started_2026_05_17:
+"Run C gestartet am 2026-05-17. Pflichtanker sol-cross-062 und sol-cross-063 gelesen. Scope: lokale Bridge auf 127.0.0.1, aktive Fensterdaten, Window-only Screenshot, Coordinate Broker + Local Verifier, Cue-Dispatch an den gelben Ball. Kein Builder-WebSocket, keine OCR, kein Vision-Provider, keine Action-Ausfuehrung."
+
+run_c_code_ready_2026_05_17:
+"Run C Code-Stand angelegt am 2026-05-17. Implementiert: FastAPI-Bridge mit /healthz, /active-window, /screen-capture, /screen-cue; screen.py fuer active-window und mss Window-Capture; broker.py mit Local-Geometry-Verifier; Tray-Integration mit Qt-Signal fuer Cue-Dispatch. Verifiziert per lokalem HTTP-Call: /screen-cue liefert safety_state=accept, anchors[] und broker_decision; Ball springt sichtbar auf die Cue-Koordinate. Bericht/Screenshot: docs/run-c-acceptance-report-2026-05-17.md und docs/screenshots/run-c-bridge-cue-acceptance-2026-05-17.png. Run C ist noch nicht completed, weil der strenge Popup-Klick/Screencast-Pfad aus der Master-Spec fehlt."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge code is ready, with final popup-triggered acceptance pending.
 
 ## Verified
 
@@ -45,8 +51,10 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run A acceptance screenshot is committed at `docs/screenshots/run-a-acceptance-2026-05-17.png`.
 - Run B overlay code compiles and runtime checks confirm click-through style plus global hotkey registration.
 - Run B acceptance evidence is committed at `docs/run-b-acceptance-report-2026-05-17.md` with two visual screenshots.
+- Run C local bridge endpoints respond in-process and `/screen-cue` moves the yellow ball after Broker `accept`.
 
 ## Not Yet Verified
 
 - OCR and Vision-LLM provider defaults are not selected yet.
+- Run C popup-triggered screencast acceptance is pending.
 - Bridge, LiveTalk implementation, and action gating do not exist yet.

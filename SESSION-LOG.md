@@ -20,3 +20,7 @@
 - Left Run B at `code_ready`; final screencast/manual click-through acceptance is still pending.
 - Replaced an invalid Run B acceptance screenshot pair that missed the ball because the crop did not include the overlay rect.
 - Accepted Run B after regenerated screenshots showed the yellow cue ball in two positions over external Chrome/Render UI and runtime evidence confirmed click-through styles, non-overlay hit-test targets, and Ctrl+Alt+Esc hiding GOAT windows.
+- Started Run C after reading sol-cross-062 and sol-cross-063.
+- Added local-only FastAPI bridge endpoints for health, active-window, screen-capture, and screen-cue.
+- Added a minimal Coordinate Broker + Local Verifier and wired accepted cue coordinates to the yellow ball through a Qt signal.
+- Verified Run C code-ready via local HTTP calls and a screenshot showing the ball at the cued coordinate; full Run C completion remains pending until the popup-triggered acceptance path is captured.

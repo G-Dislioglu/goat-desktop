@@ -6,6 +6,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction, QIcon, QPainter, QPixmap
 from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
+from goat_desktop.bridge import CueDispatcher, LocalBridge
 from goat_desktop.hotkey import EmergencyHotkey
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
@@ -20,6 +21,9 @@ class GoatTrayApp:
         self.overlay = BallOverlay()
         self.popup = GoatPopup()
         self._ball_visible = True
+        self.cue_dispatcher = CueDispatcher()
+        self.cue_dispatcher.cue_requested.connect(self.move_ball_to_cue)
+        self.bridge = LocalBridge(self.cue_dispatcher)
         self._connect_popup_controls()
         self.overlay.show_overlay()
         self.popup.place_near_tray()
@@ -30,6 +34,7 @@ class GoatTrayApp:
         self.tray.activated.connect(self._on_activated)
         self.tray.setContextMenu(self._build_menu())
         self.tray.show()
+        self.bridge.start()
 
     def show_popup(self) -> None:
         if not self.popup.isVisible():
@@ -74,11 +79,17 @@ class GoatTrayApp:
         self.overlay.hide_ball()
         self.popup.ball_toggle.setText("Ball an")
 
+    def move_ball_to_cue(self, x: int, y: int) -> None:
+        self._ball_visible = True
+        self.overlay.move_ball_to(x - self.overlay.width() // 2, y - self.overlay.height() // 2)
+        self.popup.ball_toggle.setText("Ball aus")
+
     def emergency_stop(self) -> None:
         self.hide_ball()
         self.popup.hide()
 
     def shutdown(self) -> None:
+        self.bridge.stop()
         self.hotkey.unregister()
         self.overlay.hide()
         self.app.quit()
