@@ -1,0 +1,130 @@
+{
+  "approval_phrase": "I approve this stage 3 action",
+  "results": [
+    {
+      "status": "needs_approval",
+      "executed": false,
+      "stage": 3,
+      "reason": "stage 3 action requires explicit user approval",
+      "approval_required": true,
+      "preview": {
+        "label": "Save changes",
+        "action_type": "click",
+        "consequence_summary": "This would save changes in the current app.",
+        "approval_phrase_required": "I approve this stage 3 action",
+        "broker_decision": {
+          "status": "accept",
+          "final_bbox": [
+            100,
+            200,
+            180,
+            240
+          ],
+          "fusion_path": "run_g4_sample"
+        }
+      },
+      "gate_decision": {
+        "status": "needs_approval",
+        "stage": 3,
+        "requires_user_approval": true,
+        "allowed_to_execute": false,
+        "reason": "stage 3 action requires explicit user approval",
+        "audit_event_type": "action_gate_needs_approval"
+      }
+    },
+    {
+      "status": "approval_phrase_mismatch",
+      "executed": false,
+      "stage": 3,
+      "reason": "approval phrase did not match",
+      "approval_required": true,
+      "preview": {
+        "label": "Delete record",
+        "action_type": "click",
+        "consequence_summary": "This would delete a record.",
+        "approval_phrase_required": "I approve this stage 3 action",
+        "broker_decision": {
+          "status": "accept",
+          "final_bbox": [
+            100,
+            200,
+            180,
+            240
+          ],
+          "fusion_path": "run_g4_sample"
+        }
+      },
+      "gate_decision": {
+        "status": "ready",
+        "stage": 3,
+        "requires_user_approval": true,
+        "allowed_to_execute": true,
+        "reason": "gate passed",
+        "audit_event_type": "action_gate_ready"
+      }
+    },
+    {
+      "status": "approved_not_executed",
+      "executed": false,
+      "stage": 3,
+      "reason": "stage 3 approval accepted; real execution is intentionally outside Run G4 scope",
+      "approval_required": false,
+      "preview": {
+        "label": "Manual Deploy",
+        "action_type": "click",
+        "consequence_summary": "This would trigger a manual deploy.",
+        "approval_phrase_required": "I approve this stage 3 action",
+        "broker_decision": {
+          "status": "accept",
+          "final_bbox": [
+            100,
+            200,
+            180,
+            240
+          ],
+          "fusion_path": "run_g4_sample"
+        }
+      },
+      "gate_decision": {
+        "status": "ready",
+        "stage": 3,
+        "requires_user_approval": true,
+        "allowed_to_execute": true,
+        "reason": "gate passed",
+        "audit_event_type": "action_gate_ready"
+      }
+    },
+    {
+      "status": "locked",
+      "executed": false,
+      "stage": 4,
+      "reason": "stage 4 technical lock: user must handle sensitive field manually",
+      "approval_required": false,
+      "preview": {
+        "label": "password field",
+        "action_type": "type",
+        "consequence_summary": "This would type into a password field.",
+        "approval_phrase_required": "I approve this stage 3 action",
+        "broker_decision": {
+          "status": "accept",
+          "final_bbox": [
+            100,
+            200,
+            180,
+            240
+          ],
+          "fusion_path": "run_g4_sample"
+        }
+      },
+      "gate_decision": {
+        "status": "locked",
+        "stage": 4,
+        "requires_user_approval": false,
+        "allowed_to_execute": false,
+        "reason": "technical lock: user must handle sensitive field manually",
+        "audit_event_type": "action_gate_locked"
+      }
+    }
+  ],
+  "note": "Run G4 validates approval only; no stage 3 OS action is executed."
+}

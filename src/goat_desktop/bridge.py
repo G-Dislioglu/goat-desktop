@@ -12,6 +12,7 @@ from goat_desktop.broker import build_candidate, verify_candidate
 from goat_desktop.screen import capture_active_window, get_active_window
 from goat_desktop.stage1_executor import Stage1ExecutionRequest, execute_stage1_action
 from goat_desktop.stage2_executor import Stage2ExecutionRequest, execute_stage2_text_input
+from goat_desktop.stage3_approval import Stage3ApprovalRequest, review_stage3_action
 from goat_desktop.vision_hint import load_vision_hint_config, get_vision_hint
 
 
@@ -111,6 +112,19 @@ def create_app(dispatch_cue: Callable[[int, int], None] | None = None) -> FastAP
             safe_text_context=bool(payload.get("safe_text_context") or False),
         )
         return execute_stage2_text_input(request).to_dict()
+
+    @app.post("/action/stage3/review")
+    def stage3_review(payload: dict[str, Any]) -> dict[str, Any]:
+        request = Stage3ApprovalRequest(
+            action_type=str(payload.get("action_type") or "click"),
+            label=str(payload.get("label") or ""),
+            broker_decision=dict(payload.get("broker_decision") or {}),
+            consequence_summary=str(payload.get("consequence_summary") or ""),
+            user_approved=bool(payload.get("user_approved") or False),
+            approval_phrase=str(payload.get("approval_phrase") or ""),
+            dry_run=bool(payload.get("dry_run") if "dry_run" in payload else False),
+        )
+        return review_stage3_action(request).to_dict()
 
     return app
 

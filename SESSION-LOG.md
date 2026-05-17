@@ -62,3 +62,7 @@
 - Verified Run G3 code-ready with 34 tests passing, using a recording text backend for evidence generation; no real desktop text input was executed in the code-ready sample.
 - First real Run G3 acceptance failed closed because the Win32 `SendInput` structure used an incomplete union; fixed the backend to use the full Windows `INPUT` union size and explicit SendInput error checks.
 - Completed Run G3 with a dedicated Tk test window: preview produced no input, approved Stage-2 input entered `GOAT safe input`, and screenshots were visually clean.
+- Started Run G4 as Stage-3 hard approval review without OS execution.
+- Added `stage3_approval.py` with exact approval phrase, consequence preview, Broker `accept` requirement, and Stage-4 non-overridable lock.
+- Added `/action/stage3/review`; terminal success is `approved_not_executed`, not real click/action execution.
+- Verified Run G4 with 42 tests passing and JSONL audit evidence for needs-approval, phrase mismatch, approved-not-executed, and Stage-4 locked paths.

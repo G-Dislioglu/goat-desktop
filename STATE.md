@@ -80,9 +80,12 @@ run_g3_code_ready_2026_05_17:
 run_g3_completed_2026_05_17:
 "Run G3 abgeschlossen am 2026-05-17. Kontrollierte reale Stage-2-Acceptance auf dediziertem Tk-Testfenster 'GOAT G3 Safe Text Acceptance Window' durchgefuehrt. Erst Preview ohne Ausfuehrung, danach explizit approved Texteingabe 'GOAT safe input' in ein leeres Testfeld. Kein File-Dialog, keine Stage-3/4-Action, keine Mehrzeileneingabe. Ein erster Realversuch schlug fail-closed fehl, weil die Win32-SendInput-Struktur zu klein war; Backend wurde auf volle INPUT-Union korrigiert und der erfolgreiche Versuch danach dokumentiert. Finale Artefakte: docs/run-g3-completion-report-2026-05-17.md, docs/run-g3-real-acceptance-results.json, docs/run-g3-real-acceptance-audit.jsonl, docs/screenshots/run-g3-stage2-before-2026-05-17.png und docs/screenshots/run-g3-stage2-after-2026-05-17.png."
 
+run_g4_completed_2026_05_17:
+"Run G4 abgeschlossen am 2026-05-17. Implementiert und verifiziert: stage3_approval.py fuer harte Stage-3-Approval-Pruefung ohne OS-Ausfuehrung. Gepruefte Pfade: needs_approval ohne User-Freigabe, approval_phrase_mismatch bei falscher Phrase, approved_not_executed bei exakter Phrase 'I approve this stage 3 action', Stage-4 locked bleibt nicht ueberschreibbar. /action/stage3/review Bridge-Endpunkt ergaenzt. Tests gruen: 42 passed. Artefakte: docs/run-g4-completion-report-2026-05-17.md, docs/run-g4-stage3-approval-results.json, docs/run-g4-stage3-approval-audit-sample.jsonl. Run G4 fuehrt bewusst keine Stage-3-OS-Action aus; terminaler Erfolg ist approved_not_executed."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready, but real audio verification is pending. Run G1 action-gating skeleton is code-ready. Run G2 controlled Stage-1 executor is completed for hover and scroll only. Run G3 Stage-2 text input is completed for one-line safe-context input only.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready, but real audio verification is pending. Run G1 action-gating skeleton is code-ready. Run G2 controlled Stage-1 executor is completed for hover and scroll only. Run G3 Stage-2 text input is completed for one-line safe-context input only. Run G4 Stage-3 hard approval review is completed without OS execution.
 
 ## Verified
 
@@ -105,9 +108,11 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run G2 real desktop acceptance executed hover and scroll in a dedicated safe Tk window, with visually clean before/after screenshots.
 - Run G3 Stage-2 text input tests pass and mock-backend audit lineage is written for preview, executed, and blocked paths.
 - Run G3 real desktop acceptance entered one-line dummy text in a dedicated safe Tk field after preview approval, with visually clean before/after screenshots.
+- Run G4 Stage-3 hard approval review tests pass; exact phrase approval reaches approved_not_executed, not OS execution.
 
 ## Not Yet Verified
 
 - OCR defaults are not selected yet.
 - Run F real microphone/STT/TTS acceptance is pending.
-- Stage 3/4 real OS-level action execution does not exist yet.
+- Stage 3 real OS-level action execution does not exist yet.
+- Stage 4 remains a technical lock.
