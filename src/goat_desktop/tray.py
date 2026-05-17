@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import json
+import urllib.request
 from importlib import resources
+from threading import Thread
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QAction, QIcon, QPainter, QPixmap
 from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
@@ -21,6 +24,8 @@ class GoatTrayApp:
         self.overlay = BallOverlay()
         self.popup = GoatPopup()
         self._ball_visible = True
+        self.last_test_cue_response: dict | None = None
+        self.last_test_cue_error: str | None = None
         self.cue_dispatcher = CueDispatcher()
         self.cue_dispatcher.cue_requested.connect(self.move_ball_to_cue)
         self.bridge = LocalBridge(self.cue_dispatcher)
@@ -100,6 +105,30 @@ class GoatTrayApp:
         self.popup.ball_up.clicked.connect(lambda: self.overlay.move_ball_by(0, -80))
         self.popup.ball_down.clicked.connect(lambda: self.overlay.move_ball_by(0, 80))
         self.popup.ball_toggle.clicked.connect(self._toggle_ball)
+        self.popup.cue_test.clicked.connect(self.request_test_cue)
+
+    def request_test_cue(self) -> None:
+        self.popup.hide()
+        QTimer.singleShot(250, self._post_test_cue)
+
+    def _post_test_cue(self) -> None:
+        Thread(target=self._post_test_cue_worker, name="goat-test-cue", daemon=True).start()
+
+    def _post_test_cue_worker(self) -> None:
+        payload = json.dumps({"source": "active_window", "label": "Popup test cue"}).encode("utf-8")
+        request = urllib.request.Request(
+            "http://127.0.0.1:8765/screen-cue",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=5) as response:
+                self.last_test_cue_response = json.loads(response.read().decode("utf-8"))
+                self.last_test_cue_error = None
+        except Exception as exc:
+            self.last_test_cue_response = None
+            self.last_test_cue_error = repr(exc)
 
     def _toggle_ball(self) -> None:
         if self._ball_visible:

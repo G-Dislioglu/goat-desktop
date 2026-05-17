@@ -89,9 +89,11 @@ class GoatPopup(QWidget):
         stop_button.setEnabled(False)
         talk_button = QPushButton("LiveTalk")
         talk_button.setEnabled(False)
+        self.cue_test = QPushButton("Cue testen")
 
         actions.addWidget(stop_button, 0, 0)
         actions.addWidget(talk_button, 0, 1)
+        actions.addWidget(self.cue_test, 1, 0, 1, 2)
         root.addLayout(actions)
 
         overlay_controls = QHBoxLayout()

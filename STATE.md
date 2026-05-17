@@ -38,9 +38,12 @@ run_c_started_2026_05_17:
 run_c_code_ready_2026_05_17:
 "Run C Code-Stand angelegt am 2026-05-17. Implementiert: FastAPI-Bridge mit /healthz, /active-window, /screen-capture, /screen-cue; screen.py fuer active-window und mss Window-Capture; broker.py mit Local-Geometry-Verifier; Tray-Integration mit Qt-Signal fuer Cue-Dispatch. Verifiziert per lokalem HTTP-Call: /screen-cue liefert safety_state=accept, anchors[] und broker_decision; Ball springt sichtbar auf die Cue-Koordinate. Bericht/Screenshot: docs/run-c-acceptance-report-2026-05-17.md und docs/screenshots/run-c-bridge-cue-acceptance-2026-05-17.png. Run C ist noch nicht completed, weil der strenge Popup-Klick/Screencast-Pfad aus der Master-Spec fehlt."
 
+run_c_completed_2026_05_17:
+"Run C abgeschlossen am 2026-05-17. Popup-Button 'Cue testen' triggert den lokalen /screen-cue-Endpunkt, Broker liefert safety_state=accept mit anchors[] und broker_decision, und der gelbe Ball springt sichtbar auf die akzeptierte Cue-Koordinate ueber externer Chrome/Render-UI. Acceptance-Artefakte: docs/run-c-completion-report-2026-05-17.md, docs/screenshots/run-c-popup-cue-before-2026-05-17.png und docs/screenshots/run-c-popup-cue-after-2026-05-17.png. Nicht enthalten: Builder-WebSocket, Vision-Provider, OCR, Action-Ausfuehrung."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge code is ready, with final popup-triggered acceptance pending.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed.
 
 ## Verified
 
@@ -52,9 +55,9 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run B overlay code compiles and runtime checks confirm click-through style plus global hotkey registration.
 - Run B acceptance evidence is committed at `docs/run-b-acceptance-report-2026-05-17.md` with two visual screenshots.
 - Run C local bridge endpoints respond in-process and `/screen-cue` moves the yellow ball after Broker `accept`.
+- Run C popup-triggered acceptance is committed at `docs/run-c-completion-report-2026-05-17.md`.
 
 ## Not Yet Verified
 
 - OCR and Vision-LLM provider defaults are not selected yet.
-- Run C popup-triggered screencast acceptance is pending.
-- Bridge, LiveTalk implementation, and action gating do not exist yet.
+- Builder outbound bridge, LiveTalk implementation, and action gating do not exist yet.

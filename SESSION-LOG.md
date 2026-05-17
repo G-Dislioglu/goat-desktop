@@ -24,3 +24,5 @@
 - Added local-only FastAPI bridge endpoints for health, active-window, screen-capture, and screen-cue.
 - Added a minimal Coordinate Broker + Local Verifier and wired accepted cue coordinates to the yellow ball through a Qt signal.
 - Verified Run C code-ready via local HTTP calls and a screenshot showing the ball at the cued coordinate; full Run C completion remains pending until the popup-triggered acceptance path is captured.
+- Added a `Cue testen` popup button that hides the popup, calls local `/screen-cue`, stores the bridge response, and lets the accepted cue dispatch move the ball.
+- Completed Run C after the popup-triggered path produced Broker `accept`, `anchors[]`, `broker_decision`, and a visual after-screenshot with the ball at the cue coordinate.
