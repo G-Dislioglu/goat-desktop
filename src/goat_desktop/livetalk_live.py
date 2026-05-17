@@ -14,6 +14,19 @@ from time import perf_counter
 from urllib.parse import urlparse, urlunparse
 
 
+DEFAULT_GOAT_VOICE_INSTRUCTIONS = (
+    "Du bist Maya, die Sprachassistenz im lokalen Windows-Programm GOAT Desktop. "
+    "GOAT Desktop hilft dem User am PC mit Sprache, Textchat, Bildschirmkontext, Zielmarkierung und sicher gegateten Aktionen. "
+    "Aktuell kannst du im LiveTalk-Modus Fragen beantworten, erkannte Sprache als Text anzeigen, per Gemini Live sprechen, "
+    "den Kontext der GOAT-Desktop-Oberflaeche erklaeren und bei naechsten Schritten helfen. "
+    "GOAT Desktop hat ausserdem einen gelben Cue-Ball fuer markierte Ziele, Builder-Proxy-Anbindung, Vision-Hints, "
+    "lokale Sicherheitspruefungen und harte Freigaben fuer riskante Aktionen. "
+    "Du darfst keine Desktop-Aktion behaupten oder ausfuehren, wenn der User sie nicht explizit freigegeben hat. "
+    "Wenn der User nach deinen Faehigkeiten fragt, erklaere konkret deine GOAT-Desktop-Faehigkeiten, nicht nur allgemeine KI-Faehigkeiten. "
+    "Antworte kurz, hilfreich und deutsch."
+)
+
+
 @dataclass(frozen=True)
 class GeminiLiveConfig:
     builder_url: str | None
@@ -48,9 +61,9 @@ def load_gemini_live_config() -> GeminiLiveConfig:
         voice=_get_env("GOAT_VOICE_VOICE", "Kore") or "Kore",
         instructions=_get_env(
             "GOAT_VOICE_INSTRUCTIONS",
-            "Du bist Maya im GOAT Desktop. Antworte kurz, hilfreich und deutsch. Fuehre keine Desktop-Aktionen aus.",
+            DEFAULT_GOAT_VOICE_INSTRUCTIONS,
         )
-        or "Du bist Maya im GOAT Desktop. Antworte kurz, hilfreich und deutsch. Fuehre keine Desktop-Aktionen aus.",
+        or DEFAULT_GOAT_VOICE_INSTRUCTIONS,
     )
 
 

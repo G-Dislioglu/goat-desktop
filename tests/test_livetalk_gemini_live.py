@@ -6,11 +6,13 @@ from pathlib import Path
 from goat_desktop import livetalk
 from goat_desktop.livetalk import LiveTalkSession
 from goat_desktop.livetalk_live import (
+    DEFAULT_GOAT_VOICE_INSTRUCTIONS,
     GeminiLiveConfig,
     GeminiLiveResult,
     _parse_json_bytes,
     build_goat_voice_ws_url,
     iter_wav_pcm_chunks,
+    load_gemini_live_config,
     request_gemini_live_turn,
     read_wav_as_16khz_pcm,
     wav_signal_stats,
@@ -21,6 +23,17 @@ from goat_desktop.livetalk_live import (
 def test_build_goat_voice_ws_url() -> None:
     assert build_goat_voice_ws_url("https://soulmatch-1.onrender.com") == "wss://soulmatch-1.onrender.com/api/goat/voice"
     assert build_goat_voice_ws_url("http://127.0.0.1:3001/") == "ws://127.0.0.1:3001/api/goat/voice"
+
+
+def test_default_instructions_describe_goat_desktop_capabilities(monkeypatch) -> None:
+    monkeypatch.delenv("GOAT_VOICE_INSTRUCTIONS", raising=False)
+    config = load_gemini_live_config()
+
+    assert config.instructions == DEFAULT_GOAT_VOICE_INSTRUCTIONS
+    assert "GOAT Desktop" in config.instructions
+    assert "gelben Cue-Ball" in config.instructions
+    assert "sicher gegateten Aktionen" in config.instructions
+    assert "allgemeine KI-Faehigkeiten" in config.instructions
 
 
 def test_wav_pcm_chunks_and_writer(tmp_path: Path, monkeypatch) -> None:
