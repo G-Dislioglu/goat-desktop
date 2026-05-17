@@ -26,6 +26,7 @@ def test_windows_sapi_provider_records_and_speaks_with_manual_transcript_but_is_
     monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
     monkeypatch.setenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", "zeige das suchfeld")
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
+    monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: "zeige das suchfeld" in text.casefold())
 
     result = LiveTalkSession().run_once()
@@ -44,6 +45,7 @@ def test_windows_sapi_provider_without_transcript_is_not_completion_ready(monkey
     monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
     monkeypatch.delenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", raising=False)
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
+    monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: True)
 
     result = LiveTalkSession().run_once()
@@ -64,6 +66,27 @@ def test_unsupported_livetalk_provider_raises(monkeypatch) -> None:
         assert "unsupported LiveTalk provider" in str(exc)
     else:  # pragma: no cover - explicit assertion path
         raise AssertionError("unsupported provider did not raise")
+
+
+def test_windows_sapi_provider_defaults_to_five_second_recording_and_status_cue(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    recorded_seconds: list[float] = []
+    states: list[str] = []
+
+    monkeypatch.setenv("GOAT_LIVETALK_PROVIDER", "windows_sapi")
+    monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
+    monkeypatch.delenv("GOAT_LIVETALK_RECORD_SECONDS", raising=False)
+    monkeypatch.setenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", "zeige das suchfeld")
+    monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: recorded_seconds.append(seconds) or _fake_wav(output_path))
+    monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: states.append("cue"))
+    monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: True)
+
+    LiveTalkSession(status_callback=states.append).run_once()
+
+    assert recorded_seconds == [5.0]
+    assert states[:3] == ["prepare", "cue", "listening"]
 
 
 def _fake_wav(path: Path) -> bool:

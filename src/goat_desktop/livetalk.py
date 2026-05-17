@@ -5,6 +5,8 @@ import shutil
 import subprocess
 import tempfile
 import time
+import winsound
+from collections.abc import Callable
 from ctypes import create_unicode_buffer, windll
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -41,28 +43,29 @@ class LiveTalkSession:
     marked completed.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, status_callback: Callable[[str], None] | None = None) -> None:
         self.provider = os.environ.get("GOAT_LIVETALK_PROVIDER", "mock").strip().lower() or "mock"
         self.audio_dir = Path(os.environ.get("GOAT_LIVETALK_AUDIO_DIR", Path.home() / "AppData" / "Roaming" / "GoatDesktop"))
         self.state = "idle"
         self.last_result: LiveTalkResult | None = None
+        self.status_callback = status_callback
 
     def run_once(self) -> LiveTalkResult:
         started = perf_counter()
         if self.provider == "windows_sapi":
             result = self._run_windows_sapi(started)
             self.last_result = result
-            self.state = "idle"
+            self._set_state("idle")
             return result
 
         if self.provider != "mock":
             raise RuntimeError(f"unsupported LiveTalk provider: {self.provider}")
 
-        self.state = "listening"
+        self._set_state("listening")
         transcript = "zeig mir das Suchfeld"
-        self.state = "thinking"
+        self._set_state("thinking")
         response_text = "Ich zeige das Suchfeld nur nach Freigabe."
-        self.state = "speaking"
+        self._set_state("speaking")
         result = LiveTalkResult(
             provider="mock",
             mode="half_duplex",
@@ -76,25 +79,28 @@ class LiveTalkSession:
             completion_ready=False,
         )
         self.last_result = result
-        self.state = "idle"
+        self._set_state("idle")
         return result
 
     def _run_windows_sapi(self, started: float) -> LiveTalkResult:
         self.audio_dir.mkdir(parents=True, exist_ok=True)
         audio_path = self.audio_dir / "livetalk-last-recording.wav"
-        record_seconds = float(os.environ.get("GOAT_LIVETALK_RECORD_SECONDS", "1.0"))
+        record_seconds = float(os.environ.get("GOAT_LIVETALK_RECORD_SECONDS", "5.0"))
+        prepare_seconds = float(os.environ.get("GOAT_LIVETALK_PREPARE_SECONDS", "0.8"))
         manual_transcript = os.environ.get("GOAT_LIVETALK_MANUAL_TRANSCRIPT", "").strip()
 
-        self.state = "listening"
+        self._set_state("prepare")
+        signal_recording_start(prepare_seconds)
+        self._set_state("listening")
         audio_recorded = record_windows_wav(audio_path, record_seconds)
-        self.state = "thinking"
+        self._set_state("thinking")
         stt_result = transcribe_audio(audio_path)
         transcript = stt_result.transcript or manual_transcript
         if transcript:
             response_text = f"Gehoert: {transcript}. Ich handle nur nach Freigabe."
         else:
             response_text = "Audio wurde aufgenommen. STT ist noch nicht konfiguriert."
-        self.state = "speaking"
+        self._set_state("speaking")
         response_audio_path = self.audio_dir / "livetalk-last-response.wav"
         tts_result = synthesize_speech(response_text, response_audio_path)
         if tts_result.status == "ok" and tts_result.audio_path:
@@ -121,6 +127,17 @@ class LiveTalkSession:
                 audio_recorded and audio_played and stt_result.status == "ok" and tts_result.status == "ok" and transcript
             ),
         )
+
+    def _set_state(self, state: str) -> None:
+        self.state = state
+        if self.status_callback is not None:
+            self.status_callback(state)
+
+
+def signal_recording_start(prepare_seconds: float = 0.8) -> None:
+    """Give the user a clear cue before microphone recording starts."""
+    time.sleep(max(0.0, prepare_seconds))
+    winsound.Beep(880, 180)
 
 
 def record_windows_wav(output_path: Path, seconds: float = 1.0) -> bool:

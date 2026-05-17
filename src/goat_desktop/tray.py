@@ -33,7 +33,7 @@ class GoatTrayApp:
         self.pending_builder_cue: dict | None = None
         self.last_builder_cue_response: dict | None = None
         self.builder_bridge: BuilderBridgeClient | None = None
-        self.livetalk = LiveTalkSession()
+        self.livetalk = LiveTalkSession(status_callback=self._update_livetalk_status)
         self.cue_dispatcher = CueDispatcher()
         self.cue_dispatcher.cue_requested.connect(self.move_ball_to_cue)
         self.bridge = LocalBridge(self.cue_dispatcher)
@@ -141,8 +141,9 @@ class GoatTrayApp:
 
     def run_livetalk_once(self) -> None:
         self.popup.talk_button.setEnabled(False)
-        self.popup.screen_context_value.setText("LiveTalk hoert")
+        self.popup.screen_context_value.setText("LiveTalk bereit")
         self.popup.maya_value.setText("Half-Duplex")
+        QApplication.processEvents()
         try:
             result = self.livetalk.run_once()
             self.popup.screen_context_value.setText(result.transcript)
@@ -152,6 +153,19 @@ class GoatTrayApp:
             self.popup.maya_value.setText(str(exc))
         finally:
             self.popup.talk_button.setEnabled(True)
+
+    def _update_livetalk_status(self, state: str) -> None:
+        labels = {
+            "prepare": ("Gleich sprechen", "Nach dem Ton sprechen"),
+            "listening": ("Nimmt auf", "Jetzt sprechen"),
+            "thinking": ("Verarbeite Sprache", "Builder-STT laeuft"),
+            "speaking": ("Maya antwortet", "Builder-TTS laeuft"),
+            "idle": ("bereit", "bereit, pausiert"),
+        }
+        screen_text, maya_text = labels.get(state, (state, "Half-Duplex"))
+        self.popup.screen_context_value.setText(screen_text)
+        self.popup.maya_value.setText(maya_text)
+        QApplication.processEvents()
 
     def request_test_cue(self) -> None:
         self.popup.hide()

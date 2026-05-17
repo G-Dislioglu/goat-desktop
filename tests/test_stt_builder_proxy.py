@@ -117,6 +117,7 @@ def test_livetalk_uses_builder_stt_when_available(monkeypatch, mock_stt_server, 
     monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
     monkeypatch.delenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", raising=False)
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
+    monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: "zeige das suchfeld" in text.casefold())
 
     result = LiveTalkSession().run_once()

@@ -129,6 +129,7 @@ def test_livetalk_completion_requires_builder_tts(monkeypatch, mock_tts_server, 
     monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
     monkeypatch.delenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", raising=False)
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
+    monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
     monkeypatch.setattr(livetalk, "play_windows_wav", lambda audio_path: audio_path.exists())
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: False)
 
