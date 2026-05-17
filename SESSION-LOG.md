@@ -74,3 +74,6 @@
 - Returned to Run F and added a `windows_sapi` LiveTalk provider shell.
 - Verified local Windows audio loop: MCI records a short WAV and SAPI speaks the response. A first MCI format-setting attempt failed closed and was simplified to default Windows wave format; long-path MCI save was worked around via short temp WAV plus copy.
 - Kept Run F not completed because STT is still manual/unverified; the real microphone recording file was deleted and not committed.
+- Added desktop-side STT Builder proxy support in `stt_hint.py` for `POST /api/goat/stt`.
+- Wired `windows_sapi` LiveTalk to call Builder STT after local WAV recording; manual transcript remains a fallback and does not set completion-ready.
+- Verified STT proxy behavior against a local mock server; real Soulmatch STT endpoint remains the external gate for Run F completion.

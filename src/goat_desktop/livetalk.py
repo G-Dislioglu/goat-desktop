@@ -10,6 +10,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from time import perf_counter
 
+from goat_desktop.stt_hint import transcribe_audio
+
 
 @dataclass(frozen=True)
 class LiveTalkResult:
@@ -84,7 +86,8 @@ class LiveTalkSession:
         self.state = "listening"
         audio_recorded = record_windows_wav(audio_path, record_seconds)
         self.state = "thinking"
-        transcript = manual_transcript
+        stt_result = transcribe_audio(audio_path)
+        transcript = stt_result.transcript or manual_transcript
         if transcript:
             response_text = f"Gehoert: {transcript}. Ich handle nur nach Freigabe."
         else:
@@ -99,10 +102,10 @@ class LiveTalkSession:
             time_ms=round((perf_counter() - started) * 1000, 2),
             audio_recorded=audio_recorded,
             audio_played=audio_played,
-            stt_provider="manual" if transcript else "none",
+            stt_provider=stt_result.provider if stt_result.status == "ok" else ("manual" if manual_transcript else "none"),
             tts_provider="windows_sapi",
             audio_path=str(audio_path),
-            completion_ready=False,
+            completion_ready=bool(audio_recorded and audio_played and stt_result.status == "ok" and transcript),
         )
 
 
