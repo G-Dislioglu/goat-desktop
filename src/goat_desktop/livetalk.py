@@ -35,6 +35,7 @@ class LiveTalkResult:
     audio_path: str | None = None
     response_audio_path: str | None = None
     completion_ready: bool = False
+    audio_pending: bool = False
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -48,12 +49,17 @@ class LiveTalkSession:
     marked completed.
     """
 
-    def __init__(self, status_callback: Callable[[str], None] | None = None) -> None:
+    def __init__(
+        self,
+        status_callback: Callable[[str], None] | None = None,
+        response_callback: Callable[[str, str], None] | None = None,
+    ) -> None:
         self.provider = os.environ.get("GOAT_LIVETALK_PROVIDER", "mock").strip().lower() or "mock"
         self.audio_dir = Path(os.environ.get("GOAT_LIVETALK_AUDIO_DIR", Path.home() / "AppData" / "Roaming" / "GoatDesktop"))
         self.state = "idle"
         self.last_result: LiveTalkResult | None = None
         self.status_callback = status_callback
+        self.response_callback = response_callback
 
     def run_once(self) -> LiveTalkResult:
         started = perf_counter()
@@ -113,23 +119,39 @@ class LiveTalkSession:
             chat_ok = chat_result.status == "ok"
             response_text = chat_result.response_text
             chat_time_ms = chat_result.time_ms
+            self._publish_response(transcript, response_text)
         elif stt_result.status == "uncertain":
             response_text = _stt_uncertain_response(stt_result.error)
             chat_time_ms = 0.0
+            self._publish_response(transcript, response_text)
         else:
             response_text = "Audio wurde aufgenommen. STT ist noch nicht konfiguriert."
             chat_time_ms = 0.0
+            self._publish_response(transcript, response_text)
         self._set_state("speaking")
         response_audio_path = self.audio_dir / "livetalk-last-response.wav"
-        tts_result = synthesize_speech(response_text, response_audio_path)
-        if tts_result.status == "ok" and tts_result.audio_path:
-            audio_played = play_windows_wav(Path(tts_result.audio_path))
-            tts_provider = tts_result.provider
-            final_response_audio_path = tts_result.audio_path
+        audio_pending = False
+        if _auto_tts_enabled():
+            tts_result = synthesize_speech(response_text, response_audio_path)
+            if tts_result.status == "ok" and tts_result.audio_path:
+                audio_played = play_windows_wav(Path(tts_result.audio_path))
+                tts_provider = tts_result.provider
+                final_response_audio_path = tts_result.audio_path
+            else:
+                audio_played = False
+                tts_provider = tts_result.provider
+                final_response_audio_path = None
+                if _sapi_fallback_enabled():
+                    audio_played = speak_windows_sapi(response_text)
+                    tts_provider = "windows_sapi"
+            tts_time_ms = float(getattr(tts_result, "time_ms", 0.0) or 0.0)
         else:
-            audio_played = speak_windows_sapi(response_text)
-            tts_provider = "windows_sapi"
+            tts_result = None
+            audio_played = False
+            tts_provider = "not_requested"
             final_response_audio_path = None
+            audio_pending = bool(chat_ok and response_text.strip())
+            tts_time_ms = 0.0
         return LiveTalkResult(
             provider="windows_sapi",
             mode="half_duplex",
@@ -142,24 +164,28 @@ class LiveTalkSession:
             tts_provider=tts_provider,
             stt_time_ms=float(getattr(stt_result, "time_ms", 0.0) or 0.0),
             chat_time_ms=float(chat_time_ms),
-            tts_time_ms=float(getattr(tts_result, "time_ms", 0.0) or 0.0),
+            tts_time_ms=tts_time_ms,
             record_seconds=record_seconds,
             audio_path=str(audio_path),
             response_audio_path=final_response_audio_path,
             completion_ready=bool(
                 audio_recorded
-                and audio_played
                 and stt_result.status == "ok"
                 and chat_ok
-                and tts_result.status == "ok"
                 and transcript
+                and (_auto_tts_enabled() is False or (tts_result is not None and tts_result.status == "ok" and audio_played))
             ),
+            audio_pending=audio_pending,
         )
 
     def _set_state(self, state: str) -> None:
         self.state = state
         if self.status_callback is not None:
             self.status_callback(state)
+
+    def _publish_response(self, transcript: str, response_text: str) -> None:
+        if self.response_callback is not None:
+            self.response_callback(transcript, response_text)
 
 
 def signal_recording_start(prepare_seconds: float = 0.8) -> None:
@@ -182,6 +208,16 @@ def _stt_provider_name(stt_result, has_manual_transcript: bool) -> str:
     if has_manual_transcript:
         return "manual"
     return stt_result.provider or "none"
+
+
+def _sapi_fallback_enabled() -> bool:
+    value = os.environ.get("GOAT_LIVETALK_ALLOW_SAPI_FALLBACK", "").strip().lower()
+    return value in {"1", "true", "yes", "on"}
+
+
+def _auto_tts_enabled() -> bool:
+    value = os.environ.get("GOAT_LIVETALK_AUTO_TTS", "").strip().lower()
+    return value in {"1", "true", "yes", "on"}
 
 
 def record_windows_wav(output_path: Path, seconds: float = 1.0) -> bool:

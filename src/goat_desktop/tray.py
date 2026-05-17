@@ -36,7 +36,10 @@ class GoatTrayApp:
         self.pending_builder_cue: dict | None = None
         self.last_builder_cue_response: dict | None = None
         self.builder_bridge: BuilderBridgeClient | None = None
-        self.livetalk = LiveTalkSession(status_callback=self._update_livetalk_status)
+        self.livetalk = LiveTalkSession(
+            status_callback=self._update_livetalk_status,
+            response_callback=self._update_livetalk_response,
+        )
         self.cue_dispatcher = CueDispatcher()
         self.cue_dispatcher.cue_requested.connect(self.move_ball_to_cue)
         self.bridge = LocalBridge(self.cue_dispatcher)
@@ -153,10 +156,10 @@ class GoatTrayApp:
             self.popup.screen_context_value.setText(result.transcript)
             self.popup.maya_value.setText(result.response_text)
             self.popup.audio_value.setText(
-                "STT {stt:.0f}ms / Chat {chat:.0f}ms / TTS {tts:.0f}ms / Aufnahme {rec:.1f}s".format(
+                "STT {stt:.0f}ms / Chat {chat:.0f}ms / TTS {tts} / Aufnahme {rec:.1f}s".format(
                     stt=result.stt_time_ms,
                     chat=result.chat_time_ms,
-                    tts=result.tts_time_ms,
+                    tts=("aus" if result.audio_pending else f"{result.tts_time_ms:.0f}ms"),
                     rec=result.record_seconds,
                 )
             )
@@ -205,12 +208,17 @@ class GoatTrayApp:
             "prepare": ("Gleich sprechen", "Nach dem Ton sprechen"),
             "listening": ("Nimmt auf", "Jetzt sprechen"),
             "thinking": ("Verarbeite Sprache", "Builder-STT laeuft"),
-            "speaking": ("Maya antwortet", "Builder-TTS laeuft"),
+            "speaking": ("Maya-Antwort steht", "Audio wird geladen"),
             "idle": ("bereit", "bereit, pausiert"),
         }
         screen_text, maya_text = labels.get(state, (state, "Half-Duplex"))
         self.popup.screen_context_value.setText(screen_text)
         self.popup.maya_value.setText(maya_text)
+        QApplication.processEvents()
+
+    def _update_livetalk_response(self, transcript: str, response_text: str) -> None:
+        self.popup.screen_context_value.setText(transcript)
+        self.popup.maya_value.setText(response_text)
         QApplication.processEvents()
 
     def request_test_cue(self) -> None:

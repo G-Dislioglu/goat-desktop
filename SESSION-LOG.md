@@ -14,6 +14,8 @@
 - Re-verified after Builder update: Soulmatch commit `ff43b6d` is live on Render and `/api/goat/chat` returns HTTP 200. Desktop chat smoke passed for `builder_default`, `gemini_flash_lite`, `gemini_flash`, and `grok_4_3`.
 - Routed Windows-SAPI LiveTalk audio through Maya chat after STT before TTS. This removes the local canned `Gehoert: ... Ich handle nur nach Freigabe.` response from the spoken path.
 - Reduced fixed LiveTalk wait time: default recording is now 3.0s and the prepare cue 0.35s. Added STT/Chat/TTS timing fields and a visible post-response timing breakdown in the popup audio row.
+- Guarded the TTS fallback: Maya text is now shown immediately after chat, Builder-TTS timeout defaults to 8s, and Windows-SAPI robot fallback is disabled unless explicitly enabled via `GOAT_LIVETALK_ALLOW_SAPI_FALLBACK=1`.
+- Switched LiveTalk to text-first latency mode by default: STT + Maya chat returns the visible answer, while automatic blocking TTS is off unless `GOAT_LIVETALK_AUTO_TTS=1`.
 - Upgraded canonical GOAT Desktop Vision spec to v1.1 after Run 0c evidence.
 - Added Run A native PyQt6 tray shell with movable mini-popup.
 - Kept Run A scope limited: no overlay, bridge, UIA, OCR, Vision, LiveTalk implementation, or actions.

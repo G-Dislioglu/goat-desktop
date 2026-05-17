@@ -53,7 +53,7 @@ def load_tts_config() -> TtsConfig:
     builder_url = _get_env("GOAT_BUILDER_URL")
     builder_token = _get_env("GOAT_BUILDER_TOKEN")
     mode = _parse_mode(_get_env("GOAT_TTS_MODE"), _default_tts_mode(builder_url, builder_token))
-    timeout = float(_get_env("GOAT_TTS_TIMEOUT_SECONDS", "20.0") or "20.0")
+    timeout = float(_get_env("GOAT_TTS_TIMEOUT_SECONDS", "8.0") or "8.0")
     return TtsConfig(
         mode=mode,
         builder_url=builder_url,

@@ -140,9 +140,10 @@ def test_livetalk_uses_builder_stt_when_available(monkeypatch, mock_stt_server, 
     assert result.transcript == "zeige das suchfeld"
     assert result.stt_provider == "test_stt"
     assert result.audio_recorded is True
-    assert result.audio_played is True
-    assert result.tts_provider == "windows_sapi"
-    assert result.completion_ready is False
+    assert result.audio_played is False
+    assert result.tts_provider == "not_requested"
+    assert result.completion_ready is True
+    assert result.audio_pending is True
 
 
 def _fake_wav(path: Path) -> bool:

@@ -122,6 +122,14 @@ def test_builder_tts_auto_enables_when_builder_credentials_exist(monkeypatch) ->
     assert load_tts_config().mode == TtsMode.BUILDER_PROXY
 
 
+def test_builder_tts_default_timeout_is_short_enough(monkeypatch) -> None:
+    monkeypatch.delenv("GOAT_TTS_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.setenv("GOAT_BUILDER_URL", "https://builder.example")
+    monkeypatch.setenv("GOAT_BUILDER_TOKEN", "test-token")
+
+    assert load_tts_config().timeout_seconds == 8.0
+
+
 def test_builder_tts_unauthorized_returns_uncertain(monkeypatch, mock_tts_server, tmp_path: Path) -> None:
     monkeypatch.setenv("GOAT_BUILDER_TOKEN", "bad-token")
     result = synthesize_speech("Ich helfe dir.", tmp_path / "response.wav")
@@ -140,6 +148,7 @@ def test_builder_tts_empty_audio_returns_uncertain(mock_tts_server, tmp_path: Pa
 
 def test_livetalk_completion_requires_builder_tts(monkeypatch, mock_tts_server, tmp_path: Path) -> None:
     monkeypatch.setenv("GOAT_LIVETALK_PROVIDER", "windows_sapi")
+    monkeypatch.setenv("GOAT_LIVETALK_AUTO_TTS", "1")
     monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
     monkeypatch.delenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", raising=False)
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
@@ -156,6 +165,24 @@ def test_livetalk_completion_requires_builder_tts(monkeypatch, mock_tts_server, 
     assert result.chat_time_ms == 123.0
     assert result.record_seconds == 3.0
     assert result.response_audio_path is not None
+    assert result.completion_ready is True
+
+
+def test_livetalk_default_returns_after_chat_without_blocking_tts(monkeypatch, mock_tts_server, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_LIVETALK_PROVIDER", "windows_sapi")
+    monkeypatch.delenv("GOAT_LIVETALK_AUTO_TTS", raising=False)
+    monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
+    monkeypatch.delenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", raising=False)
+    monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
+    monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
+    monkeypatch.setattr(livetalk, "request_chat_response", lambda message, context=None: ChatOk())
+    monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: (_ for _ in ()).throw(AssertionError("TTS should not block default LiveTalk")))
+
+    result = LiveTalkSession().run_once()
+
+    assert result.response_text == "Ich zeige das Suchfeld nur nach Freigabe."
+    assert result.tts_provider == "not_requested"
+    assert result.audio_pending is True
     assert result.completion_ready is True
 
 

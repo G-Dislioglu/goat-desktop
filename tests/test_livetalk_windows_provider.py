@@ -10,6 +10,7 @@ class DisabledTts:
     status = "uncertain"
     audio_path = None
     provider = "builder_default"
+    time_ms = 0.0
 
 
 class ChatOk:
@@ -48,15 +49,14 @@ def test_windows_sapi_provider_records_and_speaks_with_manual_transcript_but_is_
     monkeypatch.setattr(livetalk, "transcribe_audio", lambda audio_path: DisabledStt())
     monkeypatch.setattr(livetalk, "request_chat_response", lambda message, context=None: ChatOk())
     monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: DisabledTts())
-    monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: "mir geht es gut" in text.casefold())
 
     result = LiveTalkSession().run_once()
 
     assert result.provider == "windows_sapi"
     assert result.audio_recorded is True
-    assert result.audio_played is True
+    assert result.audio_played is False
     assert result.stt_provider == "manual"
-    assert result.tts_provider == "windows_sapi"
+    assert result.tts_provider == "not_requested"
     assert result.completion_ready is False
     assert result.audio_path is not None
 
@@ -75,12 +75,11 @@ def test_windows_sapi_provider_without_transcript_is_not_completion_ready(monkey
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
     monkeypatch.setattr(livetalk, "transcribe_audio", lambda audio_path: DisabledStt())
     monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: DisabledTts())
-    monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: True)
 
     result = LiveTalkSession().run_once()
 
     assert result.audio_recorded is True
-    assert result.audio_played is True
+    assert result.audio_played is False
     assert result.transcript == ""
     assert result.stt_provider == "none"
     assert result.completion_ready is False
@@ -100,7 +99,6 @@ def test_windows_sapi_provider_reports_empty_builder_transcript_clearly(monkeypa
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
     monkeypatch.setattr(livetalk, "transcribe_audio", lambda audio_path: EmptyStt())
     monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: DisabledTts())
-    monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: True)
 
     result = LiveTalkSession().run_once()
 
@@ -136,12 +134,38 @@ def test_windows_sapi_provider_defaults_to_three_second_recording_and_status_cue
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: states.append("cue"))
     monkeypatch.setattr(livetalk, "request_chat_response", lambda message, context=None: ChatOk())
     monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: DisabledTts())
+    monkeypatch.setenv("GOAT_LIVETALK_ALLOW_SAPI_FALLBACK", "1")
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: True)
 
     LiveTalkSession(status_callback=states.append).run_once()
 
     assert recorded_seconds == [3.0]
     assert states[:3] == ["prepare", "cue", "listening"]
+
+
+def test_livetalk_publishes_text_response_before_tts(monkeypatch, tmp_path: Path) -> None:
+    class SttOk:
+        status = "ok"
+        transcript = "hallo maya"
+        provider = "builder_default"
+        error = None
+        time_ms = 10.0
+
+    published: list[tuple[str, str]] = []
+
+    monkeypatch.setenv("GOAT_LIVETALK_PROVIDER", "windows_sapi")
+    monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
+    monkeypatch.delenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", raising=False)
+    monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
+    monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
+    monkeypatch.setattr(livetalk, "transcribe_audio", lambda audio_path: SttOk())
+    monkeypatch.setattr(livetalk, "request_chat_response", lambda message, context=None: ChatOk())
+    monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: DisabledTts())
+
+    result = LiveTalkSession(response_callback=lambda transcript, response: published.append((transcript, response))).run_once()
+
+    assert published == [("hallo maya", "Mir geht es gut. Wie kann ich dir helfen?")]
+    assert result.audio_played is False
 
 
 def _fake_wav(path: Path) -> bool:

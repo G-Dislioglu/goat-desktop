@@ -14,6 +14,12 @@ livetalk_audio_routes_through_maya_chat_2026_05_17:
 livetalk_latency_fast_path_2026_05_17:
 "LiveTalk-Latenz-Fix am 2026-05-17: feste Aufnahmezeit von 5.0s auf 3.0s reduziert und Vorbereitungszeit von 1.0/0.8s auf 0.35s reduziert. LiveTalkResult protokolliert jetzt stt_time_ms, chat_time_ms, tts_time_ms und record_seconds; das Popup zeigt nach jeder Antwort den Breakdown in der Audio-Zeile. Ziel: sofort ca. 2.5s weniger Wartezeit und klare Sicht darauf, ob TTS der naechste Flaschenhals ist."
 
+livetalk_tts_fallback_guard_2026_05_17:
+"LiveTalk-TTS-Fallback am 2026-05-17 korrigiert. Problem im UI-Test: Wenn Builder-TTS lange hing oder fehlschlug, sprach GOAT spaet noch mit Windows-SAPI-Roboterstimme. Neu: Die Maya-Textantwort wird direkt nach dem Chat-Call im Popup angezeigt, bevor Audio fertig ist; Builder-TTS-Timeout default ist 8s statt 20s; Windows-SAPI-Fallback ist standardmaessig aus und nur mit GOAT_LIVETALK_ALLOW_SAPI_FALLBACK=1 aktiv. Dadurch kein spaetes Roboter-Nachsprechen nach Wegklicken."
+
+livetalk_text_first_mode_2026_05_17:
+"LiveTalk wurde am 2026-05-17 auf Text-first-Latenzmodus gestellt. Standard: Nach Aufnahme, STT und Maya-Chat wird die Antwort sofort angezeigt; Builder-TTS wird nicht mehr automatisch blockierend gestartet. GOAT_LIVETALK_AUTO_TTS=1 aktiviert den alten Auto-Audio-Pfad explizit. Ergebnis: gefuehlte Antwortzeit haengt nicht mehr an 3-8s TTS-Generierung oder spaetem Playback; die Audio-Zeile zeigt TTS=aus, wenn kein Audio angefordert wurde."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 
