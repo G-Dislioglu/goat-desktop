@@ -18,6 +18,7 @@
 - Switched LiveTalk to text-first latency mode by default: STT + Maya chat returns the visible answer, while automatic blocking TTS is off unless `GOAT_LIVETALK_AUTO_TTS=1`.
 - Corrected the popup audio status for text-first mode: it now shows `Sprachausgabe aus` when auto-TTS is disabled instead of implying that TTS will speak automatically.
 - Added optional manual `Vorlesen` for LiveTalk answers: visible only after a Maya response in LiveTalk mode, runs Builder-TTS asynchronously, shows `Lade Audio...`, and reports TTS errors without Windows-SAPI fallback.
+- Added `gemini_live` as a GOAT Desktop LiveTalk provider. It connects to Builder `WSS /api/goat/voice`, sends recorded PCM audio, plays Gemini Live audio, and keeps the old STT->Chat->TTS path as fallback.
 - Upgraded canonical GOAT Desktop Vision spec to v1.1 after Run 0c evidence.
 - Added Run A native PyQt6 tray shell with movable mini-popup.
 - Kept Run A scope limited: no overlay, bridge, UIA, OCR, Vision, LiveTalk implementation, or actions.

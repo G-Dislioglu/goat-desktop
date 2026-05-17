@@ -161,14 +161,22 @@ class GoatTrayApp:
             self.popup.screen_context_value.setText(result.transcript)
             self.popup.maya_value.setText(result.response_text)
             self._set_read_aloud_available(result.response_text if result.audio_pending else "")
-            self.popup.audio_value.setText(
-                "STT {stt:.0f}ms / Chat {chat:.0f}ms / TTS {tts} / Aufnahme {rec:.1f}s".format(
-                    stt=result.stt_time_ms,
-                    chat=result.chat_time_ms,
-                    tts=("aus" if result.audio_pending else f"{result.tts_time_ms:.0f}ms"),
-                    rec=result.record_seconds,
+            if result.provider == "gemini_live":
+                self.popup.audio_value.setText(
+                    "Gemini Live {time:.0f}ms / Aufnahme {rec:.1f}s".format(
+                        time=result.chat_time_ms,
+                        rec=result.record_seconds,
+                    )
                 )
-            )
+            else:
+                self.popup.audio_value.setText(
+                    "STT {stt:.0f}ms / Chat {chat:.0f}ms / TTS {tts} / Aufnahme {rec:.1f}s".format(
+                        stt=result.stt_time_ms,
+                        chat=result.chat_time_ms,
+                        tts=("aus" if result.audio_pending else f"{result.tts_time_ms:.0f}ms"),
+                        rec=result.record_seconds,
+                    )
+                )
         except Exception as exc:
             self.popup.screen_context_value.setText("LiveTalk Fehler")
             self.popup.maya_value.setText(str(exc))
@@ -252,6 +260,11 @@ class GoatTrayApp:
         self.popup.audio_value.setText(f"Vorlesen fehlgeschlagen: {error}")
 
     def _refresh_audio_status(self) -> None:
+        if self.livetalk.provider == "gemini_live":
+            text = "Gemini Live aktiv"
+            self.popup.audio_value.setText(text)
+            self.popup.audio_chip.setText(f"Audio: {text}")
+            return
         stt = load_stt_config()
         tts = load_tts_config()
         stt_ready = stt.mode.value == "builder_proxy" and bool(stt.builder_url and stt.builder_token)
@@ -269,13 +282,22 @@ class GoatTrayApp:
         self.popup.audio_chip.setText(f"Audio: {text}")
 
     def _update_livetalk_status(self, state: str) -> None:
-        labels = {
-            "prepare": ("Gleich sprechen", "Nach dem Ton sprechen"),
-            "listening": ("Nimmt auf", "Jetzt sprechen"),
-            "thinking": ("Verarbeite Sprache", "Builder-STT laeuft"),
-            "speaking": ("Maya-Antwort steht", "Audio wird geladen"),
-            "idle": ("bereit", "bereit, pausiert"),
-        }
+        if self.livetalk.provider == "gemini_live":
+            labels = {
+                "prepare": ("Gleich sprechen", "Nach dem Ton sprechen"),
+                "listening": ("Nimmt auf", "Jetzt sprechen"),
+                "thinking": ("Gemini Live", "Antwort wird erzeugt"),
+                "speaking": ("Maya-Antwort steht", "Audio wird abgespielt"),
+                "idle": ("bereit", "bereit, pausiert"),
+            }
+        else:
+            labels = {
+                "prepare": ("Gleich sprechen", "Nach dem Ton sprechen"),
+                "listening": ("Nimmt auf", "Jetzt sprechen"),
+                "thinking": ("Verarbeite Sprache", "Builder-STT laeuft"),
+                "speaking": ("Maya-Antwort steht", "Audio wird geladen"),
+                "idle": ("bereit", "bereit, pausiert"),
+            }
         screen_text, maya_text = labels.get(state, (state, "Half-Duplex"))
         self.popup.screen_context_value.setText(screen_text)
         self.popup.maya_value.setText(maya_text)

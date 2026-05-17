@@ -26,6 +26,9 @@ livetalk_audio_status_text_first_2026_05_17:
 livetalk_read_aloud_button_2026_05_17:
 "Optionales Vorlesen im LiveTalk-Modus am 2026-05-17 implementiert. Standard bleibt Text-first ohne Auto-TTS. Wenn eine Maya-Antwort vorhanden ist, erscheint im LiveTalk-Modus ein Button 'Vorlesen'. Klick startet Builder-TTS asynchron, zeigt waehrenddessen 'Lade Audio...' und spielt nur bei erfolgreichem Builder-WAV ab. Bei TTS-Fehlern erscheint eine sichtbare Fehlermeldung; Windows-SAPI-Fallback wird in diesem manuellen Vorlesen-Pfad nicht verwendet."
 
+livetalk_gemini_live_provider_2026_05_18:
+"GOAT Desktop hat jetzt einen `gemini_live` LiveTalk-Provider. Aktivierung: `GOAT_LIVETALK_PROVIDER=gemini_live`. Der Desktop nimmt lokal eine WAV auf, verbindet sich per WebSocket mit Builder `WSS /api/goat/voice`, sendet PCM-Audio und spielt die Gemini-Live-Audioantwort ab. Die alte STT->Chat->TTS-Pipeline bleibt als `windows_sapi` Fallback erhalten. UI-Status zeigt fuer diesen Modus `Gemini Live aktiv`. Stand heute: erster Desktop-Client ist record-then-send, noch kein echtes Push-to-talk/gleichzeitiges Streaming. Tests gruen: compileall und 31 relevante LiveTalk/Builder-Proxy-Tests."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 

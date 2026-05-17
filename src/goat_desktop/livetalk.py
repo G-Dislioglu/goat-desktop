@@ -13,6 +13,7 @@ from pathlib import Path
 from time import perf_counter
 
 from goat_desktop.chat_hint import request_chat_response
+from goat_desktop.livetalk_live import request_gemini_live_turn
 from goat_desktop.stt_hint import transcribe_audio
 from goat_desktop.tts_hint import synthesize_speech
 
@@ -73,6 +74,12 @@ class LiveTalkSession:
 
     def run_once(self) -> LiveTalkResult:
         started = perf_counter()
+        if self.provider == "gemini_live":
+            result = self._run_gemini_live(started)
+            self.last_result = result
+            self._set_state("idle")
+            return result
+
         if self.provider == "windows_sapi":
             result = self._run_windows_sapi(started)
             self.last_result = result
@@ -102,6 +109,44 @@ class LiveTalkSession:
         self.last_result = result
         self._set_state("idle")
         return result
+
+    def _run_gemini_live(self, started: float) -> LiveTalkResult:
+        self.audio_dir.mkdir(parents=True, exist_ok=True)
+        audio_path = self.audio_dir / "livetalk-last-recording.wav"
+        response_audio_path = self.audio_dir / "livetalk-live-response.wav"
+        record_seconds = float(os.environ.get("GOAT_LIVETALK_RECORD_SECONDS", "3.0"))
+        prepare_seconds = float(os.environ.get("GOAT_LIVETALK_PREPARE_SECONDS", "0.35"))
+
+        self._set_state("prepare")
+        signal_recording_start(prepare_seconds)
+        self._set_state("listening")
+        audio_recorded = record_windows_wav(audio_path, record_seconds)
+        self._set_state("thinking")
+        live_result = request_gemini_live_turn(audio_path, response_audio_path)
+        transcript = live_result.transcript
+        response_text = live_result.response_text
+        self._publish_response(transcript, response_text)
+        self._set_state("speaking")
+        audio_played = bool(live_result.audio_path and play_windows_wav(Path(live_result.audio_path)))
+        return LiveTalkResult(
+            provider="gemini_live",
+            mode="full_duplex_proxy",
+            transcript=transcript,
+            response_text=response_text,
+            time_ms=round((perf_counter() - started) * 1000, 2),
+            audio_recorded=audio_recorded,
+            audio_played=audio_played,
+            stt_provider="gemini_live",
+            tts_provider="gemini_live",
+            stt_time_ms=0.0,
+            chat_time_ms=float(live_result.time_ms),
+            tts_time_ms=0.0,
+            record_seconds=record_seconds,
+            audio_path=str(audio_path),
+            response_audio_path=live_result.audio_path,
+            completion_ready=bool(audio_recorded and live_result.status == "ok" and (audio_played or response_text)),
+            audio_pending=False,
+        )
 
     def _run_windows_sapi(self, started: float) -> LiveTalkResult:
         self.audio_dir.mkdir(parents=True, exist_ok=True)
