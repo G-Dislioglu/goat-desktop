@@ -196,9 +196,15 @@ class GoatTrayApp:
         stt = load_stt_config()
         tts = load_tts_config()
         stt_ready = stt.mode.value == "builder_proxy" and bool(stt.builder_url and stt.builder_token)
-        tts_ready = tts.mode.value == "builder_proxy" and bool(tts.builder_url and tts.builder_token)
+        auto_tts = os.environ.get("GOAT_LIVETALK_AUTO_TTS", "").strip().lower() in {"1", "true", "yes", "on"}
+        tts_ready = auto_tts and tts.mode.value == "builder_proxy" and bool(tts.builder_url and tts.builder_token)
         stt_label = "STT Builder aktiv" if stt_ready else f"STT {stt.mode.value}"
-        tts_label = "TTS Builder aktiv" if tts_ready else f"TTS {tts.mode.value}"
+        if tts_ready:
+            tts_label = "TTS Builder aktiv"
+        elif not auto_tts:
+            tts_label = "Sprachausgabe aus"
+        else:
+            tts_label = f"TTS {tts.mode.value}"
         text = f"{stt_label} / {tts_label}"
         self.popup.audio_value.setText(text)
         self.popup.audio_chip.setText(f"Audio: {text}")

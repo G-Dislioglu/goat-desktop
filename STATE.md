@@ -20,6 +20,9 @@ livetalk_tts_fallback_guard_2026_05_17:
 livetalk_text_first_mode_2026_05_17:
 "LiveTalk wurde am 2026-05-17 auf Text-first-Latenzmodus gestellt. Standard: Nach Aufnahme, STT und Maya-Chat wird die Antwort sofort angezeigt; Builder-TTS wird nicht mehr automatisch blockierend gestartet. GOAT_LIVETALK_AUTO_TTS=1 aktiviert den alten Auto-Audio-Pfad explizit. Ergebnis: gefuehlte Antwortzeit haengt nicht mehr an 3-8s TTS-Generierung oder spaetem Playback; die Audio-Zeile zeigt TTS=aus, wenn kein Audio angefordert wurde."
 
+livetalk_audio_status_text_first_2026_05_17:
+"Audio-Statusanzeige am 2026-05-17 korrigiert. Im Text-first-Standardmodus zeigte das Popup trotz deaktivierter Auto-Sprachausgabe weiter 'TTS Builder aktiv', weil nur die Builder-TTS-Konfiguration geprueft wurde. Neu: Wenn GOAT_LIVETALK_AUTO_TTS nicht aktiv ist, zeigt die UI 'STT Builder aktiv / Sprachausgabe aus'. Dadurch ist klar: Spracheingabe ist aktiv, Antwort kommt als Text, Vorlesen ist nicht automatisch eingeschaltet."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 
