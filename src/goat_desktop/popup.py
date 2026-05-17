@@ -24,6 +24,7 @@ class GoatPopup(QWidget):
 
         self.setWindowTitle("GOAT Desktop")
         self.setMinimumSize(860, 620)
+        self._preferred_size = (1040, 720)
         self.resize(1040, 720)
         self.setWindowFlag(Qt.WindowType.Window, True)
 
@@ -47,8 +48,11 @@ class GoatPopup(QWidget):
             return
         area = screen.availableGeometry()
         margin = 18
-        width = min(self.width(), max(self.minimumWidth(), area.width() - margin * 2))
-        height = min(self.height(), max(self.minimumHeight(), area.height() - margin * 2))
+        preferred_width, preferred_height = self._preferred_size
+        current_width = preferred_width if self.width() > 1400 else self.width()
+        current_height = preferred_height if self.height() > 900 else self.height()
+        width = min(current_width, max(self.minimumWidth(), area.width() - margin * 2))
+        height = min(current_height, max(self.minimumHeight(), area.height() - margin * 2))
         if width != self.width() or height != self.height():
             self.resize(width, height)
         x = min(max(self.x(), area.left() + margin), area.right() - self.width() - margin)
