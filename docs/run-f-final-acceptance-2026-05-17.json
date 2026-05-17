@@ -1,0 +1,15 @@
+{
+  "date": "2026-05-17",
+  "run": "F",
+  "acceptance_passed": true,
+  "ui_visible": true,
+  "audio_status": "STT Builder aktiv / TTS Builder aktiv",
+  "transcript": "Zeige mir das Suchfeld.",
+  "response_text": "Gehoert: Zeige mir das Suchfeld.. Ich handle nur nach Freigabe.",
+  "stt_provider": "builder_default",
+  "tts_provider": "builder_default",
+  "path": "visible GOAT Desktop UI -> microphone -> Builder STT -> Builder TTS -> local playback",
+  "screenshot": "docs/screenshots/run-f-final-acceptance-2026-05-17.png",
+  "audio_artifacts_committed": false,
+  "dns_override": "GOAT_BUILDER_RESOLVE_IP=216.24.57.7"
+}
