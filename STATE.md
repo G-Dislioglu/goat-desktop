@@ -86,6 +86,9 @@ run_f_recording_cue_code_ready_2026_05_17:
 run_f_builder_audio_auto_mode_2026_05_17:
 "STT/TTS-Konfiguration fuer LiveTalk robuster gemacht. Wenn GOAT_BUILDER_URL und GOAT_BUILDER_TOKEN im Prozess sichtbar sind, aktivieren load_stt_config() und load_tts_config() automatisch builder_proxy, auch wenn GOAT_STT_MODE oder GOAT_TTS_MODE nicht separat gesetzt sind. Anlass: UI-Test zeigte 'Audio wurde aufgenommen. STT ist noch nicht konfiguriert.', obwohl Builder-Zugang als User-Environment vorhanden war. Tests gruen: compileall und 16 LiveTalk/STT/TTS-Tests. Run F bleibt bis erfolgreicher UI-Mikrofon-Acceptance nicht completed."
 
+run_f_builder_audio_user_env_fallback_2026_05_17:
+"STT/TTS-Konfiguration liest GOAT_BUILDER_URL und GOAT_BUILDER_TOKEN jetzt bei fehlender Prozess-Env direkt aus Windows HKCU/Environment. Anlass: sichtbare GOAT-UI lief ohne Prozess-Env und zeigte weiter 'STT ist noch nicht konfiguriert'. Verifikation: Python-Prozess ohne GOAT_BUILDER_URL/GOAT_BUILDER_TOKEN in os.environ laedt beide Werte aus User-Env und setzt stt_mode=builder_proxy sowie tts_mode=builder_proxy. Tests gruen: compileall und 16 LiveTalk/STT/TTS-Tests. Keine Secrets committed."
+
 run_e_multi_provider_code_ready_2026_05_17:
 "vision_hint.py wurde um Multi-Provider-Vision-Hint erweitert (gemini_flash_lite, grok_4_3, gemini_flash). Reasoning-Level konfigurierbar (minimal, low, medium, high). User-Wahl im Popup ueber zwei Dropdowns, Persistierung in vision_config.json unter APPDATA/GoatDesktop. Default: gemini_flash_lite + minimal. Builder-Proxy-Modus nutzt GOAT_VISION_MODE=builder_proxy, GOAT_BUILDER_URL, GOAT_BUILDER_TOKEN, GOAT_VISION_PROVIDER und GOAT_VISION_REASONING. Unit-Tests mit Mock-Server gruen: 8 passed. Acceptance gegen echten /api/goat/vision-hint folgt sobald Soulmatch-Builder den Endpoint gepusht hat. Fail-Safe bei Builder-Offline/Timeout/HTTP-Fehler: uncertain-Hint, kein stiller Mock-Switch. run_e_completed bleibt bewusst nicht gesetzt."
 

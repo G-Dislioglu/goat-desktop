@@ -7,6 +7,7 @@ import socket
 import time
 import urllib.error
 import urllib.request
+import winreg
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from enum import StrEnum
@@ -45,15 +46,15 @@ class SttResult:
 
 
 def load_stt_config() -> SttConfig:
-    builder_url = os.environ.get("GOAT_BUILDER_URL")
-    builder_token = os.environ.get("GOAT_BUILDER_TOKEN")
-    mode = _parse_mode(os.environ.get("GOAT_STT_MODE"), _default_stt_mode(builder_url, builder_token))
-    timeout = float(os.environ.get("GOAT_STT_TIMEOUT_SECONDS", "8.0"))
+    builder_url = _get_env("GOAT_BUILDER_URL")
+    builder_token = _get_env("GOAT_BUILDER_TOKEN")
+    mode = _parse_mode(_get_env("GOAT_STT_MODE"), _default_stt_mode(builder_url, builder_token))
+    timeout = float(_get_env("GOAT_STT_TIMEOUT_SECONDS", "8.0") or "8.0")
     return SttConfig(
         mode=mode,
         builder_url=builder_url,
         builder_token=builder_token,
-        provider=os.environ.get("GOAT_STT_PROVIDER", "builder_default"),
+        provider=_get_env("GOAT_STT_PROVIDER", "builder_default") or "builder_default",
         timeout_seconds=max(0.5, timeout),
     )
 
@@ -126,6 +127,18 @@ def _default_stt_mode(builder_url: str | None, builder_token: str | None) -> Stt
     if builder_url and builder_token:
         return SttMode.BUILDER_PROXY
     return SttMode.DISABLED
+
+
+def _get_env(name: str, default: str | None = None) -> str | None:
+    value = os.environ.get(name)
+    if value:
+        return value
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as key:
+            value, _value_type = winreg.QueryValueEx(key, name)
+    except OSError:
+        return default
+    return str(value) if value else default
 
 
 def _uncertain_result(

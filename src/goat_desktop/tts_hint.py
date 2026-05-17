@@ -7,6 +7,7 @@ import socket
 import time
 import urllib.error
 import urllib.request
+import winreg
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from enum import StrEnum
@@ -49,17 +50,17 @@ class TtsResult:
 
 
 def load_tts_config() -> TtsConfig:
-    builder_url = os.environ.get("GOAT_BUILDER_URL")
-    builder_token = os.environ.get("GOAT_BUILDER_TOKEN")
-    mode = _parse_mode(os.environ.get("GOAT_TTS_MODE"), _default_tts_mode(builder_url, builder_token))
-    timeout = float(os.environ.get("GOAT_TTS_TIMEOUT_SECONDS", "20.0"))
+    builder_url = _get_env("GOAT_BUILDER_URL")
+    builder_token = _get_env("GOAT_BUILDER_TOKEN")
+    mode = _parse_mode(_get_env("GOAT_TTS_MODE"), _default_tts_mode(builder_url, builder_token))
+    timeout = float(_get_env("GOAT_TTS_TIMEOUT_SECONDS", "20.0") or "20.0")
     return TtsConfig(
         mode=mode,
         builder_url=builder_url,
         builder_token=builder_token,
-        provider=os.environ.get("GOAT_TTS_PROVIDER", "builder_default"),
-        voice=os.environ.get("GOAT_TTS_VOICE", "maya_de"),
-        language=os.environ.get("GOAT_TTS_LANGUAGE", "de-DE"),
+        provider=_get_env("GOAT_TTS_PROVIDER", "builder_default") or "builder_default",
+        voice=_get_env("GOAT_TTS_VOICE", "maya_de") or "maya_de",
+        language=_get_env("GOAT_TTS_LANGUAGE", "de-DE") or "de-DE",
         timeout_seconds=max(1.0, timeout),
     )
 
@@ -151,6 +152,18 @@ def _default_tts_mode(builder_url: str | None, builder_token: str | None) -> Tts
     if builder_url and builder_token:
         return TtsMode.BUILDER_PROXY
     return TtsMode.DISABLED
+
+
+def _get_env(name: str, default: str | None = None) -> str | None:
+    value = os.environ.get(name)
+    if value:
+        return value
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as key:
+            value, _value_type = winreg.QueryValueEx(key, name)
+    except OSError:
+        return default
+    return str(value) if value else default
 
 
 def _uncertain_result(
