@@ -22,8 +22,8 @@ class GoatPopup(QWidget):
         self._drag_start: QPoint | None = None
 
         self.setWindowTitle("GOAT Desktop")
-        self.setMinimumSize(520, 300)
-        self.resize(540, 320)
+        self.setMinimumSize(560, 340)
+        self.resize(580, 360)
         self.setWindowFlag(Qt.WindowType.Window, True)
 
         self._build_ui()
@@ -76,6 +76,9 @@ class GoatPopup(QWidget):
         self.connection_value = QLabel("offline")
         self.screen_context_value = QLabel("-")
         self.maya_value = QLabel("bereit, pausiert")
+        for value_label in (self.connection_value, self.screen_context_value, self.maya_value):
+            value_label.setWordWrap(True)
+            value_label.setMinimumWidth(260)
 
         grid.addWidget(QLabel("Verbindung"), 0, 0)
         grid.addWidget(self.connection_value, 0, 1)
@@ -91,8 +94,7 @@ class GoatPopup(QWidget):
 
         stop_button = QPushButton("Pause / Stop")
         stop_button.setEnabled(False)
-        talk_button = QPushButton("LiveTalk")
-        talk_button.setEnabled(False)
+        self.talk_button = QPushButton("LiveTalk")
         self.cue_test = QPushButton("Cue testen")
         self.cue_approve = QPushButton("Cue freigeben")
         self.cue_reject = QPushButton("Cue ablehnen")
@@ -100,7 +102,7 @@ class GoatPopup(QWidget):
         self.cue_reject.setEnabled(False)
 
         actions.addWidget(stop_button, 0, 0)
-        actions.addWidget(talk_button, 0, 1)
+        actions.addWidget(self.talk_button, 0, 1)
         actions.addWidget(self.cue_test, 1, 0, 1, 2)
         actions.addWidget(self.cue_approve, 2, 0)
         actions.addWidget(self.cue_reject, 2, 1)

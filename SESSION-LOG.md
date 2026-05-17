@@ -34,3 +34,7 @@
 - Added a Vision Hint adapter with disabled, mock, and OpenAI-compatible modes.
 - Added `/vision-hint` and Broker logging for semantic hints, while preserving the rule that Vision-only can never produce `accept`.
 - Left Run E at `code_ready`; real provider latency, JSON stability, and UI-semantic accuracy still need measurement before any default provider is named.
+- Started Run F as a Half-Duplex LiveTalk shell because no real STT/TTS provider is configured.
+- Added a deterministic mock LiveTalk session and enabled the popup `LiveTalk` button.
+- Verified Run F code-ready with a screenshot showing the mock transcript and Maya response; no audio was recorded or played.
+- Left Run F at `code_ready`; real microphone/STT/TTS verification is still required before completion.

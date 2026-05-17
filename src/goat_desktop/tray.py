@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 from goat_desktop.builder_bridge import BuilderBridgeClient
 from goat_desktop.bridge import CueDispatcher, LocalBridge
 from goat_desktop.hotkey import EmergencyHotkey
+from goat_desktop.livetalk import LiveTalkSession
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
 
@@ -31,6 +32,7 @@ class GoatTrayApp:
         self.pending_builder_cue: dict | None = None
         self.last_builder_cue_response: dict | None = None
         self.builder_bridge: BuilderBridgeClient | None = None
+        self.livetalk = LiveTalkSession()
         self.cue_dispatcher = CueDispatcher()
         self.cue_dispatcher.cue_requested.connect(self.move_ball_to_cue)
         self.bridge = LocalBridge(self.cue_dispatcher)
@@ -116,6 +118,21 @@ class GoatTrayApp:
         self.popup.cue_test.clicked.connect(self.request_test_cue)
         self.popup.cue_approve.clicked.connect(self.approve_pending_cue)
         self.popup.cue_reject.clicked.connect(self.reject_pending_cue)
+        self.popup.talk_button.clicked.connect(self.run_livetalk_once)
+
+    def run_livetalk_once(self) -> None:
+        self.popup.talk_button.setEnabled(False)
+        self.popup.screen_context_value.setText("LiveTalk hoert")
+        self.popup.maya_value.setText("Half-Duplex")
+        try:
+            result = self.livetalk.run_once()
+            self.popup.screen_context_value.setText(result.transcript)
+            self.popup.maya_value.setText(result.response_text)
+        except Exception as exc:
+            self.popup.screen_context_value.setText("LiveTalk Fehler")
+            self.popup.maya_value.setText(str(exc))
+        finally:
+            self.popup.talk_button.setEnabled(True)
 
     def request_test_cue(self) -> None:
         self.popup.hide()
