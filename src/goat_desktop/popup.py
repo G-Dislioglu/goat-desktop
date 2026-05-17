@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PyQt6.QtCore import QEvent, QPoint, QTimer, Qt
+from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import (
     QApplication,
@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -23,9 +24,9 @@ class GoatPopup(QWidget):
         self._drag_start: QPoint | None = None
 
         self.setWindowTitle("GOAT Desktop")
-        self.setMinimumSize(560, 420)
-        self._preferred_size = (680, 500)
-        self._livetalk_size = (520, 360)
+        self.setMinimumSize(500, 360)
+        self._preferred_size = (620, 450)
+        self._livetalk_size = (430, 320)
         self.resize(*self._preferred_size)
         self.setWindowFlag(Qt.WindowType.Window, True)
 
@@ -80,17 +81,6 @@ class GoatPopup(QWidget):
         self._drag_start = None
         super().mouseReleaseEvent(event)
 
-    def changeEvent(self, event) -> None:
-        super().changeEvent(event)
-        if event.type() == QEvent.Type.WindowStateChange and self.isMinimized():
-            QTimer.singleShot(50, self.recover_from_minimize)
-
-    def recover_from_minimize(self) -> None:
-        self.showNormal()
-        self.restore_preferred_size()
-        self.raise_()
-        self.activateWindow()
-
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
         root.setContentsMargins(14, 12, 14, 12)
@@ -134,6 +124,17 @@ class GoatPopup(QWidget):
         output_layout.addWidget(self.screen_context_value)
         output_layout.addWidget(self.maya_value)
         root.addWidget(output_panel, 1)
+
+        self.chat_row = QHBoxLayout()
+        self.chat_row.setSpacing(8)
+        self.chat_input = QLineEdit()
+        self.chat_input.setPlaceholderText("Nachricht schreiben...")
+        self.chat_send = QPushButton("Senden")
+        self.chat_row.addWidget(self.chat_input, 1)
+        self.chat_row.addWidget(self.chat_send)
+        self.chat_input.setVisible(False)
+        self.chat_send.setVisible(False)
+        root.addLayout(self.chat_row)
 
         actions = QGridLayout()
         actions.setHorizontalSpacing(10)
@@ -188,12 +189,12 @@ class GoatPopup(QWidget):
             }
             QFrame#panel {
                 border: 1px solid #3a3f4b;
-                border-radius: 6px;
+                border-radius: 10px;
                 background: #20232b;
             }
             QLabel#chip {
                 border: 1px solid #3a3f4b;
-                border-radius: 6px;
+                border-radius: 10px;
                 background: #20232b;
                 padding: 7px 9px;
                 color: #d7dce6;
@@ -206,26 +207,40 @@ class GoatPopup(QWidget):
             QLabel#output {
                 background: #17191f;
                 border: 1px solid #2f3542;
-                border-radius: 5px;
+                border-radius: 10px;
                 padding: 8px 9px;
                 min-height: 44px;
             }
             QPushButton {
                 background: #2d3340;
                 border: 1px solid #4a5364;
-                border-radius: 5px;
+                border-radius: 10px;
                 padding: 8px 10px;
                 color: #d7dce6;
             }
+            QPushButton:hover {
+                background: #394254;
+                border-color: #6c7890;
+            }
+            QPushButton:pressed {
+                background: #242a35;
+            }
             QPushButton:disabled {
                 color: #8d95a3;
+                background: #252b36;
             }
-            QComboBox {
+            QComboBox, QLineEdit {
                 background: #2d3340;
                 border: 1px solid #4a5364;
-                border-radius: 5px;
+                border-radius: 10px;
                 padding: 5px 8px;
                 color: #d7dce6;
+            }
+            QComboBox:hover, QLineEdit:hover {
+                border-color: #6c7890;
+            }
+            QLineEdit:focus {
+                border-color: #ffd94a;
             }
             """
         )
@@ -243,10 +258,14 @@ class GoatPopup(QWidget):
         self.cue_reject.setVisible(not active)
         self.exit_livetalk.setVisible(active)
         self.target_value.setVisible(not active)
+        self.chat_input.setVisible(active)
+        self.chat_send.setVisible(active)
         self.talk_button.setText("Nochmal sprechen" if active else "LiveTalk")
         width, height = self._livetalk_size if active else self._preferred_size
         self.resize(width, height)
         self.ensure_visible()
+        if active:
+            self.chat_input.setFocus()
 
     def _set_reasoning_tooltips(self) -> None:
         self.vision_reasoning.setItemData(0, "Schnellste Antwort (ca. 700ms), Standard", Qt.ItemDataRole.ToolTipRole)

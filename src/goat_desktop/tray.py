@@ -120,6 +120,8 @@ class GoatTrayApp:
         self.popup.cue_reject.clicked.connect(self.reject_pending_cue)
         self.popup.talk_button.clicked.connect(self.run_livetalk_once)
         self.popup.exit_livetalk.clicked.connect(self.exit_livetalk_mode)
+        self.popup.chat_send.clicked.connect(self.send_chat_message)
+        self.popup.chat_input.returnPressed.connect(self.send_chat_message)
         self.popup.vision_provider.currentIndexChanged.connect(self._save_vision_config)
         self.popup.vision_reasoning.currentIndexChanged.connect(self._save_vision_config)
 
@@ -160,6 +162,14 @@ class GoatTrayApp:
         self.popup.set_livetalk_mode(False)
         self.popup.screen_context_value.setText("-")
         self.popup.maya_value.setText("bereit, pausiert")
+
+    def send_chat_message(self) -> None:
+        text = self.popup.chat_input.text().strip()
+        if not text:
+            return
+        self.popup.chat_input.clear()
+        self.popup.screen_context_value.setText(text)
+        self.popup.maya_value.setText(f"Gelesen: {text}. Ich handle nur nach Freigabe.")
 
     def _refresh_audio_status(self) -> None:
         stt = load_stt_config()

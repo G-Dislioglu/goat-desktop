@@ -102,3 +102,4 @@
 - Added automatic minimize recovery: if Windows moves the GOAT popup to the minimized -32000 coordinate state, the popup restores itself to normal size and visible screen bounds.
 - Simplified the visible popup for product use: removed static label table, dev cue-test button, and manual ball direction controls; the ball is now treated as a GOAT-controlled target marker in the main UI.
 - Added a compact LiveTalk mode that hides settings while speaking/listening and renamed the reasoning dropdown to explicit `Denkmodus` labels.
+- Added text chat input to LiveTalk mode, reduced LiveTalk logical size from 520x360 to 430x320, restored normal taskbar minimization behavior, and polished corners/hover states.
