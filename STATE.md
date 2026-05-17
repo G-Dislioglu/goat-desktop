@@ -71,6 +71,9 @@ run_f_stt_builder_smoke_2026_05_17:
 run_f_live_microphone_attempt_2026_05_17:
 "Live-Mikrofon-Acceptance fuer Run F versucht am 2026-05-17. Technischer Pfad funktioniert: audio_recorded=true, Builder-STT antwortet, audio_played=true. Acceptance nicht bestanden: erwarteter Satz 'zeige das suchfeld', erkannt wurde 'GOAT Desktop'. TTS wurde daraufhin auf deutsche Windows-SAPI-Stimme priorisiert (German/Deutsch/Hedda; auf dieser Maschine Microsoft Hedda Desktop - German vorhanden). Audio-WAV wurde geloescht und nicht committed. Artefakte: docs/run-f-live-microphone-attempt-report-2026-05-17.md und docs/run-f-live-microphone-acceptance-2026-05-17.json. Run F bleibt nicht completed."
 
+run_f2_builder_tts_code_ready_2026_05_17:
+"Desktop-seitiger Builder-TTS-Proxy fuer Run F2 angelegt am 2026-05-17. Implementiert: tts_hint.py mit GOAT_TTS_MODE=builder_proxy, POST /api/goat/tts, Bearer-Auth, deutschem Default GOAT_TTS_LANGUAGE=de-DE, GOAT_TTS_VOICE=maya_de und Aussprache-Hints fuer GOAT/Maya. LiveTalk nutzt jetzt Builder-TTS fuer die Antwort und Windows-SAPI nur noch als Fallback; completion_ready wird nur true, wenn realer STT und Builder-TTS beide erfolgreich sind. Live-Check: /api/goat/tts liefert aktuell 404, Builder-Endpunkt fehlt noch. Tests gruen: 13 passed fuer TTS/STT/LiveTalk-Subset. Artefakt: docs/run-f2-builder-tts-code-ready-report-2026-05-17.md."
+
 run_e_multi_provider_code_ready_2026_05_17:
 "vision_hint.py wurde um Multi-Provider-Vision-Hint erweitert (gemini_flash_lite, grok_4_3, gemini_flash). Reasoning-Level konfigurierbar (minimal, low, medium, high). User-Wahl im Popup ueber zwei Dropdowns, Persistierung in vision_config.json unter APPDATA/GoatDesktop. Default: gemini_flash_lite + minimal. Builder-Proxy-Modus nutzt GOAT_VISION_MODE=builder_proxy, GOAT_BUILDER_URL, GOAT_BUILDER_TOKEN, GOAT_VISION_PROVIDER und GOAT_VISION_REASONING. Unit-Tests mit Mock-Server gruen: 8 passed. Acceptance gegen echten /api/goat/vision-hint folgt sobald Soulmatch-Builder den Endpoint gepusht hat. Fail-Safe bei Builder-Offline/Timeout/HTTP-Fehler: uncertain-Hint, kein stiller Mock-Switch. run_e_completed bleibt bewusst nicht gesetzt."
 
@@ -103,7 +106,7 @@ run_g_integration_completed_2026_05_17:
 
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready with Windows audio record/playback probe, desktop-side STT Builder proxy, and live Builder-STT smoke; final live microphone acceptance is pending. Run G1 action-gating skeleton is code-ready. Run G2 controlled Stage-1 executor is completed for hover and scroll only. Run G3 Stage-2 text input is completed for one-line safe-context input only. Run G4 Stage-3 hard approval review is completed without OS execution. Run G5 classification hardening is completed. G1-G5 integration chain is completed.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready with Windows audio record/playback probe, desktop-side STT Builder proxy, live Builder-STT smoke, and desktop-side Builder-TTS proxy. Final live microphone acceptance is pending until Builder TTS is live. Run G1 action-gating skeleton is code-ready. Run G2 controlled Stage-1 executor is completed for hover and scroll only. Run G3 Stage-2 text input is completed for one-line safe-context input only. Run G4 Stage-3 hard approval review is completed without OS execution. Run G5 classification hardening is completed. G1-G5 integration chain is completed.
 
 ## Verified
 
@@ -124,6 +127,7 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run F Windows audio probe records a local WAV and plays a SAPI response; real STT remains unverified.
 - Run F desktop-side STT Builder proxy tests pass against a local mock server; real Soulmatch endpoint is pending.
 - Run F live Builder-STT endpoint smoke passes with a synthetic SAPI WAV and returns transcript plus confidence.
+- Run F2 desktop-side Builder-TTS proxy tests pass against a local mock server; live /api/goat/tts currently returns 404.
 - Run G1 action-gate tests pass and audit lineage is written for dry-run decisions.
 - Run G2 Stage-1 executor tests pass and mock-backend audit lineage is written for executed scroll/hover plus blocked non-scope actions.
 - Run G2 real desktop acceptance executed hover and scroll in a dedicated safe Tk window, with visually clean before/after screenshots.

@@ -11,6 +11,7 @@ from pathlib import Path
 from time import perf_counter
 
 from goat_desktop.stt_hint import transcribe_audio
+from goat_desktop.tts_hint import synthesize_speech
 
 
 @dataclass(frozen=True)
@@ -25,6 +26,7 @@ class LiveTalkResult:
     stt_provider: str = "none"
     tts_provider: str = "none"
     audio_path: str | None = None
+    response_audio_path: str | None = None
     completion_ready: bool = False
 
     def to_dict(self) -> dict:
@@ -93,7 +95,16 @@ class LiveTalkSession:
         else:
             response_text = "Audio wurde aufgenommen. STT ist noch nicht konfiguriert."
         self.state = "speaking"
-        audio_played = speak_windows_sapi(response_text)
+        response_audio_path = self.audio_dir / "livetalk-last-response.wav"
+        tts_result = synthesize_speech(response_text, response_audio_path)
+        if tts_result.status == "ok" and tts_result.audio_path:
+            audio_played = play_windows_wav(Path(tts_result.audio_path))
+            tts_provider = tts_result.provider
+            final_response_audio_path = tts_result.audio_path
+        else:
+            audio_played = speak_windows_sapi(response_text)
+            tts_provider = "windows_sapi"
+            final_response_audio_path = None
         return LiveTalkResult(
             provider="windows_sapi",
             mode="half_duplex",
@@ -103,9 +114,12 @@ class LiveTalkSession:
             audio_recorded=audio_recorded,
             audio_played=audio_played,
             stt_provider=stt_result.provider if stt_result.status == "ok" else ("manual" if manual_transcript else "none"),
-            tts_provider="windows_sapi",
+            tts_provider=tts_provider,
             audio_path=str(audio_path),
-            completion_ready=bool(audio_recorded and audio_played and stt_result.status == "ok" and transcript),
+            response_audio_path=final_response_audio_path,
+            completion_ready=bool(
+                audio_recorded and audio_played and stt_result.status == "ok" and tts_result.status == "ok" and transcript
+            ),
         )
 
 
@@ -147,6 +161,18 @@ def speak_windows_sapi(text: str) -> bool:
         check=False,
     )
     return completed.returncode == 0
+
+
+def play_windows_wav(audio_path: Path) -> bool:
+    if not audio_path.exists():
+        return False
+    alias = "goat_tts_playback"
+    _mci(f'open "{audio_path}" type waveaudio alias {alias}')
+    try:
+        _mci(f"play {alias} wait")
+    finally:
+        _mci(f"close {alias}", raise_on_error=False)
+    return True
 
 
 def _mci(command: str, raise_on_error: bool = True) -> str:

@@ -81,3 +81,7 @@
 - Kept Run F not completed because this was a synthetic WAV smoke, not live microphone acceptance.
 - Attempted live microphone acceptance. Technical path worked, but STT recognized `GOAT Desktop` instead of `zeige das suchfeld`, so Run F remains not completed.
 - Updated Windows SAPI playback to prefer a German voice (`German`, `Deutsch`, or `Hedda`) because the audible response used the default English-sounding voice.
+- Accepted that Windows SAPI is not the target Maya voice; it is too robotic and spells `GOAT`.
+- Added desktop-side Builder-TTS proxy support in `tts_hint.py` for `POST /api/goat/tts`, with German defaults and pronunciation hints.
+- Wired LiveTalk to require both real Builder STT and Builder TTS for `completion_ready=true`; Windows SAPI is fallback only.
+- Live check shows `/api/goat/tts` currently returns 404, so Builder work is needed before final Run F acceptance.
