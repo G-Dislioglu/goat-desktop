@@ -77,6 +77,9 @@ run_f2_builder_tts_code_ready_2026_05_17:
 run_f2_builder_tts_smoke_2026_05_17:
 "Live Soulmatch Builder-TTS-Smoke durchgefuehrt am 2026-05-17. /api/goat/tts ist erreichbar: ohne Token 401, mit gesetztem GOAT_BUILDER_TOKEN HTTP 200. Ergebnis: status=ok, provider=builder_default, voice=maya_de, language=de-DE, mime_type=audio/wav, audio_file_size_bytes=309690, latency 5350ms. WAV wurde nach dem Test geloescht und nicht committed. Artefakte: docs/run-f2-builder-tts-smoke-report-2026-05-17.md und docs/run-f2-builder-tts-smoke-2026-05-17.json. Finaler Run-F-Mikrofon-Test mit Builder-STT+Builder-TTS ist jetzt moeglich."
 
+run_f_final_live_attempt_2026_05_17:
+"Finaler Run-F-Liveversuch am 2026-05-17 durchgefuehrt mit Mikrofon -> Builder-STT -> Builder-TTS -> lokaler WAV-Wiedergabe. Technischer Pfad funktioniert: audio_recorded=true, stt_provider=builder_default, tts_provider=builder_default, audio_played=true, completion_ready=true. Acceptance nicht bestanden: erwarteter Satz 'zeige das suchfeld', erkannt wurde nur 'So'. Erster Full-Path-Versuch deckte zusaetzlich einen MCI-Long-Path-Fehler bei TTS-Wiedergabe auf; Playback wurde auf kurze Temp-WAV korrigiert. Audio-WAVs wurden geloescht und nicht committed. Artefakte: docs/run-f-final-live-attempt-report-2026-05-17.md und docs/run-f-final-live-acceptance-2026-05-17.json. Run F bleibt nicht completed."
+
 run_e_multi_provider_code_ready_2026_05_17:
 "vision_hint.py wurde um Multi-Provider-Vision-Hint erweitert (gemini_flash_lite, grok_4_3, gemini_flash). Reasoning-Level konfigurierbar (minimal, low, medium, high). User-Wahl im Popup ueber zwei Dropdowns, Persistierung in vision_config.json unter APPDATA/GoatDesktop. Default: gemini_flash_lite + minimal. Builder-Proxy-Modus nutzt GOAT_VISION_MODE=builder_proxy, GOAT_BUILDER_URL, GOAT_BUILDER_TOKEN, GOAT_VISION_PROVIDER und GOAT_VISION_REASONING. Unit-Tests mit Mock-Server gruen: 8 passed. Acceptance gegen echten /api/goat/vision-hint folgt sobald Soulmatch-Builder den Endpoint gepusht hat. Fail-Safe bei Builder-Offline/Timeout/HTTP-Fehler: uncertain-Hint, kein stiller Mock-Switch. run_e_completed bleibt bewusst nicht gesetzt."
 
@@ -144,6 +147,6 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 ## Not Yet Verified
 
 - OCR defaults are not selected yet.
-- Run F final live microphone acceptance with Builder STT+TTS is pending.
+- Run F final live microphone acceptance with Builder STT+TTS is pending; latest full-path attempt recognized only "So".
 - Stage 3 real OS-level action execution does not exist yet.
 - Stage 4 remains a technical lock.

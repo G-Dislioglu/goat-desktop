@@ -1,0 +1,21 @@
+{
+  "provider": "windows_sapi",
+  "mode": "half_duplex",
+  "transcript": "So",
+  "response_text": "Gehoert: So. Ich handle nur nach Freigabe.",
+  "time_ms": 13614.97,
+  "audio_recorded": true,
+  "audio_played": true,
+  "stt_provider": "builder_default",
+  "tts_provider": "builder_default",
+  "audio_path": "C:\\Users\\guerc\\Documents\\Codex\\2026-05-16\\files-mentioned-by-the-user-files\\goat-desktop\\docs\\livetalk-audio\\livetalk-last-recording.wav",
+  "response_audio_path": "C:\\Users\\guerc\\Documents\\Codex\\2026-05-16\\files-mentioned-by-the-user-files\\goat-desktop\\docs\\livetalk-audio\\livetalk-last-response.wav",
+  "completion_ready": true,
+  "audio_path_size_bytes": 32758,
+  "audio_path_committed": false,
+  "response_audio_path_size_bytes": 144570,
+  "response_audio_path_committed": false,
+  "expected_transcript": "zeige das suchfeld",
+  "acceptance_passed": false,
+  "acceptance_reason": "transcript or completion readiness did not match acceptance"
+}

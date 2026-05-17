@@ -166,12 +166,16 @@ def speak_windows_sapi(text: str) -> bool:
 def play_windows_wav(audio_path: Path) -> bool:
     if not audio_path.exists():
         return False
+    playable_path = Path(tempfile.gettempdir()) / "goatplay.wav"
+    shutil.copyfile(audio_path, playable_path)
     alias = "goat_tts_playback"
-    _mci(f'open "{audio_path}" type waveaudio alias {alias}')
+    _mci(f'open "{playable_path}" type waveaudio alias {alias}')
     try:
         _mci(f"play {alias} wait")
     finally:
         _mci(f"close {alias}", raise_on_error=False)
+        if playable_path.exists():
+            playable_path.unlink()
     return True
 
 

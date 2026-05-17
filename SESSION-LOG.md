@@ -87,3 +87,5 @@
 - Live check shows `/api/goat/tts` currently returns 404, so Builder work is needed before final Run F acceptance.
 - Verified live Soulmatch `/api/goat/tts`: unauthenticated request returns 401, authenticated request returns HTTP 200 with `voice=maya_de`, `language=de-DE`, and WAV audio metadata.
 - Deleted the returned TTS WAV after smoke verification and committed metadata only.
+- Attempted final Run F full path. First attempt found another Windows MCI long-path issue when playing Builder-TTS WAV; fixed playback by copying to a short temp WAV path.
+- Retried full path successfully through microphone, Builder STT, Builder TTS, and local playback, but STT recognized only `So`, so Run F remains not completed.
