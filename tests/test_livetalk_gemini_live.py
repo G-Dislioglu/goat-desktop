@@ -7,8 +7,10 @@ from goat_desktop import livetalk
 from goat_desktop.livetalk import LiveTalkSession
 from goat_desktop.livetalk_live import (
     GeminiLiveResult,
+    _parse_json_bytes,
     build_goat_voice_ws_url,
     iter_wav_pcm_chunks,
+    read_wav_as_16khz_pcm,
     write_pcm_wav,
 )
 
@@ -40,6 +42,24 @@ def test_wav_pcm_chunks_and_writer(tmp_path: Path, monkeypatch) -> None:
         assert wav.getnchannels() == 1
         assert wav.getsampwidth() == 2
         assert wav.readframes(16) == b"\x03\x04" * 16
+
+
+def test_wav_input_is_normalized_for_gemini_live(tmp_path: Path) -> None:
+    source = tmp_path / "windows-mci-default.wav"
+    with wave.open(str(source), "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(1)
+        wav.setframerate(11025)
+        wav.writeframes(b"\x80" * 11025)
+
+    pcm = read_wav_as_16khz_pcm(source)
+
+    assert len(pcm) in range(31900, 32100)
+
+
+def test_binary_json_message_is_not_treated_as_audio() -> None:
+    assert _parse_json_bytes(b'{\n  "setupComplete": {}\n}\n') == {"setupComplete": {}}
+    assert _parse_json_bytes(b"\x01\x02\x03\x04") is None
 
 
 def test_livetalk_gemini_live_records_sends_and_plays(monkeypatch, tmp_path: Path) -> None:

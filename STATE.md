@@ -29,6 +29,9 @@ livetalk_read_aloud_button_2026_05_17:
 livetalk_gemini_live_provider_2026_05_18:
 "GOAT Desktop hat jetzt einen `gemini_live` LiveTalk-Provider. Aktivierung: `GOAT_LIVETALK_PROVIDER=gemini_live`. Der Desktop nimmt lokal eine WAV auf, verbindet sich per WebSocket mit Builder `WSS /api/goat/voice`, sendet PCM-Audio und spielt die Gemini-Live-Audioantwort ab. Die alte STT->Chat->TTS-Pipeline bleibt als `windows_sapi` Fallback erhalten. UI-Status zeigt fuer diesen Modus `Gemini Live aktiv`. Stand heute: erster Desktop-Client ist record-then-send, noch kein echtes Push-to-talk/gleichzeitiges Streaming. Tests gruen: compileall und 31 relevante LiveTalk/Builder-Proxy-Tests."
 
+livetalk_gemini_live_audio_fix_2026_05_18:
+"Gemini-Live-Audio-Fix am 2026-05-18. Problem: Builder leitete `setupComplete` als Byte-Frame weiter; Desktop speicherte diese JSON-Nachricht faelschlich als Audio und zeigte 'Gemini Live hat Audio geliefert', obwohl die WAV nur 70 Bytes hatte. Zweites Problem: Windows-MCI nahm lokal 11025 Hz / 8-bit WAV auf, Builder markiert aber 16 kHz / 16-bit PCM. Fix: Byte-Frames werden zuerst als JSON geprueft, nur echte groessere Audioframes werden als WAV geschrieben; Eingabe-WAV wird vor dem Senden auf mono 16 kHz / 16-bit PCM normalisiert. Live-Debug mit letzter Aufnahme: transcript 'Hallo Maya, wie geht's?', response_text 'Hallo! Mir geht's gut, danke! Wie kann ich dir helfen?', Audio-WAV 181486 Bytes. Tests gruen: compileall und 33 relevante Tests. Audio-Testdateien geloescht."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 

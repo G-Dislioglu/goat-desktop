@@ -102,16 +102,20 @@ def request_gemini_live_turn(
                     try:
                         raw_message = websocket.recv(timeout=0.75)
                     except TimeoutError:
-                        if output_audio_chunks or response_text_parts:
+                        if response_text_parts or _has_playable_audio(output_audio_chunks):
                             break
                         continue
                     message_count += 1
                     if isinstance(raw_message, bytes):
-                        output_audio_chunks.append(raw_message)
-                        continue
-                    parsed = _parse_json_object(raw_message)
-                    if parsed is None:
-                        continue
+                        parsed_bytes = _parse_json_bytes(raw_message)
+                        if parsed_bytes is None:
+                            output_audio_chunks.append(raw_message)
+                            continue
+                        parsed = parsed_bytes
+                    else:
+                        parsed = _parse_json_object(raw_message)
+                        if parsed is None:
+                            continue
                     input_text = _nested_text(parsed, ["serverContent", "inputTranscription", "text"])
                     output_text = _nested_text(parsed, ["serverContent", "outputTranscription", "text"])
                     if input_text:
@@ -126,7 +130,7 @@ def request_gemini_live_turn(
         return _uncertain_result(type(exc).__name__, active_config, started)
 
     final_audio_path: str | None = None
-    if output_audio_chunks:
+    if _has_playable_audio(output_audio_chunks):
         output_path.parent.mkdir(parents=True, exist_ok=True)
         write_pcm_wav(output_path, b"".join(output_audio_chunks))
         final_audio_path = str(output_path)
@@ -156,12 +160,23 @@ def build_goat_voice_ws_url(builder_url: str) -> str:
 
 
 def iter_wav_pcm_chunks(audio_path: Path, chunk_frames: int = 2048):
+    pcm_data = read_wav_as_16khz_pcm(audio_path)
+    chunk_size = chunk_frames * 2
+    for offset in range(0, len(pcm_data), chunk_size):
+        yield pcm_data[offset : offset + chunk_size]
+
+
+def read_wav_as_16khz_pcm(audio_path: Path) -> bytes:
     with wave.open(str(audio_path), "rb") as wav:
-        while True:
-            data = wav.readframes(chunk_frames)
-            if not data:
-                break
-            yield data
+        channels = wav.getnchannels()
+        sample_width = wav.getsampwidth()
+        sample_rate = wav.getframerate()
+        frames = wav.readframes(wav.getnframes())
+
+    mono_samples = _decode_wav_samples(frames, channels, sample_width)
+    if sample_rate != 16000:
+        mono_samples = _resample_samples(mono_samples, sample_rate, 16000)
+    return _encode_s16le(mono_samples)
 
 
 def write_pcm_wav(output_path: Path, pcm_data: bytes, sample_rate: int | None = None) -> None:
@@ -179,6 +194,66 @@ def _parse_json_object(raw: str) -> dict | None:
     except json.JSONDecodeError:
         return None
     return parsed if isinstance(parsed, dict) else None
+
+
+def _parse_json_bytes(raw: bytes) -> dict | None:
+    if not raw.lstrip().startswith((b"{", b"[")):
+        return None
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    return _parse_json_object(text)
+
+
+def _has_playable_audio(chunks: list[bytes]) -> bool:
+    return sum(len(chunk) for chunk in chunks) >= 1600
+
+
+def _decode_wav_samples(frames: bytes, channels: int, sample_width: int) -> list[int]:
+    if channels <= 0 or sample_width <= 0:
+        return []
+    frame_width = channels * sample_width
+    samples: list[int] = []
+    for offset in range(0, len(frames) - frame_width + 1, frame_width):
+        total = 0
+        for channel in range(channels):
+            start = offset + channel * sample_width
+            raw = frames[start : start + sample_width]
+            if sample_width == 1:
+                value = (raw[0] - 128) << 8
+            else:
+                value = int.from_bytes(raw, "little", signed=True)
+                if sample_width > 2:
+                    value >>= 8 * (sample_width - 2)
+            total += value
+        samples.append(int(total / channels))
+    return samples
+
+
+def _resample_samples(samples: list[int], source_rate: int, target_rate: int) -> list[int]:
+    if not samples or source_rate <= 0 or source_rate == target_rate:
+        return samples
+    target_count = max(1, round(len(samples) * target_rate / source_rate))
+    if target_count == 1:
+        return [samples[0]]
+    scale = (len(samples) - 1) / (target_count - 1)
+    output: list[int] = []
+    for index in range(target_count):
+        source_pos = index * scale
+        left = int(source_pos)
+        right = min(left + 1, len(samples) - 1)
+        fraction = source_pos - left
+        output.append(round(samples[left] * (1.0 - fraction) + samples[right] * fraction))
+    return output
+
+
+def _encode_s16le(samples: list[int]) -> bytes:
+    output = bytearray()
+    for sample in samples:
+        clamped = max(-32768, min(32767, int(sample)))
+        output.extend(clamped.to_bytes(2, "little", signed=True))
+    return bytes(output)
 
 
 def _nested_text(root: dict, path: list[str]) -> str:
