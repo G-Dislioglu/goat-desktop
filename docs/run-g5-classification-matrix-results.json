@@ -1,0 +1,161 @@
+{
+  "cases": [
+    {
+      "action_type": "scroll",
+      "label": "scroll page",
+      "context": {},
+      "stage": 1,
+      "matched_term": "scroll",
+      "reason": "free-navigation term matched",
+      "normalized_text": "scroll scroll page"
+    },
+    {
+      "action_type": "hover",
+      "label": "hover tooltip",
+      "context": {},
+      "stage": 1,
+      "matched_term": "tooltip",
+      "reason": "free-navigation term matched",
+      "normalized_text": "hover hover tooltip"
+    },
+    {
+      "action_type": "move pointer",
+      "label": "move pointer over info icon",
+      "context": {},
+      "stage": 1,
+      "matched_term": "move pointer",
+      "reason": "free-navigation term matched",
+      "normalized_text": "move pointer move pointer over info icon"
+    },
+    {
+      "action_type": "type",
+      "label": "enter text in search field",
+      "context": {},
+      "stage": 2,
+      "matched_term": "search field",
+      "reason": "light-input or selection term matched",
+      "normalized_text": "type enter text in search field"
+    },
+    {
+      "action_type": "select",
+      "label": "select dropdown value",
+      "context": {},
+      "stage": 2,
+      "matched_term": "dropdown",
+      "reason": "light-input or selection term matched",
+      "normalized_text": "select select dropdown value"
+    },
+    {
+      "action_type": "paste",
+      "label": "paste into safe test field",
+      "context": {},
+      "stage": 2,
+      "matched_term": "paste",
+      "reason": "light-input or selection term matched",
+      "normalized_text": "paste paste into safe test field"
+    },
+    {
+      "action_type": "click",
+      "label": "Save changes",
+      "context": {},
+      "stage": 3,
+      "matched_term": "save",
+      "reason": "consequential-action term matched",
+      "normalized_text": "click save changes"
+    },
+    {
+      "action_type": "click",
+      "label": "Manual Deploy",
+      "context": {},
+      "stage": 3,
+      "matched_term": "manual deploy",
+      "reason": "consequential-action term matched",
+      "normalized_text": "click manual deploy"
+    },
+    {
+      "action_type": "click",
+      "label": "Delete record",
+      "context": {},
+      "stage": 3,
+      "matched_term": "delete",
+      "reason": "consequential-action term matched",
+      "normalized_text": "click delete record"
+    },
+    {
+      "action_type": "click",
+      "label": "Bezahlen",
+      "context": {},
+      "stage": 3,
+      "matched_term": "bezahlen",
+      "reason": "consequential-action term matched",
+      "normalized_text": "click bezahlen"
+    },
+    {
+      "action_type": "click",
+      "label": "K?ndigen",
+      "context": {},
+      "stage": 3,
+      "matched_term": null,
+      "reason": "unknown action defaults to stage 3",
+      "normalized_text": "click k?ndigen"
+    },
+    {
+      "action_type": "type",
+      "label": "password field",
+      "context": {},
+      "stage": 4,
+      "matched_term": "password",
+      "reason": "sensitive-field or secret-like term matched",
+      "normalized_text": "type password field"
+    },
+    {
+      "action_type": "type",
+      "label": "API token",
+      "context": {},
+      "stage": 4,
+      "matched_term": "token",
+      "reason": "sensitive-field or secret-like term matched",
+      "normalized_text": "type api token"
+    },
+    {
+      "action_type": "type",
+      "label": "2FA code",
+      "context": {},
+      "stage": 4,
+      "matched_term": "2fa",
+      "reason": "sensitive-field or secret-like term matched",
+      "normalized_text": "type 2fa code"
+    },
+    {
+      "action_type": "type",
+      "label": "save password",
+      "context": {},
+      "stage": 4,
+      "matched_term": "password",
+      "reason": "sensitive-field or secret-like term matched",
+      "normalized_text": "type save password"
+    },
+    {
+      "action_type": "mystery",
+      "label": "unrecognized operation",
+      "context": {},
+      "stage": 3,
+      "matched_term": null,
+      "reason": "unknown action defaults to stage 3",
+      "normalized_text": "mystery unrecognized operation"
+    },
+    {
+      "action_type": "focus",
+      "label": "masked field",
+      "context": {
+        "input_type": "password",
+        "control_type": "Edit"
+      },
+      "stage": 4,
+      "matched_term": "password",
+      "reason": "sensitive-field or secret-like term matched",
+      "normalized_text": "focus masked field edit password"
+    }
+  ],
+  "note": "Unknown defaults to stage 3; stage 4 terms are evaluated before all lower stages."
+}

@@ -66,3 +66,6 @@
 - Added `stage3_approval.py` with exact approval phrase, consequence preview, Broker `accept` requirement, and Stage-4 non-overridable lock.
 - Added `/action/stage3/review`; terminal success is `approved_not_executed`, not real click/action execution.
 - Verified Run G4 with 42 tests passing and JSONL audit evidence for needs-approval, phrase mismatch, approved-not-executed, and Stage-4 locked paths.
+- Started Run G5 as classification hardening without new OS actions.
+- Expanded German/English stage terms, added classification reasons to audit payloads, preserved Stage-4 priority and Unknown=Stage-3 behavior.
+- Verified Run G5 with 60 tests passing and a versioned classification matrix artifact.
