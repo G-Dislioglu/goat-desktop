@@ -69,3 +69,5 @@
 - Started Run G5 as classification hardening without new OS actions.
 - Expanded German/English stage terms, added classification reasons to audit payloads, preserved Stage-4 priority and Unknown=Stage-3 behavior.
 - Verified Run G5 with 60 tests passing and a versioned classification matrix artifact.
+- Added a G1-G5 integration test that exercises Stage 1, Stage 2 preview/execution, Stage 3 approval review, Stage 4 lock, and Unknown=Stage3 in one audited chain.
+- Verified the integration run with 61 tests passing; no new OS-action capability was added.

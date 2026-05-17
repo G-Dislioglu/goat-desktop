@@ -271,7 +271,7 @@ Unveraendert gegenueber v1.0:
 - Run D: ✅ done. Builder-Bruecke. WebSocket Outbound, Token-Auth, Reconnect.
 - Run E: ✅ done. Vision-LLM-Konfiguration via Builder-Proxy. Provider-Spike fuer gemini_flash_lite, gemini_flash und grok_4_3 abgeschlossen. Nur als semantischer Helfer, niemals als Koordinaten-Quelle.
 - **Run F:** LiveTalk. Mikrofon, STT, TTS. Half-Duplex. Ohne echten STT/TTS-Provider nur `code_ready`, nicht `completed`. Mock-Schale ist code-ready.
-- **Run G1–G5:** Action Layer in fuenf Sub-Phasen, Stufen 1 bis 4 plus Klassifikator-Pipeline. G1-Skeleton ist code-ready. G2 Stage-1-Executor ist completed fuer Scroll und Hover/Pointer-Move in einem harmlosen Testfenster. G3 Stage-2-Texteingabe ist completed fuer einzeilige Safe-Context-Eingabe nach Preview-Approval. G4 Stage-3-Hard-Approval ist completed als Review-Layer ohne OS-Ausfuehrung. G5 Klassifikator-Haertung ist completed mit Audit-Reasoning und Matrix-Tests. Stage 4 bleibt technische Sperre.
+- **Run G1–G5:** Action Layer in fuenf Sub-Phasen, Stufen 1 bis 4 plus Klassifikator-Pipeline. G1-Skeleton ist code-ready. G2 Stage-1-Executor ist completed fuer Scroll und Hover/Pointer-Move in einem harmlosen Testfenster. G3 Stage-2-Texteingabe ist completed fuer einzeilige Safe-Context-Eingabe nach Preview-Approval. G4 Stage-3-Hard-Approval ist completed als Review-Layer ohne OS-Ausfuehrung. G5 Klassifikator-Haertung ist completed mit Audit-Reasoning und Matrix-Tests. G1-G5 Integrationskette ist completed. Stage 4 bleibt technische Sperre.
 
 **Phase 2 — optional, evidenzbasiert:**
 - **Run 0d (OmniParser-Spike):** nur, wenn Run B oder C zeigt, dass UIA + OCR fuer Electron-Apps (VS Code, Slack, Discord) nicht reicht.

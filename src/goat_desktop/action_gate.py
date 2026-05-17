@@ -41,13 +41,11 @@ STAGE_3_TERMS = {
     "anwenden",
     "confirm",
     "bestaetigen",
-    "bestätigen",
     "submit",
     "send",
     "absenden",
     "publish",
     "veroeffentlichen",
-    "veröffentlichen",
     "deploy",
     "manual deploy",
     "release",
@@ -63,12 +61,10 @@ STAGE_3_TERMS = {
     "speichern",
     "delete",
     "loeschen",
-    "löschen",
     "cancel booking",
     "cancel subscription",
     "stornieren",
     "kuendigen",
-    "kündigen",
     "upload",
     "hochladen",
     "share",
@@ -79,10 +75,8 @@ STAGE_3_TERMS = {
     "unterschreiben",
     "transfer",
     "ueberweisen",
-    "überweisen",
     "refund",
     "rueckerstatten",
-    "rückerstatten",
     "archive",
     "archivieren",
 }
@@ -98,18 +92,15 @@ STAGE_2_TERMS = {
     "dropdown",
     "select",
     "auswaehlen",
-    "auswählen",
     "checkbox",
     "radio",
     "date",
     "file dialog",
     "attach",
     "anhaengen",
-    "anhängen",
     "copy",
     "paste",
     "einfuegen",
-    "einfügen",
 }
 
 STAGE_1_TERMS = {
@@ -300,7 +291,19 @@ def _audit_decision(
 
 
 def _normalize_text(text: str) -> str:
-    return " ".join(text.casefold().replace("Ã¶", "ö").replace("Ã¼", "ü").replace("Ã¤", "ä").split())
+    replacements = {
+        "\u00e4": "ae",
+        "\u00f6": "oe",
+        "\u00fc": "ue",
+        "\u00df": "ss",
+        "\u00c3\u00a4": "ae",
+        "\u00c3\u00b6": "oe",
+        "\u00c3\u00bc": "ue",
+    }
+    normalized = text.casefold()
+    for source, target in replacements.items():
+        normalized = normalized.replace(source, target)
+    return " ".join(normalized.split())
 
 
 def _context_text(context: dict[str, Any]) -> str:

@@ -24,7 +24,7 @@ ACCEPTED = {"status": "accept", "final_bbox": [10, 10, 50, 50], "fusion_path": "
         ("click", "Manual Deploy", ActionStage.HARD_APPROVAL),
         ("click", "Delete record", ActionStage.HARD_APPROVAL),
         ("click", "Bezahlen", ActionStage.HARD_APPROVAL),
-        ("click", "Kündigen", ActionStage.HARD_APPROVAL),
+        ("click", "Kuendigen", ActionStage.HARD_APPROVAL),
         ("type", "password field", ActionStage.TECHNICAL_LOCK),
         ("type", "API token", ActionStage.TECHNICAL_LOCK),
         ("type", "2FA code", ActionStage.TECHNICAL_LOCK),

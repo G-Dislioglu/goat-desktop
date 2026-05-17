@@ -86,9 +86,12 @@ run_g4_completed_2026_05_17:
 run_g5_completed_2026_05_17:
 "Run G5 abgeschlossen am 2026-05-17. Action-Klassifikator gehaertet: erweiterte deutsche/englische Stage-Begriffe, Stage-4-Prioritaet vor allen niedrigeren Stufen, Unknown bleibt Stage 3, Kontextfelder wie input_type/control_type/aria_label koennen klassifizieren. Audit enthaelt jetzt classification mit matched_term, reason und normalized_text. Tests gruen: 60 passed. Artefakte: docs/run-g5-completion-report-2026-05-17.md und docs/run-g5-classification-matrix-results.json. Run G5 fuehrt keine OS-Action aus."
 
+run_g_integration_completed_2026_05_17:
+"Run-G-Integration abgeschlossen am 2026-05-17. G1-G5 Entscheidungskette zusammen getestet: Stage1 scroll executed via RecordingMouseBackend, Stage2 preview ohne Approval, Stage2 executed mit Approval und safe_text_context via RecordingTextBackend, Stage3 approved_not_executed mit exakter Approval-Phrase, Stage4 locked, Unknown needs_approval/Stage3. Tests gruen: 61 passed. Artefakte: docs/run-g-integration-completion-report-2026-05-17.md, docs/run-g-integration-results-2026-05-17.json, docs/run-g-integration-audit-sample.jsonl. Keine neue OS-Action-Faehigkeit eingefuehrt."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready, but real audio verification is pending. Run G1 action-gating skeleton is code-ready. Run G2 controlled Stage-1 executor is completed for hover and scroll only. Run G3 Stage-2 text input is completed for one-line safe-context input only. Run G4 Stage-3 hard approval review is completed without OS execution. Run G5 classification hardening is completed.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready, but real audio verification is pending. Run G1 action-gating skeleton is code-ready. Run G2 controlled Stage-1 executor is completed for hover and scroll only. Run G3 Stage-2 text input is completed for one-line safe-context input only. Run G4 Stage-3 hard approval review is completed without OS execution. Run G5 classification hardening is completed. G1-G5 integration chain is completed.
 
 ## Verified
 
@@ -113,6 +116,7 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run G3 real desktop acceptance entered one-line dummy text in a dedicated safe Tk field after preview approval, with visually clean before/after screenshots.
 - Run G4 Stage-3 hard approval review tests pass; exact phrase approval reaches approved_not_executed, not OS execution.
 - Run G5 action-classification matrix tests pass; audit payload records matched term and reason.
+- Run G integration test passes across Stage 1, Stage 2, Stage 3 review, Stage 4 lock, and Unknown=Stage3.
 
 ## Not Yet Verified
 
