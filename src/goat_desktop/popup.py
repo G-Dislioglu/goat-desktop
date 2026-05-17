@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtCore import QPoint, Qt, pyqtSignal
 from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import (
     QApplication,
@@ -18,6 +18,8 @@ from PyQt6.QtWidgets import (
 
 class GoatPopup(QWidget):
     """Small native status popup for Run A."""
+
+    read_aloud_finished = pyqtSignal(dict)
 
     def __init__(self) -> None:
         super().__init__()
@@ -130,10 +132,13 @@ class GoatPopup(QWidget):
         self.chat_input = QLineEdit()
         self.chat_input.setPlaceholderText("Nachricht schreiben...")
         self.chat_send = QPushButton("Senden")
+        self.read_aloud = QPushButton("Vorlesen")
         self.chat_row.addWidget(self.chat_input, 1)
         self.chat_row.addWidget(self.chat_send)
+        self.chat_row.addWidget(self.read_aloud)
         self.chat_input.setVisible(False)
         self.chat_send.setVisible(False)
+        self.read_aloud.setVisible(False)
         root.addLayout(self.chat_row)
 
         actions = QGridLayout()
@@ -260,6 +265,10 @@ class GoatPopup(QWidget):
         self.target_value.setVisible(not active)
         self.chat_input.setVisible(active)
         self.chat_send.setVisible(active)
+        if not active:
+            self.read_aloud.setVisible(False)
+            self.read_aloud.setEnabled(True)
+            self.read_aloud.setText("Vorlesen")
         self.talk_button.setText("Nochmal sprechen" if active else "LiveTalk")
         width, height = self._livetalk_size if active else self._preferred_size
         self.resize(width, height)

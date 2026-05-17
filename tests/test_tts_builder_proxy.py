@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from goat_desktop import livetalk
-from goat_desktop.livetalk import LiveTalkSession
+from goat_desktop.livetalk import LiveTalkSession, read_response_aloud
 from goat_desktop.tts_hint import TtsMode, load_tts_config, synthesize_speech
 
 
@@ -21,6 +21,22 @@ class ChatOk:
     status = "ok"
     response_text = "Ich zeige das Suchfeld nur nach Freigabe."
     time_ms = 123.0
+
+
+class TtsOk:
+    status = "ok"
+    audio_path: str | None = None
+    provider = "test_tts"
+    time_ms = 222.0
+    error = None
+
+
+class TtsError:
+    status = "uncertain"
+    audio_path = None
+    provider = "test_tts"
+    time_ms = 111.0
+    error = "http_500"
 
 
 class TtsHandler(BaseHTTPRequestHandler):
@@ -184,6 +200,40 @@ def test_livetalk_default_returns_after_chat_without_blocking_tts(monkeypatch, m
     assert result.tts_provider == "not_requested"
     assert result.audio_pending is True
     assert result.completion_ready is True
+
+
+def test_read_response_aloud_uses_builder_tts_and_plays_wav(monkeypatch, tmp_path: Path) -> None:
+    output_paths: list[Path] = []
+
+    def fake_synthesize(text: str, output_path: Path):
+        output_path.write_bytes(WAV_BYTES)
+        output_paths.append(output_path)
+        result = TtsOk()
+        result.audio_path = str(output_path)
+        return result
+
+    monkeypatch.setattr(livetalk, "synthesize_speech", fake_synthesize)
+    monkeypatch.setattr(livetalk, "play_windows_wav", lambda audio_path: audio_path.exists())
+    monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: (_ for _ in ()).throw(AssertionError("SAPI fallback must not run")))
+
+    result = read_response_aloud("Ich helfe dir.", tmp_path)
+
+    assert result.status == "ok"
+    assert result.audio_played is True
+    assert result.tts_provider == "test_tts"
+    assert output_paths == [tmp_path / "livetalk-read-aloud.wav"]
+
+
+def test_read_response_aloud_reports_tts_error_without_sapi_fallback(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: TtsError())
+    monkeypatch.setattr(livetalk, "play_windows_wav", lambda audio_path: (_ for _ in ()).throw(AssertionError("No audio should play")))
+    monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: (_ for _ in ()).throw(AssertionError("SAPI fallback must not run")))
+
+    result = read_response_aloud("Ich helfe dir.", tmp_path)
+
+    assert result.status == "error"
+    assert result.audio_played is False
+    assert result.error == "http_500"
 
 
 def _fake_wav(path: Path) -> bool:

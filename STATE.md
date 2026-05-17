@@ -23,6 +23,9 @@ livetalk_text_first_mode_2026_05_17:
 livetalk_audio_status_text_first_2026_05_17:
 "Audio-Statusanzeige am 2026-05-17 korrigiert. Im Text-first-Standardmodus zeigte das Popup trotz deaktivierter Auto-Sprachausgabe weiter 'TTS Builder aktiv', weil nur die Builder-TTS-Konfiguration geprueft wurde. Neu: Wenn GOAT_LIVETALK_AUTO_TTS nicht aktiv ist, zeigt die UI 'STT Builder aktiv / Sprachausgabe aus'. Dadurch ist klar: Spracheingabe ist aktiv, Antwort kommt als Text, Vorlesen ist nicht automatisch eingeschaltet."
 
+livetalk_read_aloud_button_2026_05_17:
+"Optionales Vorlesen im LiveTalk-Modus am 2026-05-17 implementiert. Standard bleibt Text-first ohne Auto-TTS. Wenn eine Maya-Antwort vorhanden ist, erscheint im LiveTalk-Modus ein Button 'Vorlesen'. Klick startet Builder-TTS asynchron, zeigt waehrenddessen 'Lade Audio...' und spielt nur bei erfolgreichem Builder-WAV ab. Bei TTS-Fehlern erscheint eine sichtbare Fehlermeldung; Windows-SAPI-Fallback wird in diesem manuellen Vorlesen-Pfad nicht verwendet."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 

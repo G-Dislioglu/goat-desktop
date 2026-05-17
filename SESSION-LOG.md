@@ -17,6 +17,7 @@
 - Guarded the TTS fallback: Maya text is now shown immediately after chat, Builder-TTS timeout defaults to 8s, and Windows-SAPI robot fallback is disabled unless explicitly enabled via `GOAT_LIVETALK_ALLOW_SAPI_FALLBACK=1`.
 - Switched LiveTalk to text-first latency mode by default: STT + Maya chat returns the visible answer, while automatic blocking TTS is off unless `GOAT_LIVETALK_AUTO_TTS=1`.
 - Corrected the popup audio status for text-first mode: it now shows `Sprachausgabe aus` when auto-TTS is disabled instead of implying that TTS will speak automatically.
+- Added optional manual `Vorlesen` for LiveTalk answers: visible only after a Maya response in LiveTalk mode, runs Builder-TTS asynchronously, shows `Lade Audio...`, and reports TTS errors without Windows-SAPI fallback.
 - Upgraded canonical GOAT Desktop Vision spec to v1.1 after Run 0c evidence.
 - Added Run A native PyQt6 tray shell with movable mini-popup.
 - Kept Run A scope limited: no overlay, bridge, UIA, OCR, Vision, LiveTalk implementation, or actions.

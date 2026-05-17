@@ -14,7 +14,7 @@ from goat_desktop.builder_bridge import BuilderBridgeClient
 from goat_desktop.bridge import CueDispatcher, LocalBridge
 from goat_desktop.chat_hint import request_chat_response
 from goat_desktop.hotkey import EmergencyHotkey, VK_G
-from goat_desktop.livetalk import LiveTalkSession
+from goat_desktop.livetalk import LiveTalkSession, read_response_aloud
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
 from goat_desktop.stt_hint import load_stt_config
@@ -36,6 +36,8 @@ class GoatTrayApp:
         self.pending_builder_cue: dict | None = None
         self.last_builder_cue_response: dict | None = None
         self.builder_bridge: BuilderBridgeClient | None = None
+        self._read_aloud_text = ""
+        self._read_aloud_request_id = 0
         self.livetalk = LiveTalkSession(
             status_callback=self._update_livetalk_status,
             response_callback=self._update_livetalk_response,
@@ -126,6 +128,8 @@ class GoatTrayApp:
         self.popup.exit_livetalk.clicked.connect(self.exit_livetalk_mode)
         self.popup.chat_send.clicked.connect(self.send_chat_message)
         self.popup.chat_input.returnPressed.connect(self.send_chat_message)
+        self.popup.read_aloud.clicked.connect(self.read_livetalk_response_aloud)
+        self.popup.read_aloud_finished.connect(self._finish_read_livetalk_response_aloud)
         self.popup.vision_provider.currentIndexChanged.connect(self._save_vision_config)
         self.popup.vision_reasoning.currentIndexChanged.connect(self._save_vision_config)
 
@@ -147,6 +151,7 @@ class GoatTrayApp:
     def run_livetalk_once(self) -> None:
         self.popup.set_livetalk_mode(True)
         self.popup.talk_button.setEnabled(False)
+        self._set_read_aloud_available("")
         self._refresh_audio_status()
         self.popup.screen_context_value.setText("LiveTalk bereit")
         self.popup.maya_value.setText("Half-Duplex")
@@ -155,6 +160,7 @@ class GoatTrayApp:
             result = self.livetalk.run_once()
             self.popup.screen_context_value.setText(result.transcript)
             self.popup.maya_value.setText(result.response_text)
+            self._set_read_aloud_available(result.response_text if result.audio_pending else "")
             self.popup.audio_value.setText(
                 "STT {stt:.0f}ms / Chat {chat:.0f}ms / TTS {tts} / Aufnahme {rec:.1f}s".format(
                     stt=result.stt_time_ms,
@@ -171,6 +177,7 @@ class GoatTrayApp:
 
     def exit_livetalk_mode(self) -> None:
         self.popup.set_livetalk_mode(False)
+        self._set_read_aloud_available("")
         self.popup.screen_context_value.setText("-")
         self.popup.maya_value.setText("bereit, pausiert")
 
@@ -191,6 +198,58 @@ class GoatTrayApp:
             },
         )
         self.popup.maya_value.setText(result.response_text)
+        self._set_read_aloud_available(result.response_text)
+
+    def _set_read_aloud_available(self, text: str) -> None:
+        self._read_aloud_request_id += 1
+        self._read_aloud_text = text.strip()
+        visible = bool(self._read_aloud_text) and self.popup.exit_livetalk.isVisible()
+        self.popup.read_aloud.setVisible(visible)
+        self.popup.read_aloud.setEnabled(visible)
+        self.popup.read_aloud.setText("Vorlesen")
+
+    def read_livetalk_response_aloud(self) -> None:
+        text = self._read_aloud_text.strip()
+        if not text:
+            self._set_read_aloud_available("")
+            return
+        self._read_aloud_request_id += 1
+        request_id = self._read_aloud_request_id
+        self.popup.read_aloud.setEnabled(False)
+        self.popup.read_aloud.setText("Lade Audio...")
+        self.popup.audio_value.setText("Builder-TTS laedt Audio...")
+        Thread(
+            target=self._read_livetalk_response_aloud_worker,
+            args=(request_id, text),
+            name="goat-read-aloud",
+            daemon=True,
+        ).start()
+
+    def _read_livetalk_response_aloud_worker(self, request_id: int, text: str) -> None:
+        if request_id != self._read_aloud_request_id:
+            return
+        result = read_response_aloud(text, self.livetalk.audio_dir)
+        self.popup.read_aloud_finished.emit(
+            {
+                "request_id": request_id,
+                "status": result.status,
+                "audio_played": result.audio_played,
+                "tts_provider": result.tts_provider,
+                "tts_time_ms": result.tts_time_ms,
+                "error": result.error,
+            }
+        )
+
+    def _finish_read_livetalk_response_aloud(self, payload: dict) -> None:
+        if int(payload.get("request_id", -1)) != self._read_aloud_request_id:
+            return
+        self.popup.read_aloud.setEnabled(True)
+        self.popup.read_aloud.setText("Vorlesen")
+        if payload.get("status") == "ok" and payload.get("audio_played"):
+            self.popup.audio_value.setText("Vorgelesen ({time:.0f}ms)".format(time=float(payload.get("tts_time_ms") or 0.0)))
+            return
+        error = str(payload.get("error") or "TTS fehlgeschlagen")
+        self.popup.audio_value.setText(f"Vorlesen fehlgeschlagen: {error}")
 
     def _refresh_audio_status(self) -> None:
         stt = load_stt_config()

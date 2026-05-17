@@ -41,6 +41,16 @@ class LiveTalkResult:
         return asdict(self)
 
 
+@dataclass(frozen=True)
+class ReadAloudResult:
+    status: str
+    audio_played: bool
+    tts_provider: str
+    tts_time_ms: float
+    audio_path: str | None = None
+    error: str | None = None
+
+
 class LiveTalkSession:
     """Half-duplex LiveTalk shell.
 
@@ -186,6 +196,29 @@ class LiveTalkSession:
     def _publish_response(self, transcript: str, response_text: str) -> None:
         if self.response_callback is not None:
             self.response_callback(transcript, response_text)
+
+
+def read_response_aloud(text: str, audio_dir: Path | str | None = None) -> ReadAloudResult:
+    target_dir = Path(audio_dir or os.environ.get("GOAT_LIVETALK_AUDIO_DIR", Path.home() / "AppData" / "Roaming" / "GoatDesktop"))
+    response_audio_path = target_dir / "livetalk-read-aloud.wav"
+    tts_result = synthesize_speech(text, response_audio_path)
+    if tts_result.status != "ok" or not tts_result.audio_path:
+        return ReadAloudResult(
+            status="error",
+            audio_played=False,
+            tts_provider=tts_result.provider,
+            tts_time_ms=float(getattr(tts_result, "time_ms", 0.0) or 0.0),
+            error=tts_result.error or tts_result.status,
+        )
+    audio_played = play_windows_wav(Path(tts_result.audio_path))
+    return ReadAloudResult(
+        status="ok" if audio_played else "error",
+        audio_played=audio_played,
+        tts_provider=tts_result.provider,
+        tts_time_ms=float(getattr(tts_result, "time_ms", 0.0) or 0.0),
+        audio_path=tts_result.audio_path,
+        error=None if audio_played else "playback failed",
+    )
 
 
 def signal_recording_start(prepare_seconds: float = 0.8) -> None:
