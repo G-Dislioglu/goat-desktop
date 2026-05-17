@@ -71,9 +71,12 @@ run_g1_code_ready_2026_05_17:
 run_g2_code_ready_2026_05_17:
 "Run G2 Code-Stand angelegt am 2026-05-17. Implementiert: stage1_executor.py als eng allowlist-basierter Stage-1-Ausfuehrungspfad fuer Scroll und Hover/Pointer-Move, mit Broker-accept ueber action_gate.py, zusaetzlicher Stage-1-Pruefung im Executor und JSONL-Audit. /action/stage1 Bridge-Endpunkt defaults auf dry_run=true. Stage 2, Stage 3 und Stage 4 werden im Executor auch dann geblockt, wenn ein Caller ihn direkt erreicht. open menu bleibt in G2 bewusst geblockt, weil es meist Click-Semantik braucht. Tests gruen: 24 passed. Artefakte: docs/run-g2-code-ready-report-2026-05-17.md, docs/run-g2-stage1-executor-results.json, docs/run-g2-stage1-audit-sample.jsonl. Evidence nutzt RecordingMouseBackend; keine echte Desktop-OS-Action wurde in diesem Codex-Lauf ausgefuehrt. Run G2 ist code_ready, nicht completed."
 
+run_g2_completed_2026_05_17:
+"Run G2 abgeschlossen am 2026-05-17. Kontrollierte reale Stage-1-Acceptance auf dediziertem Tk-Testfenster 'GOAT G2 Safe Acceptance Window' durchgefuehrt. Ausgefuehrt wurden nur Hover/Pointer-Move zum Broker-accepted bbox center und Scroll im harmlosen Dummy-Textfenster. Kein Click, keine Texteingabe, kein File-Dialog, keine Stage-2/3/4-Action. Der erste Notepad-Screenshot-Versuch wurde wegen sichtbarer .env-Tabnamen verworfen und nicht committed. Finale Artefakte: docs/run-g2-completion-report-2026-05-17.md, docs/run-g2-real-acceptance-results.json, docs/run-g2-real-acceptance-audit.jsonl, docs/screenshots/run-g2-stage1-before-2026-05-17.png und docs/screenshots/run-g2-stage1-after-2026-05-17.png."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready, but real audio verification is pending. Run G1 action-gating skeleton is code-ready. Run G2 controlled Stage-1 executor is code-ready, but real desktop acceptance is still pending.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready, but real audio verification is pending. Run G1 action-gating skeleton is code-ready. Run G2 controlled Stage-1 executor is completed for hover and scroll only.
 
 ## Verified
 
@@ -93,10 +96,10 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run F mock LiveTalk path shows a half-duplex transcript and Maya response in the popup.
 - Run G1 action-gate tests pass and audit lineage is written for dry-run decisions.
 - Run G2 Stage-1 executor tests pass and mock-backend audit lineage is written for executed scroll/hover plus blocked non-scope actions.
+- Run G2 real desktop acceptance executed hover and scroll in a dedicated safe Tk window, with visually clean before/after screenshots.
 
 ## Not Yet Verified
 
 - OCR defaults are not selected yet.
 - Run F real microphone/STT/TTS acceptance is pending.
-- Run G2 real desktop acceptance for harmless Stage-1 navigation is pending.
 - Stage 2/3/4 real OS-level action execution does not exist yet.

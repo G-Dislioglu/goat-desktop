@@ -1,0 +1,90 @@
+{
+  "window": {
+    "title": "GOAT G2 Safe Acceptance Window",
+    "rect": [
+      268,
+      191,
+      1048,
+      711
+    ],
+    "width": 780,
+    "height": 520
+  },
+  "broker_decision": {
+    "status": "accept",
+    "final_bbox": [
+      388,
+      341,
+      928,
+      631
+    ],
+    "fusion_path": "run_g2_real_acceptance_tk_window"
+  },
+  "before_capture": {
+    "ok": true,
+    "capture": {
+      "source": "mss",
+      "scope": "tk_window_rect",
+      "width": 780,
+      "height": 520,
+      "time_ms": 1086.29,
+      "saved_to": "C:\\Users\\guerc\\Documents\\Codex\\2026-05-16\\files-mentioned-by-the-user-files\\goat-desktop\\docs\\screenshots\\run-g2-stage1-before-2026-05-17.png"
+    }
+  },
+  "hover_result": {
+    "status": "executed",
+    "executed": true,
+    "action_type": "hover",
+    "stage": 1,
+    "reason": "stage 1 pointer move executed to broker-verified bbox center",
+    "gate_decision": {
+      "status": "ready",
+      "stage": 1,
+      "requires_user_approval": false,
+      "allowed_to_execute": true,
+      "reason": "gate passed",
+      "audit_event_type": "action_gate_ready"
+    },
+    "target": {
+      "x": 658,
+      "y": 486
+    }
+  },
+  "scroll_result": {
+    "status": "executed",
+    "executed": true,
+    "action_type": "scroll",
+    "stage": 1,
+    "reason": "stage 1 scroll executed through configured mouse backend",
+    "gate_decision": {
+      "status": "ready",
+      "stage": 1,
+      "requires_user_approval": false,
+      "allowed_to_execute": true,
+      "reason": "gate passed",
+      "audit_event_type": "action_gate_ready"
+    },
+    "target": {
+      "scroll_amount": -360
+    }
+  },
+  "after_capture": {
+    "ok": true,
+    "capture": {
+      "source": "mss",
+      "scope": "tk_window_rect",
+      "width": 780,
+      "height": 520,
+      "time_ms": 386.19,
+      "saved_to": "C:\\Users\\guerc\\Documents\\Codex\\2026-05-16\\files-mentioned-by-the-user-files\\goat-desktop\\docs\\screenshots\\run-g2-stage1-after-2026-05-17.png"
+    }
+  },
+  "safety": {
+    "test_window": "dedicated Tk window with generated harmless dummy text",
+    "no_text_input": true,
+    "no_click": true,
+    "no_file_dialog": true,
+    "no_stage2_stage3_stage4_execution": true,
+    "capture_scope": "own Tk window rectangle only"
+  }
+}

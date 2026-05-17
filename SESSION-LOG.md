@@ -54,3 +54,5 @@
 - Added `stage1_executor.py` with an independent Stage-1 allowlist for scroll and hover/pointer move only.
 - Added `/action/stage1` with `dry_run=true` as the bridge default.
 - Verified Run G2 code-ready with 24 tests passing, using a recording mouse backend for evidence generation; no real desktop OS action was executed in this Codex run.
+- Attempted a Notepad-based Run G2 acceptance, then discarded the screenshots because Windows reused a tabbed Notepad instance with `.env` tab names visible.
+- Completed Run G2 with a dedicated Tk test window containing only generated safe text; executed real hover and scroll only, with clean before/after screenshots and audit log.
