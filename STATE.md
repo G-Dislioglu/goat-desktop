@@ -29,9 +29,12 @@ run_b_started_2026_05_17:
 run_b_code_ready_2026_05_17:
 "Run B Code-Stand angelegt am 2026-05-17. Fullscreen-Overlay-Ansatz wurde verworfen, weil er schwarz renderte und damit err-dev-002-Risiko zeigte. Implementiert ist stattdessen ein kleines click-through Topmost-Cue-Window mit gelbem Ball, Popup-Buttons zum Bewegen/Verbergen und globalem Ctrl+Alt+Esc-Hotkey. Runtime-Checks: overlay_click_through=True, hotkey_registered=True. Visual Check: docs/screenshots/run-b-code-ready-visual-check-2026-05-17.png. Run B ist noch nicht completed, weil Screencast und manueller Click-through-Test ueber zwei externe Apps fehlen."
 
+run_b_completed_2026_05_17:
+"Run B abgeschlossen am 2026-05-17. Acceptance-Evidenz committed unter docs/run-b-acceptance-report-2026-05-17.md sowie docs/screenshots/run-b-acceptance-context-1.png und docs/screenshots/run-b-acceptance-context-2.png. Verifiziert: gelber Ball sichtbar ueber externer Chrome/Render-UI in zwei Positionen, WS_EX_TRANSPARENT=True, WS_EX_LAYERED=True, Hit-Tests resolve nicht auf das Overlay, Ctrl+Alt+Esc versteckt Overlay und Popup. Der sicherere kleine Cue-Window-Ansatz bleibt bewusst gesetzt; kein Fullscreen-Overlay."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay code is ready, but final acceptance is pending.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed.
 
 ## Verified
 
@@ -41,9 +44,9 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run A native PyQt6 tray app and mini-popup code compile successfully.
 - Run A acceptance screenshot is committed at `docs/screenshots/run-a-acceptance-2026-05-17.png`.
 - Run B overlay code compiles and runtime checks confirm click-through style plus global hotkey registration.
+- Run B acceptance evidence is committed at `docs/run-b-acceptance-report-2026-05-17.md` with two visual screenshots.
 
 ## Not Yet Verified
 
 - OCR and Vision-LLM provider defaults are not selected yet.
-- Run B manual click-through screencast over two external apps is pending.
 - Bridge, LiveTalk implementation, and action gating do not exist yet.

@@ -18,3 +18,5 @@
 - Rejected the first fullscreen-overlay approach because it rendered as a black blocking surface.
 - Added a smaller click-through topmost cue-window with yellow ball, popup movement controls, and global Ctrl+Alt+Esc emergency hotkey.
 - Left Run B at `code_ready`; final screencast/manual click-through acceptance is still pending.
+- Replaced an invalid Run B acceptance screenshot pair that missed the ball because the crop did not include the overlay rect.
+- Accepted Run B after regenerated screenshots showed the yellow cue ball in two positions over external Chrome/Render UI and runtime evidence confirmed click-through styles, non-overlay hit-test targets, and Ctrl+Alt+Esc hiding GOAT windows.
