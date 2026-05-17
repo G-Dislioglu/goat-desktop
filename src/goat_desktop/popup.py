@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
     QApplication,
     QFrame,
     QGridLayout,
+    QHBoxLayout,
     QLabel,
     QPushButton,
     QVBoxLayout,
@@ -21,8 +22,8 @@ class GoatPopup(QWidget):
         self._drag_start: QPoint | None = None
 
         self.setWindowTitle("GOAT Desktop")
-        self.setMinimumSize(320, 200)
-        self.resize(340, 220)
+        self.setMinimumSize(520, 300)
+        self.resize(540, 320)
         self.setWindowFlag(Qt.WindowType.Window, True)
 
         self._build_ui()
@@ -92,6 +93,17 @@ class GoatPopup(QWidget):
         actions.addWidget(stop_button, 0, 0)
         actions.addWidget(talk_button, 0, 1)
         root.addLayout(actions)
+
+        overlay_controls = QHBoxLayout()
+        overlay_controls.setSpacing(8)
+        self.ball_left = QPushButton("Ball <")
+        self.ball_right = QPushButton("Ball >")
+        self.ball_up = QPushButton("Ball ^")
+        self.ball_down = QPushButton("Ball v")
+        self.ball_toggle = QPushButton("Ball aus")
+        for button in (self.ball_left, self.ball_right, self.ball_up, self.ball_down, self.ball_toggle):
+            overlay_controls.addWidget(button)
+        root.addLayout(overlay_controls)
 
         self.setStyleSheet(
             """

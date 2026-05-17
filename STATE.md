@@ -23,9 +23,15 @@ run_a_code_ready_2026_05_17:
 run_a_completed_2026_05_17:
 "Run A abgeschlossen am 2026-05-17. Sauberer Acceptance-Screenshot committed unter docs/screenshots/run-a-acceptance-2026-05-17.png. Screenshot zeigt native GOAT-Popup-Schale mit Statusfeldern, Pause/Stop, LiveTalk-Platzhalter und Windows-Taskleiste mit aktiver App. Keine sensitiven Fensterinhalte im Acceptance-Artefakt."
 
+run_b_started_2026_05_17:
+"Run B gestartet am 2026-05-17. Pflichtreferenz err-dev-002 gelesen. Scope: PyQt6 Overlay/gelber Ball, click-through, Popup-Steuerung, globaler Kill-Switch. Kein Bridge, UIA, OCR, Vision oder Action-Layer."
+
+run_b_code_ready_2026_05_17:
+"Run B Code-Stand angelegt am 2026-05-17. Fullscreen-Overlay-Ansatz wurde verworfen, weil er schwarz renderte und damit err-dev-002-Risiko zeigte. Implementiert ist stattdessen ein kleines click-through Topmost-Cue-Window mit gelbem Ball, Popup-Buttons zum Bewegen/Verbergen und globalem Ctrl+Alt+Esc-Hotkey. Runtime-Checks: overlay_click_through=True, hotkey_registered=True. Visual Check: docs/screenshots/run-b-code-ready-visual-check-2026-05-17.png. Run B ist noch nicht completed, weil Screencast und manueller Click-through-Test ueber zwei externe Apps fehlen."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed and visually accepted.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay code is ready, but final acceptance is pending.
 
 ## Verified
 
@@ -34,8 +40,10 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - AICOS references are listed at `docs/AICOS-REFERENCES.md`.
 - Run A native PyQt6 tray app and mini-popup code compile successfully.
 - Run A acceptance screenshot is committed at `docs/screenshots/run-a-acceptance-2026-05-17.png`.
+- Run B overlay code compiles and runtime checks confirm click-through style plus global hotkey registration.
 
 ## Not Yet Verified
 
 - OCR and Vision-LLM provider defaults are not selected yet.
-- Overlay, bridge, LiveTalk implementation, and action gating do not exist yet.
+- Run B manual click-through screencast over two external apps is pending.
+- Bridge, LiveTalk implementation, and action gating do not exist yet.
