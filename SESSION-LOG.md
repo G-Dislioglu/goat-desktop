@@ -9,6 +9,8 @@
 
 ## 2026-05-17
 
+- Verified the live Builder surface for text chat: STT, TTS, and Vision Hint endpoints are reachable, but `/api/goat/chat` returns 404.
+- Added `chat_hint.py` as the desktop-side Builder proxy for future Maya text chat and replaced the local canned chat response with an explicit uncertain state when Builder chat is unavailable.
 - Upgraded canonical GOAT Desktop Vision spec to v1.1 after Run 0c evidence.
 - Added Run A native PyQt6 tray shell with movable mini-popup.
 - Kept Run A scope limited: no overlay, bridge, UIA, OCR, Vision, LiveTalk implementation, or actions.

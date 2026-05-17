@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+maya_chat_builder_proxy_code_ready_2026_05_17:
+"Desktop-seitige Maya-Textchat-Anbindung vorbereitet am 2026-05-17. Implementiert: chat_hint.py mit GOAT_CHAT_MODE=builder_proxy, POST /api/goat/chat, Bearer-Auth, Reasoning-Parameter, optionalem GOAT_BUILDER_RESOLVE_IP und fail-closed uncertain bei Fehlern. Das LiveTalk-Textfeld nutzt jetzt diesen Adapter statt einer lokalen Fake-Antwort. Live-Pruefung gegen Soulmatch: /api/goat/stt, /api/goat/tts und /api/goat/vision-hint sind erreichbar; /api/goat/chat liefert aktuell 404. Deshalb ist Maya-Text-KI code_ready, aber nicht completed. Tests gruen: test_chat_builder_proxy.py plus LiveTalk/STT/TTS-Subset."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 

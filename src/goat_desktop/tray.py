@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from goat_desktop.builder_bridge import BuilderBridgeClient
 from goat_desktop.bridge import CueDispatcher, LocalBridge
+from goat_desktop.chat_hint import request_chat_response
 from goat_desktop.hotkey import EmergencyHotkey, VK_G
 from goat_desktop.livetalk import LiveTalkSession
 from goat_desktop.overlay import BallOverlay
@@ -169,7 +170,17 @@ class GoatTrayApp:
             return
         self.popup.chat_input.clear()
         self.popup.screen_context_value.setText(text)
-        self.popup.maya_value.setText(f"Gelesen: {text}. Ich handle nur nach Freigabe.")
+        self.popup.maya_value.setText("Maya wird angefragt...")
+        QApplication.processEvents()
+        result = request_chat_response(
+            text,
+            context={
+                "screen_context": self.popup.screen_context_value.text(),
+                "target": self.popup.target_value.text(),
+                "safety_rule": "desktop actions require explicit user approval",
+            },
+        )
+        self.popup.maya_value.setText(result.response_text)
 
     def _refresh_audio_status(self) -> None:
         stt = load_stt_config()
