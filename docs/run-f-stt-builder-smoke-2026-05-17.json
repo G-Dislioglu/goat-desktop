@@ -1,0 +1,17 @@
+{
+  "status": "ok",
+  "transcript": "Sieh das Suchfeld",
+  "confidence": 0.95,
+  "provider": "builder_default",
+  "time_ms": 2146.0,
+  "raw_evidence": {
+    "mode": "builder_proxy",
+    "provider": "builder_default",
+    "http_status": 200,
+    "audio_bytes": 96592
+  },
+  "http_status": 200,
+  "error": null,
+  "audio_file_size_bytes": 96592,
+  "audio_artifact_committed": false
+}

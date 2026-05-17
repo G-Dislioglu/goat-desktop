@@ -77,3 +77,5 @@
 - Added desktop-side STT Builder proxy support in `stt_hint.py` for `POST /api/goat/stt`.
 - Wired `windows_sapi` LiveTalk to call Builder STT after local WAV recording; manual transcript remains a fallback and does not set completion-ready.
 - Verified STT proxy behavior against a local mock server; real Soulmatch STT endpoint remains the external gate for Run F completion.
+- Verified live Soulmatch `/api/goat/stt`: unauthenticated request returns 401, authenticated synthetic SAPI WAV returns HTTP 200 with transcript `Sieh das Suchfeld`, confidence 0.95, latency about 2.1s.
+- Kept Run F not completed because this was a synthetic WAV smoke, not live microphone acceptance.
