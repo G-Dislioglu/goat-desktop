@@ -20,9 +20,12 @@ run_a_started_2026_05_17:
 run_a_code_ready_2026_05_17:
 "Run A Code-Stand angelegt am 2026-05-17. Erstes natives PyQt6-Projekt mit src/goat_desktop, Tray-Icon, Rechtsklick-Menue mit Beenden, Linksklick/DoubleClick oeffnet Popup, verschiebbares Status-Popup mit offline-Verbindung, leerem Screen-Kontext, Pause/Stop-Button und LiveTalk-Platzhalter. Compile-Check bestanden. Acceptance-Screenshot wurde nicht committed, weil im Desktop-Hintergrund ein sensibles .env-Notepad sichtbar war. Run A ist erst nach sauberem Screenshot vollstaendig completed."
 
+run_a_completed_2026_05_17:
+"Run A abgeschlossen am 2026-05-17. Sauberer Acceptance-Screenshot committed unter docs/screenshots/run-a-acceptance-2026-05-17.png. Screenshot zeigt native GOAT-Popup-Schale mit Statusfeldern, Pause/Stop, LiveTalk-Platzhalter und Windows-Taskleiste mit aktiver App. Keine sensitiven Fensterinhalte im Acceptance-Artefakt."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell code exists; visual acceptance screenshot is still pending.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed and visually accepted.
 
 ## Verified
 
@@ -30,6 +33,7 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell code exi
 - Canonical spec v1.1 is stored at `docs/GOAT-DESKTOP-VISION.md`.
 - AICOS references are listed at `docs/AICOS-REFERENCES.md`.
 - Run A native PyQt6 tray app and mini-popup code compile successfully.
+- Run A acceptance screenshot is committed at `docs/screenshots/run-a-acceptance-2026-05-17.png`.
 
 ## Not Yet Verified
 
