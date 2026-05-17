@@ -46,3 +46,7 @@
 - Completed Run E after the Soulmatch Builder endpoint went live and local User env exposed the Builder token.
 - Verified real Builder-proxy responses for gemini_flash_lite, gemini_flash, and grok_4_3 on the Run E desktop screenshot; all returned semantic hints only with HTTP 200.
 - Added optional GOAT_BUILDER_RESOLVE_IP support because this local Codex process had DNS resolution trouble for the Render hostname while explicit Cloudflare resolution worked.
+- Started Run G1 after reading the required Run G AICOS cards.
+- Added dry-run action gating with conservative stage classification, Broker `accept` as a hard prerequisite, Stage 4 technical lock, and unknown-action escalation to Stage 3.
+- Added JSONL audit logging for gate decisions with assumptions and request/decision lineage.
+- Verified Run G1 code-ready with 15 tests passing; no OS-level action execution was added.

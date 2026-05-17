@@ -1,0 +1,34 @@
+﻿[
+  {
+    "status": "dry_run_ready",
+    "stage": 1,
+    "requires_user_approval": false,
+    "allowed_to_execute": false,
+    "reason": "dry-run skeleton only; no OS action executed",
+    "audit_event_type": "action_gate_ready"
+  },
+  {
+    "status": "preview",
+    "stage": 2,
+    "requires_user_approval": true,
+    "allowed_to_execute": false,
+    "reason": "stage 2 action requires preview approval",
+    "audit_event_type": "action_gate_preview"
+  },
+  {
+    "status": "needs_approval",
+    "stage": 3,
+    "requires_user_approval": true,
+    "allowed_to_execute": false,
+    "reason": "stage 3 action requires explicit user approval",
+    "audit_event_type": "action_gate_needs_approval"
+  },
+  {
+    "status": "locked",
+    "stage": 4,
+    "requires_user_approval": false,
+    "allowed_to_execute": false,
+    "reason": "technical lock: user must handle sensitive field manually",
+    "audit_event_type": "action_gate_locked"
+  }
+]

@@ -271,7 +271,7 @@ Unveraendert gegenueber v1.0:
 - Run D: ✅ done. Builder-Bruecke. WebSocket Outbound, Token-Auth, Reconnect.
 - Run E: ✅ done. Vision-LLM-Konfiguration via Builder-Proxy. Provider-Spike fuer gemini_flash_lite, gemini_flash und grok_4_3 abgeschlossen. Nur als semantischer Helfer, niemals als Koordinaten-Quelle.
 - **Run F:** LiveTalk. Mikrofon, STT, TTS. Half-Duplex. Ohne echten STT/TTS-Provider nur `code_ready`, nicht `completed`. Mock-Schale ist code-ready.
-- **Run G1–G5:** Action Layer in fuenf Sub-Phasen, Stufen 1 bis 4 plus Klassifikator-Pipeline.
+- **Run G1–G5:** Action Layer in fuenf Sub-Phasen, Stufen 1 bis 4 plus Klassifikator-Pipeline. G1-Skeleton ist code-ready, aber echte OS-Actions sind noch gesperrt.
 
 **Phase 2 — optional, evidenzbasiert:**
 - **Run 0d (OmniParser-Spike):** nur, wenn Run B oder C zeigt, dass UIA + OCR fuer Electron-Apps (VS Code, Slack, Discord) nicht reicht.

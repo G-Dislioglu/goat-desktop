@@ -65,9 +65,12 @@ run_e_multi_provider_code_ready_2026_05_17:
 run_e_completed_2026_05_17:
 "Run E abgeschlossen am 2026-05-17. Echter Builder-Proxy-Smoke gegen https://soulmatch-1.onrender.com/api/goat/vision-hint durchgefuehrt mit gesetztem GOAT_BUILDER_TOKEN. Alle drei Provider liefern nutzbare semantische Hints ohne Pixel-Koordinatenautoritaet: gemini_flash_lite minimal 1617ms, gemini_flash minimal 1580ms, grok_4_3 requested minimal / used none 1300ms. Alle Antworten http_status=200, Labels zeigen semantisch auf den Manual-Deploy-Button. Artefakt: docs/run-e-completion-report-2026-05-17.md. Lokaler DNS-Resolver brauchte fuer den Test GOAT_BUILDER_RESOLVE_IP=216.24.57.7; Code unterstuetzt diesen optionalen Override, bleibt aber standardmaessig bei normaler DNS-Aufloesung."
 
+run_g1_code_ready_2026_05_17:
+"Run G1 Code-Stand angelegt am 2026-05-17. Pflichtanker sol-cross-062, sol-cross-063, sol-cross-042, sol-cross-038, sol-cross-014 und sol-cross-034 gelesen. Implementiert: action_gate.py mit konservativer Stufenklassifikation (1 Navigation, 2 Preview, 3 harte Freigabe, 4 technische Sperre), Broker accept als harte Vorbedingung, Unknown=Stage3, Stage4=locked; audit_log.py mit JSONL-Claim-Lineage und Assumptions. Tests gruen: 15 passed. Dry-run-Artefakte: docs/run-g1-code-ready-report-2026-05-17.md, docs/run-g1-action-gate-dry-run-results.json, docs/run-g1-action-gate-audit-sample.jsonl. Keine OS-Action ausgefuehrt; Run G1 ist code_ready, nicht completed."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready, but real audio verification is pending.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E multi-provider Vision-Hint via Builder proxy is completed. Run F LiveTalk shell is code-ready, but real audio verification is pending. Run G1 action-gating skeleton is code-ready, with real OS actions still blocked.
 
 ## Verified
 
@@ -85,9 +88,10 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run E multi-provider Builder-proxy tests pass against a local Mock-Server; Vision-only remains `uncertain`, never `accept`.
 - Run E real Builder-proxy smoke passes for gemini_flash_lite, gemini_flash, and grok_4_3 using semantic hints only.
 - Run F mock LiveTalk path shows a half-duplex transcript and Maya response in the popup.
+- Run G1 action-gate tests pass and audit lineage is written for dry-run decisions.
 
 ## Not Yet Verified
 
 - OCR defaults are not selected yet.
 - Run F real microphone/STT/TTS acceptance is pending.
-- Action gating does not exist yet.
+- Real OS-level action execution does not exist yet.
