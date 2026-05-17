@@ -191,13 +191,16 @@ def _uncertain_result(
 
 @contextmanager
 def _temporary_resolve_override(url: str | None):
-    override_ip = os.environ.get("GOAT_BUILDER_RESOLVE_IP")
+    override_ip = _get_env("GOAT_BUILDER_RESOLVE_IP")
     if not url or not override_ip:
         yield
         return
 
     hostname = urlparse(url).hostname
     if not hostname:
+        yield
+        return
+    if hostname in {"127.0.0.1", "localhost", "::1"}:
         yield
         return
 

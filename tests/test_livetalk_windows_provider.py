@@ -6,6 +6,12 @@ from goat_desktop import livetalk
 from goat_desktop.livetalk import LiveTalkSession
 
 
+class DisabledTts:
+    status = "uncertain"
+    audio_path = None
+    provider = "builder_default"
+
+
 def test_mock_livetalk_remains_not_completion_ready(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("GOAT_LIVETALK_PROVIDER", "mock")
     monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
@@ -34,6 +40,7 @@ def test_windows_sapi_provider_records_and_speaks_with_manual_transcript_but_is_
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
     monkeypatch.setattr(livetalk, "transcribe_audio", lambda audio_path: DisabledStt())
+    monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: DisabledTts())
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: "zeige das suchfeld" in text.casefold())
 
     result = LiveTalkSession().run_once()
@@ -60,6 +67,7 @@ def test_windows_sapi_provider_without_transcript_is_not_completion_ready(monkey
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
     monkeypatch.setattr(livetalk, "transcribe_audio", lambda audio_path: DisabledStt())
+    monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: DisabledTts())
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: True)
 
     result = LiveTalkSession().run_once()
@@ -84,6 +92,7 @@ def test_windows_sapi_provider_reports_empty_builder_transcript_clearly(monkeypa
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
     monkeypatch.setattr(livetalk, "transcribe_audio", lambda audio_path: EmptyStt())
+    monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: DisabledTts())
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: True)
 
     result = LiveTalkSession().run_once()
@@ -118,6 +127,7 @@ def test_windows_sapi_provider_defaults_to_five_second_recording_and_status_cue(
     monkeypatch.setenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", "zeige das suchfeld")
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: recorded_seconds.append(seconds) or _fake_wav(output_path))
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: states.append("cue"))
+    monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: DisabledTts())
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: True)
 
     LiveTalkSession(status_callback=states.append).run_once()
