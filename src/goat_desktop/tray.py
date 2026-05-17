@@ -16,6 +16,8 @@ from goat_desktop.hotkey import EmergencyHotkey
 from goat_desktop.livetalk import LiveTalkSession
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
+from goat_desktop.stt_hint import load_stt_config
+from goat_desktop.tts_hint import load_tts_config
 from goat_desktop.vision_config import load_vision_config, save_vision_config
 
 
@@ -50,6 +52,7 @@ class GoatTrayApp:
         self.bridge.start()
         self._start_builder_bridge_if_configured()
         self._load_vision_config()
+        self._refresh_audio_status()
 
     def show_popup(self) -> None:
         if not self.popup.isVisible():
@@ -141,6 +144,7 @@ class GoatTrayApp:
 
     def run_livetalk_once(self) -> None:
         self.popup.talk_button.setEnabled(False)
+        self._refresh_audio_status()
         self.popup.screen_context_value.setText("LiveTalk bereit")
         self.popup.maya_value.setText("Half-Duplex")
         QApplication.processEvents()
@@ -152,7 +156,17 @@ class GoatTrayApp:
             self.popup.screen_context_value.setText("LiveTalk Fehler")
             self.popup.maya_value.setText(str(exc))
         finally:
+            self._refresh_audio_status()
             self.popup.talk_button.setEnabled(True)
+
+    def _refresh_audio_status(self) -> None:
+        stt = load_stt_config()
+        tts = load_tts_config()
+        stt_ready = stt.mode.value == "builder_proxy" and bool(stt.builder_url and stt.builder_token)
+        tts_ready = tts.mode.value == "builder_proxy" and bool(tts.builder_url and tts.builder_token)
+        stt_label = "STT Builder aktiv" if stt_ready else f"STT {stt.mode.value}"
+        tts_label = "TTS Builder aktiv" if tts_ready else f"TTS {tts.mode.value}"
+        self.popup.audio_value.setText(f"{stt_label} / {tts_label}")
 
     def _update_livetalk_status(self, state: str) -> None:
         labels = {

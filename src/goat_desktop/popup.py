@@ -75,18 +75,21 @@ class GoatPopup(QWidget):
         grid.setVerticalSpacing(8)
 
         self.connection_value = QLabel("offline")
+        self.audio_value = QLabel("-")
         self.screen_context_value = QLabel("-")
         self.maya_value = QLabel("bereit, pausiert")
-        for value_label in (self.connection_value, self.screen_context_value, self.maya_value):
+        for value_label in (self.connection_value, self.audio_value, self.screen_context_value, self.maya_value):
             value_label.setWordWrap(True)
             value_label.setMinimumWidth(260)
 
         grid.addWidget(QLabel("Verbindung"), 0, 0)
         grid.addWidget(self.connection_value, 0, 1)
-        grid.addWidget(QLabel("Screen-Kontext"), 1, 0)
-        grid.addWidget(self.screen_context_value, 1, 1)
-        grid.addWidget(QLabel("Maya"), 2, 0)
-        grid.addWidget(self.maya_value, 2, 1)
+        grid.addWidget(QLabel("Audio"), 1, 0)
+        grid.addWidget(self.audio_value, 1, 1)
+        grid.addWidget(QLabel("Screen-Kontext"), 2, 0)
+        grid.addWidget(self.screen_context_value, 2, 1)
+        grid.addWidget(QLabel("Maya"), 3, 0)
+        grid.addWidget(self.maya_value, 3, 1)
 
         root.addWidget(panel)
 

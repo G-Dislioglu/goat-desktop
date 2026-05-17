@@ -92,3 +92,4 @@
 - Added a clear LiveTalk recording cue after user feedback that recording start was invisible: popup status now shows preparation/listening states, a short beep fires immediately before recording, and default recording duration is 5 seconds.
 - Fixed LiveTalk Builder audio config fallback after UI test showed STT disabled in the visible app: STT/TTS now auto-enable `builder_proxy` when Builder URL and token are present.
 - Extended the Builder audio config fallback to read Windows User environment from `HKCU/Environment` when process env is missing; verified modes become `builder_proxy` without exposing the token.
+- Added a visible Audio status row to the popup so Run F tests only proceed when the UI itself shows `STT Builder aktiv / TTS Builder aktiv`.
