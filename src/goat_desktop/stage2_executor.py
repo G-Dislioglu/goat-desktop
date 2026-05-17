@@ -34,26 +34,45 @@ class Win32TextInputBackend:
 
     def type_text(self, text: str) -> None:
         import time
-        from ctypes import Structure, Union, byref, c_ulong, c_ushort, sizeof, windll
+        from ctypes import Structure, Union, WinDLL, byref, c_size_t, get_last_error, sizeof
+        from ctypes import wintypes
 
         input_keyboard = 1
         keyeventf_unicode = 0x0004
         keyeventf_keyup = 0x0002
+        user32 = WinDLL("user32", use_last_error=True)
 
         class KeyBdInput(Structure):
             _fields_ = [
-                ("wVk", c_ushort),
-                ("wScan", c_ushort),
-                ("dwFlags", c_ulong),
-                ("time", c_ulong),
-                ("dwExtraInfo", c_ulong),
+                ("wVk", wintypes.WORD),
+                ("wScan", wintypes.WORD),
+                ("dwFlags", wintypes.DWORD),
+                ("time", wintypes.DWORD),
+                ("dwExtraInfo", c_size_t),
+            ]
+
+        class MouseInput(Structure):
+            _fields_ = [
+                ("dx", wintypes.LONG),
+                ("dy", wintypes.LONG),
+                ("mouseData", wintypes.DWORD),
+                ("dwFlags", wintypes.DWORD),
+                ("time", wintypes.DWORD),
+                ("dwExtraInfo", c_size_t),
+            ]
+
+        class HardwareInput(Structure):
+            _fields_ = [
+                ("uMsg", wintypes.DWORD),
+                ("wParamL", wintypes.WORD),
+                ("wParamH", wintypes.WORD),
             ]
 
         class InputUnion(Union):
-            _fields_ = [("ki", KeyBdInput)]
+            _fields_ = [("mi", MouseInput), ("ki", KeyBdInput), ("hi", HardwareInput)]
 
         class Input(Structure):
-            _fields_ = [("type", c_ulong), ("union", InputUnion)]
+            _fields_ = [("type", wintypes.DWORD), ("union", InputUnion)]
 
         for char in text:
             code = ord(char)
@@ -62,8 +81,10 @@ class Win32TextInputBackend:
                 type=input_keyboard,
                 union=InputUnion(ki=KeyBdInput(0, code, keyeventf_unicode | keyeventf_keyup, 0, 0)),
             )
-            windll.user32.SendInput(1, byref(down), sizeof(down))
-            windll.user32.SendInput(1, byref(up), sizeof(up))
+            if user32.SendInput(1, byref(down), sizeof(down)) != 1:
+                raise OSError(get_last_error(), "SendInput key-down failed")
+            if user32.SendInput(1, byref(up), sizeof(up)) != 1:
+                raise OSError(get_last_error(), "SendInput key-up failed")
             time.sleep(0.005)
 
 

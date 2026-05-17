@@ -60,3 +60,5 @@
 - Added `stage2_executor.py` with preview approval, `safe_text_context`, one-line text validation, and hard blocks for Stage 3/4.
 - Added `/action/stage2/text` with `dry_run=true` as the bridge default.
 - Verified Run G3 code-ready with 34 tests passing, using a recording text backend for evidence generation; no real desktop text input was executed in the code-ready sample.
+- First real Run G3 acceptance failed closed because the Win32 `SendInput` structure used an incomplete union; fixed the backend to use the full Windows `INPUT` union size and explicit SendInput error checks.
+- Completed Run G3 with a dedicated Tk test window: preview produced no input, approved Stage-2 input entered `GOAT safe input`, and screenshots were visually clean.

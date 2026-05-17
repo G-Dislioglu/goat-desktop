@@ -1,0 +1,100 @@
+{
+  "window": {
+    "title": "GOAT G3 Safe Text Acceptance Window",
+    "rect": [
+      288,
+      211,
+      1048,
+      571
+    ],
+    "width": 760,
+    "height": 360
+  },
+  "broker_decision": {
+    "status": "accept",
+    "final_bbox": [
+      342,
+      343,
+      994,
+      371
+    ],
+    "fusion_path": "run_g3_real_acceptance_tk_entry"
+  },
+  "before_capture": {
+    "ok": true,
+    "capture": {
+      "source": "mss",
+      "scope": "tk_window_rect",
+      "width": 760,
+      "height": 360,
+      "time_ms": 687.98,
+      "saved_to": "C:\\Users\\guerc\\Documents\\Codex\\2026-05-16\\files-mentioned-by-the-user-files\\goat-desktop\\docs\\screenshots\\run-g3-stage2-before-2026-05-17.png"
+    }
+  },
+  "preview_result": {
+    "status": "preview",
+    "executed": false,
+    "stage": 2,
+    "reason": "action gate did not allow execution: preview",
+    "preview": {
+      "label": "enter text in safe test field",
+      "text": "GOAT safe input",
+      "text_length": 15,
+      "requires_user_approval": true,
+      "safe_text_context": true
+    },
+    "gate_decision": {
+      "status": "preview",
+      "stage": 2,
+      "requires_user_approval": true,
+      "allowed_to_execute": false,
+      "reason": "stage 2 action requires preview approval",
+      "audit_event_type": "action_gate_preview"
+    },
+    "target": null
+  },
+  "approved_result": {
+    "status": "executed",
+    "executed": true,
+    "stage": 2,
+    "reason": "stage 2 text input executed after preview approval",
+    "preview": {
+      "label": "enter text in safe test field",
+      "text": "GOAT safe input",
+      "text_length": 15,
+      "requires_user_approval": true,
+      "safe_text_context": true
+    },
+    "gate_decision": {
+      "status": "ready",
+      "stage": 2,
+      "requires_user_approval": true,
+      "allowed_to_execute": true,
+      "reason": "gate passed",
+      "audit_event_type": "action_gate_ready"
+    },
+    "target": {
+      "x": 668,
+      "y": 357
+    }
+  },
+  "after_capture": {
+    "ok": true,
+    "capture": {
+      "source": "mss",
+      "scope": "tk_window_rect",
+      "width": 760,
+      "height": 360,
+      "time_ms": 139.11,
+      "saved_to": "C:\\Users\\guerc\\Documents\\Codex\\2026-05-16\\files-mentioned-by-the-user-files\\goat-desktop\\docs\\screenshots\\run-g3-stage2-after-2026-05-17.png"
+    }
+  },
+  "observed_entry_value": "GOAT safe input",
+  "safety": {
+    "test_window": "dedicated Tk window with one empty Entry field",
+    "text_entered": "GOAT safe input",
+    "no_file_dialog": true,
+    "no_stage3_stage4_execution": true,
+    "capture_scope": "own Tk window rectangle only"
+  }
+}
