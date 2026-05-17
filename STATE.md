@@ -116,6 +116,9 @@ popup_minimize_recovery_2026_05_17:
 popup_product_simplification_2026_05_17:
 "Popup-UI produktnaeher verschlankt. Entfernt aus sichtbarer Haupt-UI: statische Tabellenbeschriftungen, Dev-Button 'Cue testen' und manuelle Ball-Pfeiltasten. Ballsteuerung bleibt im Tray-Menue fuer Debug/Recovery, aber normaler Produktpfad ist GOAT setzt den Ball auf erkannte Ziele/Felder/Buttons. Status wird als kompakte Chips angezeigt; Screen-Kontext, Maya-Antwort und Zielmarkierung sind groessere Ausgabefelder. Bevorzugte Popup-Groesse bleibt kompakt."
 
+livetalk_compact_mode_2026_05_17:
+"LiveTalk bekommt einen eigenen kompakten Anzeigemodus. Beim Klick auf LiveTalk werden Einstellungen, Freigabe-Buttons, Zielmarkierung und Verbindungschip ausgeblendet; sichtbar bleiben Audio-Status, erkannter Text, Maya-Antwort, 'Nochmal sprechen' und 'LiveTalk beenden'. Nach 'LiveTalk beenden' kehrt das normale Fenster mit Provider-/Denkmodus-Einstellungen zurueck. Reasoning-Dropdown wurde von unklarem 'Minimal/Niedrig/Mittel/Hoch' auf 'Denkmodus: schnell/niedrig/mittel/hoch' umbenannt. Tests gruen: compileall und 17 LiveTalk/STT/TTS-Tests."
+
 run_e_multi_provider_code_ready_2026_05_17:
 "vision_hint.py wurde um Multi-Provider-Vision-Hint erweitert (gemini_flash_lite, grok_4_3, gemini_flash). Reasoning-Level konfigurierbar (minimal, low, medium, high). User-Wahl im Popup ueber zwei Dropdowns, Persistierung in vision_config.json unter APPDATA/GoatDesktop. Default: gemini_flash_lite + minimal. Builder-Proxy-Modus nutzt GOAT_VISION_MODE=builder_proxy, GOAT_BUILDER_URL, GOAT_BUILDER_TOKEN, GOAT_VISION_PROVIDER und GOAT_VISION_REASONING. Unit-Tests mit Mock-Server gruen: 8 passed. Acceptance gegen echten /api/goat/vision-hint folgt sobald Soulmatch-Builder den Endpoint gepusht hat. Fail-Safe bei Builder-Offline/Timeout/HTTP-Fehler: uncertain-Hint, kein stiller Mock-Switch. run_e_completed bleibt bewusst nicht gesetzt."
 

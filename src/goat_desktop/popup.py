@@ -25,6 +25,7 @@ class GoatPopup(QWidget):
         self.setWindowTitle("GOAT Desktop")
         self.setMinimumSize(560, 420)
         self._preferred_size = (680, 500)
+        self._livetalk_size = (520, 360)
         self.resize(*self._preferred_size)
         self.setWindowFlag(Qt.WindowType.Window, True)
 
@@ -139,19 +140,23 @@ class GoatPopup(QWidget):
         actions.setVerticalSpacing(8)
 
         self.talk_button = QPushButton("LiveTalk")
+        self.exit_livetalk = QPushButton("LiveTalk beenden")
         self.cue_approve = QPushButton("Cue freigeben")
         self.cue_reject = QPushButton("Cue ablehnen")
+        self.exit_livetalk.setVisible(False)
         self.cue_approve.setEnabled(False)
         self.cue_reject.setEnabled(False)
 
-        actions.addWidget(self.talk_button, 0, 0, 1, 2)
+        actions.addWidget(self.talk_button, 0, 0)
+        actions.addWidget(self.exit_livetalk, 0, 1)
         actions.addWidget(self.cue_approve, 1, 0)
         actions.addWidget(self.cue_reject, 1, 1)
-        root.addLayout(actions)
+        self.actions_layout = actions
+        root.addLayout(self.actions_layout)
 
-        vision_panel = QFrame()
-        vision_panel.setObjectName("panel")
-        vision_grid = QGridLayout(vision_panel)
+        self.vision_panel = QFrame()
+        self.vision_panel.setObjectName("panel")
+        vision_grid = QGridLayout(self.vision_panel)
         vision_grid.setContentsMargins(10, 8, 10, 8)
         vision_grid.setHorizontalSpacing(8)
         vision_grid.setVerticalSpacing(6)
@@ -160,13 +165,13 @@ class GoatPopup(QWidget):
         self.vision_provider.addItem("Grok 4.3", "grok_4_3")
         self.vision_provider.addItem("Gemini Flash", "gemini_flash")
         self.vision_reasoning = QComboBox()
-        self.vision_reasoning.addItem("Minimal", "minimal")
-        self.vision_reasoning.addItem("Niedrig", "low")
-        self.vision_reasoning.addItem("Mittel", "medium")
-        self.vision_reasoning.addItem("Hoch", "high")
+        self.vision_reasoning.addItem("Denkmodus: schnell", "minimal")
+        self.vision_reasoning.addItem("Denkmodus: niedrig", "low")
+        self.vision_reasoning.addItem("Denkmodus: mittel", "medium")
+        self.vision_reasoning.addItem("Denkmodus: hoch", "high")
         vision_grid.addWidget(self.vision_provider, 0, 0)
         vision_grid.addWidget(self.vision_reasoning, 0, 1)
-        root.addWidget(vision_panel)
+        root.addWidget(self.vision_panel)
         self._set_reasoning_tooltips()
 
         self.setStyleSheet(
@@ -230,6 +235,18 @@ class GoatPopup(QWidget):
         label.setObjectName("chip")
         label.setWordWrap(True)
         return label
+
+    def set_livetalk_mode(self, active: bool) -> None:
+        self.connection_chip.setVisible(not active)
+        self.vision_panel.setVisible(not active)
+        self.cue_approve.setVisible(not active)
+        self.cue_reject.setVisible(not active)
+        self.exit_livetalk.setVisible(active)
+        self.target_value.setVisible(not active)
+        self.talk_button.setText("Nochmal sprechen" if active else "LiveTalk")
+        width, height = self._livetalk_size if active else self._preferred_size
+        self.resize(width, height)
+        self.ensure_visible()
 
     def _set_reasoning_tooltips(self) -> None:
         self.vision_reasoning.setItemData(0, "Schnellste Antwort (ca. 700ms), Standard", Qt.ItemDataRole.ToolTipRole)

@@ -119,6 +119,7 @@ class GoatTrayApp:
         self.popup.cue_approve.clicked.connect(self.approve_pending_cue)
         self.popup.cue_reject.clicked.connect(self.reject_pending_cue)
         self.popup.talk_button.clicked.connect(self.run_livetalk_once)
+        self.popup.exit_livetalk.clicked.connect(self.exit_livetalk_mode)
         self.popup.vision_provider.currentIndexChanged.connect(self._save_vision_config)
         self.popup.vision_reasoning.currentIndexChanged.connect(self._save_vision_config)
 
@@ -138,6 +139,7 @@ class GoatTrayApp:
         )
 
     def run_livetalk_once(self) -> None:
+        self.popup.set_livetalk_mode(True)
         self.popup.talk_button.setEnabled(False)
         self._refresh_audio_status()
         self.popup.screen_context_value.setText("LiveTalk bereit")
@@ -153,6 +155,11 @@ class GoatTrayApp:
         finally:
             self._refresh_audio_status()
             self.popup.talk_button.setEnabled(True)
+
+    def exit_livetalk_mode(self) -> None:
+        self.popup.set_livetalk_mode(False)
+        self.popup.screen_context_value.setText("-")
+        self.popup.maya_value.setText("bereit, pausiert")
 
     def _refresh_audio_status(self) -> None:
         stt = load_stt_config()

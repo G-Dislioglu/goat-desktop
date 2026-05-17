@@ -101,3 +101,4 @@
 - Tightened popup recovery for Windows DPI behavior: Ctrl+Alt+G now actively restores the preferred 920x640 size before clamping the popup on screen.
 - Added automatic minimize recovery: if Windows moves the GOAT popup to the minimized -32000 coordinate state, the popup restores itself to normal size and visible screen bounds.
 - Simplified the visible popup for product use: removed static label table, dev cue-test button, and manual ball direction controls; the ball is now treated as a GOAT-controlled target marker in the main UI.
+- Added a compact LiveTalk mode that hides settings while speaking/listening and renamed the reasoning dropdown to explicit `Denkmodus` labels.
