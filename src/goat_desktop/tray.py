@@ -92,17 +92,15 @@ class GoatTrayApp:
         self._ball_visible = True
         self.overlay.show_overlay()
         self.overlay.show_ball()
-        self.popup.ball_toggle.setText("Ball aus")
 
     def hide_ball(self) -> None:
         self._ball_visible = False
         self.overlay.hide_ball()
-        self.popup.ball_toggle.setText("Ball an")
 
     def move_ball_to_cue(self, x: int, y: int) -> None:
         self._ball_visible = True
         self.overlay.move_ball_to(x - self.overlay.width() // 2, y - self.overlay.height() // 2)
-        self.popup.ball_toggle.setText("Ball aus")
+        self.popup.target_value.setText(f"Ziel markiert: x={x}, y={y}")
 
     def emergency_stop(self) -> None:
         self.hide_ball()
@@ -118,12 +116,6 @@ class GoatTrayApp:
         self.app.quit()
 
     def _connect_popup_controls(self) -> None:
-        self.popup.ball_left.clicked.connect(lambda: self.overlay.move_ball_by(-80, 0))
-        self.popup.ball_right.clicked.connect(lambda: self.overlay.move_ball_by(80, 0))
-        self.popup.ball_up.clicked.connect(lambda: self.overlay.move_ball_by(0, -80))
-        self.popup.ball_down.clicked.connect(lambda: self.overlay.move_ball_by(0, 80))
-        self.popup.ball_toggle.clicked.connect(self._toggle_ball)
-        self.popup.cue_test.clicked.connect(self.request_test_cue)
         self.popup.cue_approve.clicked.connect(self.approve_pending_cue)
         self.popup.cue_reject.clicked.connect(self.reject_pending_cue)
         self.popup.talk_button.clicked.connect(self.run_livetalk_once)
@@ -169,7 +161,9 @@ class GoatTrayApp:
         tts_ready = tts.mode.value == "builder_proxy" and bool(tts.builder_url and tts.builder_token)
         stt_label = "STT Builder aktiv" if stt_ready else f"STT {stt.mode.value}"
         tts_label = "TTS Builder aktiv" if tts_ready else f"TTS {tts.mode.value}"
-        self.popup.audio_value.setText(f"{stt_label} / {tts_label}")
+        text = f"{stt_label} / {tts_label}"
+        self.popup.audio_value.setText(text)
+        self.popup.audio_chip.setText(f"Audio: {text}")
 
     def _update_livetalk_status(self, state: str) -> None:
         labels = {
@@ -212,11 +206,16 @@ class GoatTrayApp:
         token = os.environ.get("GOAT_BUILDER_TOKEN")
         if not url or not token:
             self.popup.connection_value.setText("lokal")
+            self.popup.connection_chip.setText("Verbindung: lokal")
             return
         self.builder_bridge = BuilderBridgeClient(url=url, token=token)
-        self.builder_bridge.status_changed.connect(self.popup.connection_value.setText)
+        self.builder_bridge.status_changed.connect(self._update_connection_status)
         self.builder_bridge.cue_received.connect(self.receive_builder_cue)
         self.builder_bridge.start()
+
+    def _update_connection_status(self, text: str) -> None:
+        self.popup.connection_value.setText(text)
+        self.popup.connection_chip.setText(f"Verbindung: {text}")
 
     def receive_builder_cue(self, message: dict) -> None:
         self.pending_builder_cue = {
@@ -227,6 +226,8 @@ class GoatTrayApp:
         }
         if self.pending_builder_cue["bbox"] is None:
             self.pending_builder_cue.pop("bbox")
+        label = str(self.pending_builder_cue.get("label") or "Builder-Cue")
+        self.popup.target_value.setText(f"Zielvorschlag: {label}")
         self.popup.screen_context_value.setText("Builder-Cue wartet")
         self.popup.maya_value.setText("Freigabe erforderlich")
         self.popup.cue_approve.setEnabled(True)
@@ -260,6 +261,7 @@ class GoatTrayApp:
 
     def reject_pending_cue(self) -> None:
         self.pending_builder_cue = None
+        self.popup.target_value.setText("Kein Ziel markiert")
         self.popup.screen_context_value.setText("Builder-Cue abgelehnt")
         self.popup.maya_value.setText("bereit, pausiert")
         self.popup.cue_approve.setEnabled(False)

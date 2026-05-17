@@ -4,8 +4,8 @@ from PyQt6.QtCore import QEvent, QPoint, QTimer, Qt
 from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import (
     QApplication,
-    QFrame,
     QComboBox,
+    QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -23,8 +23,8 @@ class GoatPopup(QWidget):
         self._drag_start: QPoint | None = None
 
         self.setWindowTitle("GOAT Desktop")
-        self.setMinimumSize(760, 540)
-        self._preferred_size = (920, 640)
+        self.setMinimumSize(560, 420)
+        self._preferred_size = (680, 500)
         self.resize(*self._preferred_size)
         self.setWindowFlag(Qt.WindowType.Window, True)
 
@@ -92,90 +92,82 @@ class GoatPopup(QWidget):
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
-        root.setContentsMargins(16, 14, 16, 14)
-        root.setSpacing(12)
+        root.setContentsMargins(14, 12, 14, 12)
+        root.setSpacing(10)
 
         title = QLabel("GOAT Desktop")
         title.setObjectName("title")
         root.addWidget(title)
 
-        panel = QFrame()
-        panel.setObjectName("panel")
-        grid = QGridLayout(panel)
-        grid.setContentsMargins(12, 10, 12, 10)
-        grid.setHorizontalSpacing(12)
-        grid.setVerticalSpacing(8)
-
         self.connection_value = QLabel("offline")
         self.audio_value = QLabel("-")
         self.screen_context_value = QLabel("-")
         self.maya_value = QLabel("bereit, pausiert")
-        for value_label in (self.connection_value, self.audio_value, self.screen_context_value, self.maya_value):
+        self.target_value = QLabel("Kein Ziel markiert")
+        for value_label in (
+            self.connection_value,
+            self.audio_value,
+            self.screen_context_value,
+            self.maya_value,
+            self.target_value,
+        ):
             value_label.setWordWrap(True)
-            value_label.setMinimumWidth(260)
 
-        grid.addWidget(QLabel("Verbindung"), 0, 0)
-        grid.addWidget(self.connection_value, 0, 1)
-        grid.addWidget(QLabel("Audio"), 1, 0)
-        grid.addWidget(self.audio_value, 1, 1)
-        grid.addWidget(QLabel("Screen-Kontext"), 2, 0)
-        grid.addWidget(self.screen_context_value, 2, 1)
-        grid.addWidget(QLabel("Maya"), 3, 0)
-        grid.addWidget(self.maya_value, 3, 1)
+        status_row = QHBoxLayout()
+        status_row.setSpacing(8)
+        self.connection_chip = self._chip("Verbindung: offline")
+        self.audio_chip = self._chip("Audio: -")
+        status_row.addWidget(self.connection_chip, 1)
+        status_row.addWidget(self.audio_chip, 2)
+        root.addLayout(status_row)
 
-        root.addWidget(panel)
+        output_panel = QFrame()
+        output_panel.setObjectName("panel")
+        output_layout = QVBoxLayout(output_panel)
+        output_layout.setContentsMargins(10, 8, 10, 8)
+        output_layout.setSpacing(8)
+        self.target_value.setObjectName("target")
+        self.screen_context_value.setObjectName("output")
+        self.maya_value.setObjectName("output")
+        output_layout.addWidget(self.target_value)
+        output_layout.addWidget(self.screen_context_value)
+        output_layout.addWidget(self.maya_value)
+        root.addWidget(output_panel, 1)
 
         actions = QGridLayout()
         actions.setHorizontalSpacing(10)
+        actions.setVerticalSpacing(8)
 
-        stop_button = QPushButton("Pause / Stop")
-        stop_button.setEnabled(False)
         self.talk_button = QPushButton("LiveTalk")
-        self.cue_test = QPushButton("Cue testen")
         self.cue_approve = QPushButton("Cue freigeben")
         self.cue_reject = QPushButton("Cue ablehnen")
         self.cue_approve.setEnabled(False)
         self.cue_reject.setEnabled(False)
 
-        actions.addWidget(stop_button, 0, 0)
-        actions.addWidget(self.talk_button, 0, 1)
-        actions.addWidget(self.cue_test, 1, 0, 1, 2)
-        actions.addWidget(self.cue_approve, 2, 0)
-        actions.addWidget(self.cue_reject, 2, 1)
+        actions.addWidget(self.talk_button, 0, 0, 1, 2)
+        actions.addWidget(self.cue_approve, 1, 0)
+        actions.addWidget(self.cue_reject, 1, 1)
         root.addLayout(actions)
 
         vision_panel = QFrame()
         vision_panel.setObjectName("panel")
         vision_grid = QGridLayout(vision_panel)
-        vision_grid.setContentsMargins(12, 10, 12, 10)
-        vision_grid.setHorizontalSpacing(12)
-        vision_grid.setVerticalSpacing(8)
-        vision_grid.addWidget(QLabel("Vision-Modell"), 0, 0)
+        vision_grid.setContentsMargins(10, 8, 10, 8)
+        vision_grid.setHorizontalSpacing(8)
+        vision_grid.setVerticalSpacing(6)
         self.vision_provider = QComboBox()
         self.vision_provider.addItem("Gemini Flash Lite", "gemini_flash_lite")
         self.vision_provider.addItem("Grok 4.3", "grok_4_3")
         self.vision_provider.addItem("Gemini Flash", "gemini_flash")
-        vision_grid.addWidget(self.vision_provider, 0, 1)
-        vision_grid.addWidget(QLabel("Denk-Tiefe"), 1, 0)
         self.vision_reasoning = QComboBox()
         self.vision_reasoning.addItem("Minimal", "minimal")
         self.vision_reasoning.addItem("Niedrig", "low")
         self.vision_reasoning.addItem("Mittel", "medium")
         self.vision_reasoning.addItem("Hoch", "high")
-        vision_grid.addWidget(self.vision_reasoning, 1, 1)
+        vision_grid.addWidget(self.vision_provider, 0, 0)
+        vision_grid.addWidget(self.vision_reasoning, 0, 1)
         root.addWidget(vision_panel)
         self._set_reasoning_tooltips()
-
-        overlay_controls = QHBoxLayout()
-        overlay_controls.setSpacing(8)
-        self.ball_left = QPushButton("Ball <")
-        self.ball_right = QPushButton("Ball >")
-        self.ball_up = QPushButton("Ball ^")
-        self.ball_down = QPushButton("Ball v")
-        self.ball_toggle = QPushButton("Ball aus")
-        for button in (self.ball_left, self.ball_right, self.ball_up, self.ball_down, self.ball_toggle):
-            overlay_controls.addWidget(button)
-        root.addLayout(overlay_controls)
 
         self.setStyleSheet(
             """
@@ -183,10 +175,10 @@ class GoatPopup(QWidget):
                 background: #17191f;
                 color: #f2f4f8;
                 font-family: Segoe UI;
-                font-size: 12px;
+                font-size: 13px;
             }
             QLabel#title {
-                font-size: 16px;
+                font-size: 18px;
                 font-weight: 600;
             }
             QFrame#panel {
@@ -194,11 +186,30 @@ class GoatPopup(QWidget):
                 border-radius: 6px;
                 background: #20232b;
             }
+            QLabel#chip {
+                border: 1px solid #3a3f4b;
+                border-radius: 6px;
+                background: #20232b;
+                padding: 7px 9px;
+                color: #d7dce6;
+            }
+            QLabel#target {
+                color: #ffd94a;
+                font-weight: 600;
+                padding: 4px 6px;
+            }
+            QLabel#output {
+                background: #17191f;
+                border: 1px solid #2f3542;
+                border-radius: 5px;
+                padding: 8px 9px;
+                min-height: 44px;
+            }
             QPushButton {
                 background: #2d3340;
                 border: 1px solid #4a5364;
                 border-radius: 5px;
-                padding: 7px 10px;
+                padding: 8px 10px;
                 color: #d7dce6;
             }
             QPushButton:disabled {
@@ -213,6 +224,12 @@ class GoatPopup(QWidget):
             }
             """
         )
+
+    def _chip(self, text: str) -> QLabel:
+        label = QLabel(text)
+        label.setObjectName("chip")
+        label.setWordWrap(True)
+        return label
 
     def _set_reasoning_tooltips(self) -> None:
         self.vision_reasoning.setItemData(0, "Schnellste Antwort (ca. 700ms), Standard", Qt.ItemDataRole.ToolTipRole)
