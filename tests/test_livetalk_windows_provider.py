@@ -12,6 +12,11 @@ class DisabledTts:
     provider = "builder_default"
 
 
+class ChatOk:
+    status = "ok"
+    response_text = "Mir geht es gut. Wie kann ich dir helfen?"
+
+
 def test_mock_livetalk_remains_not_completion_ready(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("GOAT_LIVETALK_PROVIDER", "mock")
     monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
@@ -40,8 +45,9 @@ def test_windows_sapi_provider_records_and_speaks_with_manual_transcript_but_is_
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
     monkeypatch.setattr(livetalk, "transcribe_audio", lambda audio_path: DisabledStt())
+    monkeypatch.setattr(livetalk, "request_chat_response", lambda message, context=None: ChatOk())
     monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: DisabledTts())
-    monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: "zeige das suchfeld" in text.casefold())
+    monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: "mir geht es gut" in text.casefold())
 
     result = LiveTalkSession().run_once()
 
@@ -127,6 +133,7 @@ def test_windows_sapi_provider_defaults_to_five_second_recording_and_status_cue(
     monkeypatch.setenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", "zeige das suchfeld")
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: recorded_seconds.append(seconds) or _fake_wav(output_path))
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: states.append("cue"))
+    monkeypatch.setattr(livetalk, "request_chat_response", lambda message, context=None: ChatOk())
     monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: DisabledTts())
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: True)
 

@@ -17,6 +17,11 @@ from goat_desktop.tts_hint import TtsMode, load_tts_config, synthesize_speech
 WAV_BYTES = b"RIFF" + b"\0" * 256
 
 
+class ChatOk:
+    status = "ok"
+    response_text = "Ich zeige das Suchfeld nur nach Freigabe."
+
+
 class TtsHandler(BaseHTTPRequestHandler):
     response_mode = "ok"
     last_request: dict | None = None
@@ -138,6 +143,7 @@ def test_livetalk_completion_requires_builder_tts(monkeypatch, mock_tts_server, 
     monkeypatch.delenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", raising=False)
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
+    monkeypatch.setattr(livetalk, "request_chat_response", lambda message, context=None: ChatOk())
     monkeypatch.setattr(livetalk, "play_windows_wav", lambda audio_path: audio_path.exists())
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: False)
 

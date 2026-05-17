@@ -12,6 +12,7 @@
 - Verified the live Builder surface for text chat: STT, TTS, and Vision Hint endpoints are reachable, but `/api/goat/chat` returns 404.
 - Added `chat_hint.py` as the desktop-side Builder proxy for future Maya text chat and replaced the local canned chat response with an explicit uncertain state when Builder chat is unavailable.
 - Re-verified after Builder update: Soulmatch commit `ff43b6d` is live on Render and `/api/goat/chat` returns HTTP 200. Desktop chat smoke passed for `builder_default`, `gemini_flash_lite`, `gemini_flash`, and `grok_4_3`.
+- Routed Windows-SAPI LiveTalk audio through Maya chat after STT before TTS. This removes the local canned `Gehoert: ... Ich handle nur nach Freigabe.` response from the spoken path.
 - Upgraded canonical GOAT Desktop Vision spec to v1.1 after Run 0c evidence.
 - Added Run A native PyQt6 tray shell with movable mini-popup.
 - Kept Run A scope limited: no overlay, bridge, UIA, OCR, Vision, LiveTalk implementation, or actions.

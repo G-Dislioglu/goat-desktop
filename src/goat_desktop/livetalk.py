@@ -12,6 +12,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from time import perf_counter
 
+from goat_desktop.chat_hint import request_chat_response
 from goat_desktop.stt_hint import transcribe_audio
 from goat_desktop.tts_hint import synthesize_speech
 
@@ -96,8 +97,17 @@ class LiveTalkSession:
         self._set_state("thinking")
         stt_result = transcribe_audio(audio_path)
         transcript = stt_result.transcript or manual_transcript
+        chat_ok = False
         if transcript:
-            response_text = f"Gehoert: {transcript}. Ich handle nur nach Freigabe."
+            chat_result = request_chat_response(
+                transcript,
+                context={
+                    "source": "livetalk_audio",
+                    "safety_rule": "desktop actions require explicit user approval",
+                },
+            )
+            chat_ok = chat_result.status == "ok"
+            response_text = chat_result.response_text
         elif stt_result.status == "uncertain":
             response_text = _stt_uncertain_response(stt_result.error)
         else:
@@ -126,7 +136,12 @@ class LiveTalkSession:
             audio_path=str(audio_path),
             response_audio_path=final_response_audio_path,
             completion_ready=bool(
-                audio_recorded and audio_played and stt_result.status == "ok" and tts_result.status == "ok" and transcript
+                audio_recorded
+                and audio_played
+                and stt_result.status == "ok"
+                and chat_ok
+                and tts_result.status == "ok"
+                and transcript
             ),
         )
 

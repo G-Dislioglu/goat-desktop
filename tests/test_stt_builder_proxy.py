@@ -13,6 +13,11 @@ from goat_desktop.livetalk import LiveTalkSession
 from goat_desktop.stt_hint import SttMode, load_stt_config, transcribe_audio
 
 
+class ChatOk:
+    status = "ok"
+    response_text = "Ich zeige das Suchfeld nur nach Freigabe."
+
+
 class SttHandler(BaseHTTPRequestHandler):
     response_mode = "ok"
     last_request: dict | None = None
@@ -126,6 +131,7 @@ def test_livetalk_uses_builder_stt_when_available(monkeypatch, mock_stt_server, 
     monkeypatch.delenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", raising=False)
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
+    monkeypatch.setattr(livetalk, "request_chat_response", lambda message, context=None: ChatOk())
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: "zeige das suchfeld" in text.casefold())
 
     result = LiveTalkSession().run_once()
