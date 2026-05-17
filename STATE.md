@@ -107,6 +107,9 @@ popup_recovery_fix_2026_05_17:
 popup_recovery_size_normalization_2026_05_17:
 "Popup-Recovery normalisiert jetzt auch die Fenstergroesse. Anlass: Nach Maximieren/Minimieren stellte Qt das Fenster zwar wieder sichtbar her, aber in einer extrem grossen Geometrie. ensure_visible() setzt Fenster ueber 1400px Breite oder 900px Hoehe beim Wiederanzeigen auf die bevorzugte Groesse 1040x720 zurueck und klemmt es danach in den sichtbaren Bereich."
 
+popup_recovery_preferred_size_2026_05_17:
+"Popup-Recovery setzt beim Wiederanzeigen jetzt aktiv die bevorzugte Fenstergroesse 920x640 und klemmt danach in den sichtbaren Bereich. Anlass: Windows-DPI/Qt-Geometrie liess die vorherige Oversize-Erkennung zu spaet greifen. Minimum reduziert auf 760x540, damit die UI lesbar bleibt ohne maximiertes Fenster."
+
 run_e_multi_provider_code_ready_2026_05_17:
 "vision_hint.py wurde um Multi-Provider-Vision-Hint erweitert (gemini_flash_lite, grok_4_3, gemini_flash). Reasoning-Level konfigurierbar (minimal, low, medium, high). User-Wahl im Popup ueber zwei Dropdowns, Persistierung in vision_config.json unter APPDATA/GoatDesktop. Default: gemini_flash_lite + minimal. Builder-Proxy-Modus nutzt GOAT_VISION_MODE=builder_proxy, GOAT_BUILDER_URL, GOAT_BUILDER_TOKEN, GOAT_VISION_PROVIDER und GOAT_VISION_REASONING. Unit-Tests mit Mock-Server gruen: 8 passed. Acceptance gegen echten /api/goat/vision-hint folgt sobald Soulmatch-Builder den Endpoint gepusht hat. Fail-Safe bei Builder-Offline/Timeout/HTTP-Fehler: uncertain-Hint, kein stiller Mock-Switch. run_e_completed bleibt bewusst nicht gesetzt."
 

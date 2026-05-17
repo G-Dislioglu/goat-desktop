@@ -98,3 +98,4 @@
 - Completed Run F live UI acceptance: visible popup showed `STT Builder aktiv / TTS Builder aktiv`, Builder-STT recognized `Zeige mir das Suchfeld.`, Builder-TTS replied with the accepted KI voice, and no audio files were committed.
 - Fixed popup recovery after user minimized/maximized the window and could only see the yellow overlay: Ctrl+Alt+G now restores GOAT globally, popup show uses showNormal plus on-screen clamping, and the default window is larger for readable LiveTalk output.
 - Added popup size normalization during recovery so maximized/oversized geometry is reset to the preferred 1040x720 window before on-screen clamping.
+- Tightened popup recovery for Windows DPI behavior: Ctrl+Alt+G now actively restores the preferred 920x640 size before clamping the popup on screen.

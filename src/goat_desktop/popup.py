@@ -23,9 +23,9 @@ class GoatPopup(QWidget):
         self._drag_start: QPoint | None = None
 
         self.setWindowTitle("GOAT Desktop")
-        self.setMinimumSize(860, 620)
-        self._preferred_size = (1040, 720)
-        self.resize(1040, 720)
+        self.setMinimumSize(760, 540)
+        self._preferred_size = (920, 640)
+        self.resize(*self._preferred_size)
         self.setWindowFlag(Qt.WindowType.Window, True)
 
         self._build_ui()
@@ -48,16 +48,18 @@ class GoatPopup(QWidget):
             return
         area = screen.availableGeometry()
         margin = 18
-        preferred_width, preferred_height = self._preferred_size
-        current_width = preferred_width if self.width() > 1400 else self.width()
-        current_height = preferred_height if self.height() > 900 else self.height()
-        width = min(current_width, max(self.minimumWidth(), area.width() - margin * 2))
-        height = min(current_height, max(self.minimumHeight(), area.height() - margin * 2))
+        width = min(self.width(), max(self.minimumWidth(), area.width() - margin * 2))
+        height = min(self.height(), max(self.minimumHeight(), area.height() - margin * 2))
         if width != self.width() or height != self.height():
             self.resize(width, height)
         x = min(max(self.x(), area.left() + margin), area.right() - self.width() - margin)
         y = min(max(self.y(), area.top() + margin), area.bottom() - self.height() - margin)
         self.move(x, y)
+
+    def restore_preferred_size(self) -> None:
+        width, height = self._preferred_size
+        self.resize(width, height)
+        self.ensure_visible()
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.LeftButton:

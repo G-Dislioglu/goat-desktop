@@ -59,7 +59,7 @@ class GoatTrayApp:
         if not self.popup.isVisible():
             self.popup.place_near_tray()
         self.popup.showNormal()
-        self.popup.ensure_visible()
+        self.popup.restore_preferred_size()
         self.popup.raise_()
         self.popup.activateWindow()
 
