@@ -114,6 +114,7 @@ class LiveTalkSession:
         self.audio_dir.mkdir(parents=True, exist_ok=True)
         audio_path = self.audio_dir / "livetalk-last-recording.wav"
         response_audio_path = self.audio_dir / "livetalk-live-response.wav"
+        response_audio_path.unlink(missing_ok=True)
         record_seconds = float(os.environ.get("GOAT_LIVETALK_RECORD_SECONDS", "3.0"))
         prepare_seconds = float(os.environ.get("GOAT_LIVETALK_PREPARE_SECONDS", "0.35"))
 
@@ -123,7 +124,7 @@ class LiveTalkSession:
         audio_recorded = record_windows_wav(audio_path, record_seconds)
         self._set_state("thinking")
         live_result = request_gemini_live_turn(audio_path, response_audio_path)
-        transcript = live_result.transcript
+        transcript = live_result.transcript or ("Keine Sprache erkannt" if live_result.status != "ok" else "")
         response_text = live_result.response_text
         self._publish_response(transcript, response_text)
         self._set_state("speaking")

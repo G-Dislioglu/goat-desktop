@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import math
 import os
 import socket
 import wave
@@ -64,6 +65,22 @@ def request_gemini_live_turn(
         return _uncertain_result("GOAT_BUILDER_URL and GOAT_BUILDER_TOKEN are required", active_config, started)
     if not audio_path.exists() or audio_path.stat().st_size <= 44:
         return _uncertain_result("audio file is empty", active_config, started)
+    input_signal = wav_signal_stats(audio_path)
+    if _is_low_input_signal(input_signal):
+        return GeminiLiveResult(
+            status="uncertain",
+            transcript="",
+            response_text="Keine Sprache erkannt. Bitte nach dem Ton sprechen.",
+            audio_path=None,
+            time_ms=round((perf_counter() - started) * 1000, 2),
+            error="low_input_signal",
+            raw_evidence={
+                "mode": "gemini_live",
+                "model": active_config.model,
+                "voice": active_config.voice,
+                "input_signal": input_signal,
+            },
+        )
 
     uri = build_goat_voice_ws_url(active_config.builder_url)
     headers = {"Authorization": f"Bearer {active_config.builder_token}"}
@@ -149,6 +166,7 @@ def request_gemini_live_turn(
             "voice": active_config.voice,
             "messages": message_count,
             "audio_chunks": len(output_audio_chunks),
+            "input_signal": input_signal,
         },
     )
 
@@ -177,6 +195,22 @@ def read_wav_as_16khz_pcm(audio_path: Path) -> bytes:
     if sample_rate != 16000:
         mono_samples = _resample_samples(mono_samples, sample_rate, 16000)
     return _encode_s16le(mono_samples)
+
+
+def wav_signal_stats(audio_path: Path) -> dict[str, float]:
+    pcm = read_wav_as_16khz_pcm(audio_path)
+    samples = [int.from_bytes(pcm[offset : offset + 2], "little", signed=True) for offset in range(0, len(pcm), 2)]
+    if not samples:
+        return {"duration_s": 0.0, "rms": 0.0, "peak": 0.0, "loud_ratio": 0.0}
+    rms = math.sqrt(sum(sample * sample for sample in samples) / len(samples))
+    peak = max(abs(sample) for sample in samples)
+    loud_ratio = sum(1 for sample in samples if abs(sample) > 700) / len(samples)
+    return {
+        "duration_s": round(len(samples) / 16000, 3),
+        "rms": round(rms, 2),
+        "peak": float(peak),
+        "loud_ratio": round(loud_ratio, 5),
+    }
 
 
 def write_pcm_wav(output_path: Path, pcm_data: bytes, sample_rate: int | None = None) -> None:
@@ -208,6 +242,12 @@ def _parse_json_bytes(raw: bytes) -> dict | None:
 
 def _has_playable_audio(chunks: list[bytes]) -> bool:
     return sum(len(chunk) for chunk in chunks) >= 1600
+
+
+def _is_low_input_signal(stats: dict[str, float]) -> bool:
+    min_rms = float(_get_env("GOAT_VOICE_MIN_RMS", "220") or "220")
+    min_loud_ratio = float(_get_env("GOAT_VOICE_MIN_LOUD_RATIO", "0.02") or "0.02")
+    return stats.get("duration_s", 0.0) > 0.0 and stats.get("rms", 0.0) < min_rms and stats.get("loud_ratio", 0.0) < min_loud_ratio
 
 
 def _decode_wav_samples(frames: bytes, channels: int, sample_width: int) -> list[int]:

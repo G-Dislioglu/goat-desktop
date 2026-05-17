@@ -20,6 +20,7 @@
 - Added optional manual `Vorlesen` for LiveTalk answers: visible only after a Maya response in LiveTalk mode, runs Builder-TTS asynchronously, shows `Lade Audio...`, and reports TTS errors without Windows-SAPI fallback.
 - Added `gemini_live` as a GOAT Desktop LiveTalk provider. It connects to Builder `WSS /api/goat/voice`, sends recorded PCM audio, plays Gemini Live audio, and keeps the old STT->Chat->TTS path as fallback.
 - Fixed the first `gemini_live` UI failure: setup JSON byte frames are no longer treated as audio, and local Windows WAV input is normalized to mono 16 kHz / 16-bit PCM before being sent.
+- Improved the active LiveTalk retry UX: button text is now `Weiter sprechen`, quiet recordings fail fast with a clear `Keine Sprache erkannt` message, and stale response WAVs are removed before every Gemini Live turn.
 - Upgraded canonical GOAT Desktop Vision spec to v1.1 after Run 0c evidence.
 - Added Run A native PyQt6 tray shell with movable mini-popup.
 - Kept Run A scope limited: no overlay, bridge, UIA, OCR, Vision, LiveTalk implementation, or actions.

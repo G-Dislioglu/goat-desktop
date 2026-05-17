@@ -32,6 +32,9 @@ livetalk_gemini_live_provider_2026_05_18:
 livetalk_gemini_live_audio_fix_2026_05_18:
 "Gemini-Live-Audio-Fix am 2026-05-18. Problem: Builder leitete `setupComplete` als Byte-Frame weiter; Desktop speicherte diese JSON-Nachricht faelschlich als Audio und zeigte 'Gemini Live hat Audio geliefert', obwohl die WAV nur 70 Bytes hatte. Zweites Problem: Windows-MCI nahm lokal 11025 Hz / 8-bit WAV auf, Builder markiert aber 16 kHz / 16-bit PCM. Fix: Byte-Frames werden zuerst als JSON geprueft, nur echte groessere Audioframes werden als WAV geschrieben; Eingabe-WAV wird vor dem Senden auf mono 16 kHz / 16-bit PCM normalisiert. Live-Debug mit letzter Aufnahme: transcript 'Hallo Maya, wie geht's?', response_text 'Hallo! Mir geht's gut, danke! Wie kann ich dir helfen?', Audio-WAV 181486 Bytes. Tests gruen: compileall und 33 relevante Tests. Audio-Testdateien geloescht."
 
+livetalk_gemini_live_retry_ux_2026_05_18:
+"Gemini-Live-Weiterreden-UX am 2026-05-18 verbessert. Anlass: Nach zwei guten Runden war die dritte lokale Aufnahme fast still (RMS ca. 160, loud_ratio ca. 0.009), daher lieferte Gemini keine Antwort. Neu: Der LiveTalk-Button heisst im aktiven Modus `Weiter sprechen`; leise Aufnahmen werden lokal per Signalstatistik erkannt und bekommen sofort `Keine Sprache erkannt. Bitte nach dem Ton sprechen.` statt 20s Wartezeit; alte Antwort-WAVs werden vor jedem neuen Lauf geloescht, damit keine stale Audio-Datei wiederverwendet wird. Tests gruen: compileall und 35 relevante Tests. Audio-Testdateien geloescht."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 
