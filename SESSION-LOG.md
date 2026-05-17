@@ -50,3 +50,7 @@
 - Added dry-run action gating with conservative stage classification, Broker `accept` as a hard prerequisite, Stage 4 technical lock, and unknown-action escalation to Stage 3.
 - Added JSONL audit logging for gate decisions with assumptions and request/decision lineage.
 - Verified Run G1 code-ready with 15 tests passing; no OS-level action execution was added.
+- Started Run G2 as a deliberately narrow Stage-1 execution path.
+- Added `stage1_executor.py` with an independent Stage-1 allowlist for scroll and hover/pointer move only.
+- Added `/action/stage1` with `dry_run=true` as the bridge default.
+- Verified Run G2 code-ready with 24 tests passing, using a recording mouse backend for evidence generation; no real desktop OS action was executed in this Codex run.

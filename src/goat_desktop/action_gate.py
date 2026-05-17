@@ -188,7 +188,7 @@ def _audit_decision(request: ActionRequest, decision: GateDecision) -> GateDecis
                 "broker_decision must be accept before any action gate can pass",
                 "unknown action labels are classified as stage 3",
                 "vision hints are semantic context only",
-                "run_g1 is dry-run only and executes no OS actions",
+                "run_g1 is gate-only; run_g2 may execute only separately allowlisted stage 1 navigation",
             ],
         },
     )

@@ -1,0 +1,85 @@
+{
+  "results": [
+    {
+      "status": "executed",
+      "executed": true,
+      "action_type": "scroll",
+      "stage": 1,
+      "reason": "stage 1 scroll executed through configured mouse backend",
+      "gate_decision": {
+        "status": "ready",
+        "stage": 1,
+        "requires_user_approval": false,
+        "allowed_to_execute": true,
+        "reason": "gate passed",
+        "audit_event_type": "action_gate_ready"
+      },
+      "target": {
+        "scroll_amount": -240
+      }
+    },
+    {
+      "status": "executed",
+      "executed": true,
+      "action_type": "hover",
+      "stage": 1,
+      "reason": "stage 1 pointer move executed to broker-verified bbox center",
+      "gate_decision": {
+        "status": "ready",
+        "stage": 1,
+        "requires_user_approval": false,
+        "allowed_to_execute": true,
+        "reason": "gate passed",
+        "audit_event_type": "action_gate_ready"
+      },
+      "target": {
+        "x": 120,
+        "y": 220
+      }
+    },
+    {
+      "status": "blocked",
+      "executed": false,
+      "action_type": "open menu",
+      "stage": 1,
+      "reason": "stage 1 action is classified as free navigation but is not in the G2 executor allowlist",
+      "gate_decision": {
+        "status": "ready",
+        "stage": 1,
+        "requires_user_approval": false,
+        "allowed_to_execute": true,
+        "reason": "gate passed",
+        "audit_event_type": "action_gate_ready"
+      },
+      "target": null
+    },
+    {
+      "status": "blocked",
+      "executed": false,
+      "action_type": "type",
+      "stage": 2,
+      "reason": "stage1 executor only handles free-navigation actions",
+      "gate_decision": {
+        "status": "ready",
+        "stage": 2,
+        "requires_user_approval": true,
+        "allowed_to_execute": true,
+        "reason": "gate passed",
+        "audit_event_type": "action_gate_ready"
+      },
+      "target": null
+    }
+  ],
+  "recorded_backend": {
+    "moves": [
+      [
+        120,
+        220
+      ]
+    ],
+    "scrolls": [
+      -240
+    ]
+  },
+  "note": "RecordedMouseBackend was used for evidence generation; no real desktop OS action was executed in this sample."
+}

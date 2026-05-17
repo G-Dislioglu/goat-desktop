@@ -10,6 +10,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 from goat_desktop.broker import build_candidate, verify_candidate
 from goat_desktop.screen import capture_active_window, get_active_window
+from goat_desktop.stage1_executor import Stage1ExecutionRequest, execute_stage1_action
 from goat_desktop.vision_hint import load_vision_hint_config, get_vision_hint
 
 
@@ -83,6 +84,19 @@ def create_app(dispatch_cue: Callable[[int, int], None] | None = None) -> FastAP
             "anchors": decision["anchors"],
             "broker_decision": decision,
         }
+
+    @app.post("/action/stage1")
+    def stage1_action(payload: dict[str, Any]) -> dict[str, Any]:
+        scroll_amount = payload.get("scroll_amount")
+        request = Stage1ExecutionRequest(
+            action_type=str(payload.get("action_type") or ""),
+            label=str(payload.get("label") or ""),
+            broker_decision=dict(payload.get("broker_decision") or {}),
+            user_approved=bool(payload.get("user_approved") or False),
+            dry_run=bool(payload.get("dry_run") if "dry_run" in payload else True),
+            scroll_amount=int(scroll_amount) if scroll_amount is not None else -360,
+        )
+        return execute_stage1_action(request).to_dict()
 
     return app
 
