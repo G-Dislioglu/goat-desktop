@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtCore import QEvent, QPoint, QTimer, Qt
 from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import (
     QApplication,
@@ -78,6 +78,17 @@ class GoatPopup(QWidget):
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self._drag_start = None
         super().mouseReleaseEvent(event)
+
+    def changeEvent(self, event) -> None:
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.WindowStateChange and self.isMinimized():
+            QTimer.singleShot(50, self.recover_from_minimize)
+
+    def recover_from_minimize(self) -> None:
+        self.showNormal()
+        self.restore_preferred_size()
+        self.raise_()
+        self.activateWindow()
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)

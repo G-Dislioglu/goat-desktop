@@ -110,6 +110,9 @@ popup_recovery_size_normalization_2026_05_17:
 popup_recovery_preferred_size_2026_05_17:
 "Popup-Recovery setzt beim Wiederanzeigen jetzt aktiv die bevorzugte Fenstergroesse 920x640 und klemmt danach in den sichtbaren Bereich. Anlass: Windows-DPI/Qt-Geometrie liess die vorherige Oversize-Erkennung zu spaet greifen. Minimum reduziert auf 760x540, damit die UI lesbar bleibt ohne maximiertes Fenster."
 
+popup_minimize_recovery_2026_05_17:
+"GOAT-Popup faengt WindowStateChange=minimized jetzt ab und stellt sich automatisch mit showNormal(), bevorzugter Groesse und On-Screen-Clamping wieder her. Anlass: Windows legte das minimierte Popup bei -32000/-32000 ab; damit blieb nur der gelbe Overlay-Ball sichtbar. Minimieren wird fuer GOAT vorerst als Recovery-Fall behandelt, nicht als dauerhafter Hidden-State."
+
 run_e_multi_provider_code_ready_2026_05_17:
 "vision_hint.py wurde um Multi-Provider-Vision-Hint erweitert (gemini_flash_lite, grok_4_3, gemini_flash). Reasoning-Level konfigurierbar (minimal, low, medium, high). User-Wahl im Popup ueber zwei Dropdowns, Persistierung in vision_config.json unter APPDATA/GoatDesktop. Default: gemini_flash_lite + minimal. Builder-Proxy-Modus nutzt GOAT_VISION_MODE=builder_proxy, GOAT_BUILDER_URL, GOAT_BUILDER_TOKEN, GOAT_VISION_PROVIDER und GOAT_VISION_REASONING. Unit-Tests mit Mock-Server gruen: 8 passed. Acceptance gegen echten /api/goat/vision-hint folgt sobald Soulmatch-Builder den Endpoint gepusht hat. Fail-Safe bei Builder-Offline/Timeout/HTTP-Fehler: uncertain-Hint, kein stiller Mock-Switch. run_e_completed bleibt bewusst nicht gesetzt."
 

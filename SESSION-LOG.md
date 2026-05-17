@@ -99,3 +99,4 @@
 - Fixed popup recovery after user minimized/maximized the window and could only see the yellow overlay: Ctrl+Alt+G now restores GOAT globally, popup show uses showNormal plus on-screen clamping, and the default window is larger for readable LiveTalk output.
 - Added popup size normalization during recovery so maximized/oversized geometry is reset to the preferred 1040x720 window before on-screen clamping.
 - Tightened popup recovery for Windows DPI behavior: Ctrl+Alt+G now actively restores the preferred 920x640 size before clamping the popup on screen.
+- Added automatic minimize recovery: if Windows moves the GOAT popup to the minimized -32000 coordinate state, the popup restores itself to normal size and visible screen bounds.
