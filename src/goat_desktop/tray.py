@@ -152,11 +152,18 @@ class GoatTrayApp:
             result = self.livetalk.run_once()
             self.popup.screen_context_value.setText(result.transcript)
             self.popup.maya_value.setText(result.response_text)
+            self.popup.audio_value.setText(
+                "STT {stt:.0f}ms / Chat {chat:.0f}ms / TTS {tts:.0f}ms / Aufnahme {rec:.1f}s".format(
+                    stt=result.stt_time_ms,
+                    chat=result.chat_time_ms,
+                    tts=result.tts_time_ms,
+                    rec=result.record_seconds,
+                )
+            )
         except Exception as exc:
             self.popup.screen_context_value.setText("LiveTalk Fehler")
             self.popup.maya_value.setText(str(exc))
         finally:
-            self._refresh_audio_status()
             self.popup.talk_button.setEnabled(True)
 
     def exit_livetalk_mode(self) -> None:

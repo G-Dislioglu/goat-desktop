@@ -15,6 +15,7 @@ class DisabledTts:
 class ChatOk:
     status = "ok"
     response_text = "Mir geht es gut. Wie kann ich dir helfen?"
+    time_ms = 123.0
 
 
 def test_mock_livetalk_remains_not_completion_ready(monkeypatch, tmp_path: Path) -> None:
@@ -120,7 +121,7 @@ def test_unsupported_livetalk_provider_raises(monkeypatch) -> None:
         raise AssertionError("unsupported provider did not raise")
 
 
-def test_windows_sapi_provider_defaults_to_five_second_recording_and_status_cue(
+def test_windows_sapi_provider_defaults_to_three_second_recording_and_status_cue(
     monkeypatch,
     tmp_path: Path,
 ) -> None:
@@ -139,7 +140,7 @@ def test_windows_sapi_provider_defaults_to_five_second_recording_and_status_cue(
 
     LiveTalkSession(status_callback=states.append).run_once()
 
-    assert recorded_seconds == [5.0]
+    assert recorded_seconds == [3.0]
     assert states[:3] == ["prepare", "cue", "listening"]
 
 

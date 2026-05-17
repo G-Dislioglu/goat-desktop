@@ -20,6 +20,7 @@ WAV_BYTES = b"RIFF" + b"\0" * 256
 class ChatOk:
     status = "ok"
     response_text = "Ich zeige das Suchfeld nur nach Freigabe."
+    time_ms = 123.0
 
 
 class TtsHandler(BaseHTTPRequestHandler):
@@ -152,6 +153,8 @@ def test_livetalk_completion_requires_builder_tts(monkeypatch, mock_tts_server, 
     assert result.transcript == "zeige das suchfeld"
     assert result.stt_provider == "test_stt"
     assert result.tts_provider == "test_tts"
+    assert result.chat_time_ms == 123.0
+    assert result.record_seconds == 3.0
     assert result.response_audio_path is not None
     assert result.completion_ready is True
 

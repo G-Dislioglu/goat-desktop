@@ -11,6 +11,9 @@ maya_chat_builder_proxy_completed_2026_05_17:
 livetalk_audio_routes_through_maya_chat_2026_05_17:
 "LiveTalk-Audio wurde am 2026-05-17 an Maya-Textchat angeschlossen. Vorher wurde ein STT-Transcript lokal als 'Gehoert: ... Ich handle nur nach Freigabe.' wiederholt; das war keine freie KI-Antwort. Jetzt ruft der Windows-SAPI-LiveTalk-Pfad nach erfolgreicher STT-Erkennung request_chat_response() auf und spricht erst danach die Maya-Antwort per TTS. completion_ready verlangt nun STT ok + Chat ok + TTS ok. Tests gruen: LiveTalk/STT/TTS/Chat-Subset."
 
+livetalk_latency_fast_path_2026_05_17:
+"LiveTalk-Latenz-Fix am 2026-05-17: feste Aufnahmezeit von 5.0s auf 3.0s reduziert und Vorbereitungszeit von 1.0/0.8s auf 0.35s reduziert. LiveTalkResult protokolliert jetzt stt_time_ms, chat_time_ms, tts_time_ms und record_seconds; das Popup zeigt nach jeder Antwort den Breakdown in der Audio-Zeile. Ziel: sofort ca. 2.5s weniger Wartezeit und klare Sicht darauf, ob TTS der naechste Flaschenhals ist."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 

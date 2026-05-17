@@ -28,6 +28,10 @@ class LiveTalkResult:
     audio_played: bool
     stt_provider: str = "none"
     tts_provider: str = "none"
+    stt_time_ms: float = 0.0
+    chat_time_ms: float = 0.0
+    tts_time_ms: float = 0.0
+    record_seconds: float = 0.0
     audio_path: str | None = None
     response_audio_path: str | None = None
     completion_ready: bool = False
@@ -86,8 +90,8 @@ class LiveTalkSession:
     def _run_windows_sapi(self, started: float) -> LiveTalkResult:
         self.audio_dir.mkdir(parents=True, exist_ok=True)
         audio_path = self.audio_dir / "livetalk-last-recording.wav"
-        record_seconds = float(os.environ.get("GOAT_LIVETALK_RECORD_SECONDS", "5.0"))
-        prepare_seconds = float(os.environ.get("GOAT_LIVETALK_PREPARE_SECONDS", "0.8"))
+        record_seconds = float(os.environ.get("GOAT_LIVETALK_RECORD_SECONDS", "3.0"))
+        prepare_seconds = float(os.environ.get("GOAT_LIVETALK_PREPARE_SECONDS", "0.35"))
         manual_transcript = os.environ.get("GOAT_LIVETALK_MANUAL_TRANSCRIPT", "").strip()
 
         self._set_state("prepare")
@@ -108,10 +112,13 @@ class LiveTalkSession:
             )
             chat_ok = chat_result.status == "ok"
             response_text = chat_result.response_text
+            chat_time_ms = chat_result.time_ms
         elif stt_result.status == "uncertain":
             response_text = _stt_uncertain_response(stt_result.error)
+            chat_time_ms = 0.0
         else:
             response_text = "Audio wurde aufgenommen. STT ist noch nicht konfiguriert."
+            chat_time_ms = 0.0
         self._set_state("speaking")
         response_audio_path = self.audio_dir / "livetalk-last-response.wav"
         tts_result = synthesize_speech(response_text, response_audio_path)
@@ -133,6 +140,10 @@ class LiveTalkSession:
             audio_played=audio_played,
             stt_provider=_stt_provider_name(stt_result, bool(manual_transcript)),
             tts_provider=tts_provider,
+            stt_time_ms=float(getattr(stt_result, "time_ms", 0.0) or 0.0),
+            chat_time_ms=float(chat_time_ms),
+            tts_time_ms=float(getattr(tts_result, "time_ms", 0.0) or 0.0),
+            record_seconds=record_seconds,
             audio_path=str(audio_path),
             response_audio_path=final_response_audio_path,
             completion_ready=bool(

@@ -16,6 +16,7 @@ from goat_desktop.stt_hint import SttMode, load_stt_config, transcribe_audio
 class ChatOk:
     status = "ok"
     response_text = "Ich zeige das Suchfeld nur nach Freigabe."
+    time_ms = 123.0
 
 
 class SttHandler(BaseHTTPRequestHandler):
