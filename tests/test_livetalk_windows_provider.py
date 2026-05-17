@@ -22,11 +22,18 @@ def test_windows_sapi_provider_records_and_speaks_with_manual_transcript_but_is_
     monkeypatch,
     tmp_path: Path,
 ) -> None:
+    class DisabledStt:
+        status = "uncertain"
+        transcript = ""
+        provider = "none"
+        error = "STT mode disabled"
+
     monkeypatch.setenv("GOAT_LIVETALK_PROVIDER", "windows_sapi")
     monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
     monkeypatch.setenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", "zeige das suchfeld")
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
+    monkeypatch.setattr(livetalk, "transcribe_audio", lambda audio_path: DisabledStt())
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: "zeige das suchfeld" in text.casefold())
 
     result = LiveTalkSession().run_once()
@@ -41,11 +48,18 @@ def test_windows_sapi_provider_records_and_speaks_with_manual_transcript_but_is_
 
 
 def test_windows_sapi_provider_without_transcript_is_not_completion_ready(monkeypatch, tmp_path: Path) -> None:
+    class DisabledStt:
+        status = "uncertain"
+        transcript = ""
+        provider = "none"
+        error = "STT mode disabled"
+
     monkeypatch.setenv("GOAT_LIVETALK_PROVIDER", "windows_sapi")
     monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
     monkeypatch.delenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", raising=False)
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
+    monkeypatch.setattr(livetalk, "transcribe_audio", lambda audio_path: DisabledStt())
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: True)
 
     result = LiveTalkSession().run_once()
@@ -54,6 +68,29 @@ def test_windows_sapi_provider_without_transcript_is_not_completion_ready(monkey
     assert result.audio_played is True
     assert result.transcript == ""
     assert result.stt_provider == "none"
+    assert result.completion_ready is False
+
+
+def test_windows_sapi_provider_reports_empty_builder_transcript_clearly(monkeypatch, tmp_path: Path) -> None:
+    class EmptyStt:
+        status = "uncertain"
+        transcript = ""
+        provider = "builder_default"
+        error = "empty transcript"
+
+    monkeypatch.setenv("GOAT_LIVETALK_PROVIDER", "windows_sapi")
+    monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
+    monkeypatch.delenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", raising=False)
+    monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
+    monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
+    monkeypatch.setattr(livetalk, "transcribe_audio", lambda audio_path: EmptyStt())
+    monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: True)
+
+    result = LiveTalkSession().run_once()
+
+    assert result.transcript == ""
+    assert result.stt_provider == "builder_default"
+    assert result.response_text == "Audio wurde aufgenommen, aber Builder-STT hat keinen Text erkannt."
     assert result.completion_ready is False
 
 

@@ -23,8 +23,8 @@ class GoatPopup(QWidget):
         self._drag_start: QPoint | None = None
 
         self.setWindowTitle("GOAT Desktop")
-        self.setMinimumSize(560, 340)
-        self.resize(580, 360)
+        self.setMinimumSize(560, 390)
+        self.resize(580, 410)
         self.setWindowFlag(Qt.WindowType.Window, True)
 
         self._build_ui()

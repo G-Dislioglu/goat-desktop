@@ -98,6 +98,8 @@ class LiveTalkSession:
         transcript = stt_result.transcript or manual_transcript
         if transcript:
             response_text = f"Gehoert: {transcript}. Ich handle nur nach Freigabe."
+        elif stt_result.status == "uncertain":
+            response_text = _stt_uncertain_response(stt_result.error)
         else:
             response_text = "Audio wurde aufgenommen. STT ist noch nicht konfiguriert."
         self._set_state("speaking")
@@ -119,7 +121,7 @@ class LiveTalkSession:
             time_ms=round((perf_counter() - started) * 1000, 2),
             audio_recorded=audio_recorded,
             audio_played=audio_played,
-            stt_provider=stt_result.provider if stt_result.status == "ok" else ("manual" if manual_transcript else "none"),
+            stt_provider=_stt_provider_name(stt_result, bool(manual_transcript)),
             tts_provider=tts_provider,
             audio_path=str(audio_path),
             response_audio_path=final_response_audio_path,
@@ -138,6 +140,22 @@ def signal_recording_start(prepare_seconds: float = 0.8) -> None:
     """Give the user a clear cue before microphone recording starts."""
     time.sleep(max(0.0, prepare_seconds))
     winsound.Beep(880, 180)
+
+
+def _stt_uncertain_response(error: str | None) -> str:
+    if error == "empty transcript":
+        return "Audio wurde aufgenommen, aber Builder-STT hat keinen Text erkannt."
+    if error:
+        return f"Audio wurde aufgenommen, aber Builder-STT meldet: {error}."
+    return "Audio wurde aufgenommen, aber Builder-STT konnte keinen sicheren Text liefern."
+
+
+def _stt_provider_name(stt_result, has_manual_transcript: bool) -> str:
+    if stt_result.status == "ok":
+        return stt_result.provider
+    if has_manual_transcript:
+        return "manual"
+    return stt_result.provider or "none"
 
 
 def record_windows_wav(output_path: Path, seconds: float = 1.0) -> bool:
