@@ -96,3 +96,4 @@
 - Fixed misleading LiveTalk response text: active Builder-STT failures now say whether no text was recognized instead of claiming STT is not configured; popup height increased to avoid clipping.
 - Diagnosed Run F `URLError` as local DNS failure for `soulmatch-1.onrender.com`; verified the same recorded WAV succeeds with `GOAT_BUILDER_RESOLVE_IP=216.24.57.7`, and made STT/TTS resolve override read Windows User environment.
 - Completed Run F live UI acceptance: visible popup showed `STT Builder aktiv / TTS Builder aktiv`, Builder-STT recognized `Zeige mir das Suchfeld.`, Builder-TTS replied with the accepted KI voice, and no audio files were committed.
+- Fixed popup recovery after user minimized/maximized the window and could only see the yellow overlay: Ctrl+Alt+G now restores GOAT globally, popup show uses showNormal plus on-screen clamping, and the default window is larger for readable LiveTalk output.

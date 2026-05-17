@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from goat_desktop.builder_bridge import BuilderBridgeClient
 from goat_desktop.bridge import CueDispatcher, LocalBridge
-from goat_desktop.hotkey import EmergencyHotkey
+from goat_desktop.hotkey import EmergencyHotkey, VK_G
 from goat_desktop.livetalk import LiveTalkSession
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
@@ -44,6 +44,7 @@ class GoatTrayApp:
         self.popup.place_near_tray()
         self.popup.show()
         self.hotkey = EmergencyHotkey(self.emergency_stop)
+        self.show_hotkey = EmergencyHotkey(self.show_popup, hotkey_id=0x470B, virtual_key=VK_G)
         self.tray = QSystemTrayIcon(self._load_icon(), app)
         self.tray.setToolTip("GOAT Desktop")
         self.tray.activated.connect(self._on_activated)
@@ -57,7 +58,8 @@ class GoatTrayApp:
     def show_popup(self) -> None:
         if not self.popup.isVisible():
             self.popup.place_near_tray()
-        self.popup.show()
+        self.popup.showNormal()
+        self.popup.ensure_visible()
         self.popup.raise_()
         self.popup.activateWindow()
 
@@ -111,6 +113,7 @@ class GoatTrayApp:
             self.builder_bridge.stop()
         self.bridge.stop()
         self.hotkey.unregister()
+        self.show_hotkey.unregister()
         self.overlay.hide()
         self.app.quit()
 
