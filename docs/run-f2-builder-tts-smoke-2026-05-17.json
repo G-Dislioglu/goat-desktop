@@ -1,0 +1,21 @@
+{
+  "status": "ok",
+  "audio_path": "docs\\tts-smoke-response.wav",
+  "provider": "builder_default",
+  "voice": "maya_de",
+  "language": "de-DE",
+  "time_ms": 5350.0,
+  "raw_evidence": {
+    "mode": "builder_proxy",
+    "provider": "builder_default",
+    "voice": "maya_de",
+    "language": "de-DE",
+    "http_status": 200,
+    "audio_bytes": 309690
+  },
+  "mime_type": "audio/wav",
+  "http_status": 200,
+  "error": null,
+  "audio_file_size_bytes": 309690,
+  "audio_artifact_committed": false
+}

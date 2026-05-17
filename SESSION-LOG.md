@@ -85,3 +85,5 @@
 - Added desktop-side Builder-TTS proxy support in `tts_hint.py` for `POST /api/goat/tts`, with German defaults and pronunciation hints.
 - Wired LiveTalk to require both real Builder STT and Builder TTS for `completion_ready=true`; Windows SAPI is fallback only.
 - Live check shows `/api/goat/tts` currently returns 404, so Builder work is needed before final Run F acceptance.
+- Verified live Soulmatch `/api/goat/tts`: unauthenticated request returns 401, authenticated request returns HTTP 200 with `voice=maya_de`, `language=de-DE`, and WAV audio metadata.
+- Deleted the returned TTS WAV after smoke verification and committed metadata only.
