@@ -79,3 +79,5 @@
 - Verified STT proxy behavior against a local mock server; real Soulmatch STT endpoint remains the external gate for Run F completion.
 - Verified live Soulmatch `/api/goat/stt`: unauthenticated request returns 401, authenticated synthetic SAPI WAV returns HTTP 200 with transcript `Sieh das Suchfeld`, confidence 0.95, latency about 2.1s.
 - Kept Run F not completed because this was a synthetic WAV smoke, not live microphone acceptance.
+- Attempted live microphone acceptance. Technical path worked, but STT recognized `GOAT Desktop` instead of `zeige das suchfeld`, so Run F remains not completed.
+- Updated Windows SAPI playback to prefer a German voice (`German`, `Deutsch`, or `Hedda`) because the audible response used the default English-sounding voice.

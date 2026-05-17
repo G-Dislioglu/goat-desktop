@@ -133,6 +133,10 @@ def speak_windows_sapi(text: str) -> bool:
     escaped = text.replace("'", "''")
     command = (
         "$voice = New-Object -ComObject SAPI.SpVoice; "
+        "$germanVoice = $voice.GetVoices() | "
+        "Where-Object { $_.GetDescription() -match 'German|Deutsch|Hedda' } | "
+        "Select-Object -First 1; "
+        "if ($null -ne $germanVoice) { $voice.Voice = $germanVoice }; "
         f"$null = $voice.Speak('{escaped}', 0)"
     )
     completed = subprocess.run(

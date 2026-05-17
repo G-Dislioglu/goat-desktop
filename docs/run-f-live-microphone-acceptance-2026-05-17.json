@@ -1,0 +1,20 @@
+﻿{
+    "provider":  "windows_sapi",
+    "mode":  "half_duplex",
+    "transcript":  "GOAT Desktop",
+    "response_text":  "Gehoert: GOAT Desktop. Ich handle nur nach Freigabe.",
+    "time_ms":  20213.91,
+    "audio_recorded":  true,
+    "audio_played":  true,
+    "stt_provider":  "builder_default",
+    "tts_provider":  "windows_sapi",
+    "audio_path":  "C:\\Users\\guerc\\Documents\\Codex\\2026-05-16\\files-mentioned-by-the-user-files\\goat-desktop\\docs\\livetalk-audio\\livetalk-last-recording.wav",
+    "completion_ready":  false,
+    "audio_file_size_bytes":  32647,
+    "audio_artifact_committed":  false,
+    "expected_transcript":  "zeige das suchfeld",
+    "acceptance_passed":  false,
+    "tts_language_target":  "de-DE via German SAPI voice preference",
+    "technical_path_ready":  true,
+    "acceptance_reason":  "transcript did not match expected German test phrase"
+}
