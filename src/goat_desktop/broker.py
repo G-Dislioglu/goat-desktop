@@ -42,6 +42,7 @@ def build_candidate(payload: dict[str, Any], window: WindowInfo) -> Candidate:
         confidence=confidence,
         raw_evidence={
             "request": payload,
+            "vision_hint": payload.get("vision_hint"),
             "active_window": window.to_dict(),
         },
     )
@@ -69,6 +70,9 @@ def verify_candidate(candidate: Candidate, window: WindowInfo) -> dict[str, Any]
         reasons.append("source is not an accepted local geometry source")
     if not candidate.label.strip():
         reasons.append("semantic label is empty")
+    vision_hint = candidate.raw_evidence.get("vision_hint")
+    if candidate.source == "vision":
+        reasons.append("vision source alone cannot accept")
 
     if reasons:
         status = "stop"
@@ -78,6 +82,8 @@ def verify_candidate(candidate: Candidate, window: WindowInfo) -> dict[str, Any]
         status = "accept"
         confidence = min(max(candidate.confidence, 0.0), 0.95)
         fusion_path = f"{candidate.source}_local_geometry_accept"
+        if vision_hint:
+            reasons.append("vision hint recorded as semantic context only; local geometry remains authoritative")
         reasons.append("local geometry source passed finite-bounds, foreground-window, and semantic-label checks")
 
     elapsed_ms = round((perf_counter() - started) * 1000, 2)

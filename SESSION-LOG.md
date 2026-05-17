@@ -30,3 +30,7 @@
 - Added an outbound-only Builder WebSocket client with token header, hello capabilities, timeouts, and reconnect loop.
 - Added popup approval controls for Builder cues; incoming Builder test cues can only become rendered cues after `Cue freigeben`.
 - Completed Run D against a local test Builder WebSocket: Desktop connected outbound, sent hello, received test cue, showed preview, required approval, then rendered the ball through the local Broker path.
+- Started Run E as provider wiring because no real Vision provider key is visible in the environment.
+- Added a Vision Hint adapter with disabled, mock, and OpenAI-compatible modes.
+- Added `/vision-hint` and Broker logging for semantic hints, while preserving the rule that Vision-only can never produce `accept`.
+- Left Run E at `code_ready`; real provider latency, JSON stability, and UI-semantic accuracy still need measurement before any default provider is named.

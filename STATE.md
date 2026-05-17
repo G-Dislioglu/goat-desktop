@@ -47,9 +47,15 @@ run_d_started_2026_05_17:
 run_d_completed_2026_05_17:
 "Run D abgeschlossen am 2026-05-17. Implementiert: BuilderBridgeClient als outbound-only WebSocket-Client mit Authorization-Header, hello-Capabilities, Reconnect-Loop und Timeouts; Popup zeigt Builder-Cue als wartende Vorschau mit 'Cue freigeben'/'Cue ablehnen'; Freigabe leitet Cue ueber lokalen /screen-cue-Endpunkt zum Broker, erst danach rendert der Ball. Acceptance-Artefakte: docs/run-d-completion-report-2026-05-17.md, docs/screenshots/run-d-builder-cue-preview-2026-05-17.png und docs/screenshots/run-d-builder-cue-approved-2026-05-17.png."
 
+run_e_started_2026_05_17:
+"Run E gestartet am 2026-05-17. Scope: Vision-LLM als semantischer Hint-Provider, niemals als Koordinatenquelle. Konkrete Provider-Defaults bleiben gesperrt, bis echte Provider-Messungen mit Key, Latenz, JSON-Stabilitaet und UI-Semantik vorliegen."
+
+run_e_code_ready_2026_05_17:
+"Run E Code-Stand angelegt am 2026-05-17. Implementiert: vision_hint.py mit disabled/mock/openai_compatible Provider-Modi, /vision-hint Endpoint, Broker-Protokollierung von vision_hint als reine Semantik, expliziter Schutz gegen Vision-only accept. Mock-Acceptance verifiziert: /vision-hint liefert authority=semantic_hint_only, /screen-cue nimmt den Hint ins Log, finaler Broker-Pfad bleibt active_window_local_geometry_accept. Artefakte: docs/run-e-code-ready-report-2026-05-17.md, docs/screenshots/run-e-vision-input.png, docs/screenshots/run-e-mock-vision-hint-2026-05-17.png. Run E ist nicht completed, weil kein echter Provider-Key in der sichtbaren Umgebung konfiguriert ist."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder. Run E provider wiring is code-ready, but real provider verification is pending.
 
 ## Verified
 
@@ -63,8 +69,10 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run C local bridge endpoints respond in-process and `/screen-cue` moves the yellow ball after Broker `accept`.
 - Run C popup-triggered acceptance is committed at `docs/run-c-completion-report-2026-05-17.md`.
 - Run D outbound WebSocket bridge connects to a test Builder, receives a test cue, requires user approval, then renders the ball through the local Broker path.
+- Run E mock provider wiring preserves the authority boundary: Vision hint is logged as semantic context, while Broker accept remains local-geometry based.
 
 ## Not Yet Verified
 
-- OCR and Vision-LLM provider defaults are not selected yet.
+- OCR and real Vision-LLM provider defaults are not selected yet.
+- Run E real-provider benchmark is pending because no provider API key is configured in the visible environment.
 - LiveTalk implementation and action gating do not exist yet.
