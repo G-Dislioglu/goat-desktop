@@ -26,3 +26,7 @@
 - Verified Run C code-ready via local HTTP calls and a screenshot showing the ball at the cued coordinate; full Run C completion remains pending until the popup-triggered acceptance path is captured.
 - Added a `Cue testen` popup button that hides the popup, calls local `/screen-cue`, stores the bridge response, and lets the accepted cue dispatch move the ball.
 - Completed Run C after the popup-triggered path produced Broker `accept`, `anchors[]`, `broker_decision`, and a visual after-screenshot with the ball at the cue coordinate.
+- Started Run D after reading sol-cross-032 and sol-cross-044.
+- Added an outbound-only Builder WebSocket client with token header, hello capabilities, timeouts, and reconnect loop.
+- Added popup approval controls for Builder cues; incoming Builder test cues can only become rendered cues after `Cue freigeben`.
+- Completed Run D against a local test Builder WebSocket: Desktop connected outbound, sent hello, received test cue, showed preview, required approval, then rendered the ball through the local Broker path.

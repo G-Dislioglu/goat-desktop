@@ -41,9 +41,15 @@ run_c_code_ready_2026_05_17:
 run_c_completed_2026_05_17:
 "Run C abgeschlossen am 2026-05-17. Popup-Button 'Cue testen' triggert den lokalen /screen-cue-Endpunkt, Broker liefert safety_state=accept mit anchors[] und broker_decision, und der gelbe Ball springt sichtbar auf die akzeptierte Cue-Koordinate ueber externer Chrome/Render-UI. Acceptance-Artefakte: docs/run-c-completion-report-2026-05-17.md, docs/screenshots/run-c-popup-cue-before-2026-05-17.png und docs/screenshots/run-c-popup-cue-after-2026-05-17.png. Nicht enthalten: Builder-WebSocket, Vision-Provider, OCR, Action-Ausfuehrung."
 
+run_d_started_2026_05_17:
+"Run D gestartet am 2026-05-17. Pflichtanker sol-cross-032 und sol-cross-044 gelesen. Scope: Desktop-initiiertes outbound WebSocket zu Builder/Testserver, Token-Auth, Reconnect/Timeout-Disziplin, Builder-Test-Cue als Vorschlag, explizite User-Freigabe vor Rendering. Kein offener Inbound-Port, keine Action-Ausfuehrung, keine Vision/OCR."
+
+run_d_completed_2026_05_17:
+"Run D abgeschlossen am 2026-05-17. Implementiert: BuilderBridgeClient als outbound-only WebSocket-Client mit Authorization-Header, hello-Capabilities, Reconnect-Loop und Timeouts; Popup zeigt Builder-Cue als wartende Vorschau mit 'Cue freigeben'/'Cue ablehnen'; Freigabe leitet Cue ueber lokalen /screen-cue-Endpunkt zum Broker, erst danach rendert der Ball. Acceptance-Artefakte: docs/run-d-completion-report-2026-05-17.md, docs/screenshots/run-d-builder-cue-preview-2026-05-17.png und docs/screenshots/run-d-builder-cue-approved-2026-05-17.png."
+
 ## Current State
 
-Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed.
+Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is completed. Run B overlay/cue-ball safety layer is completed. Run C local bridge + Coordinate Broker path is completed. Run D outbound Builder bridge is completed against a local test Builder.
 
 ## Verified
 
@@ -56,8 +62,9 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run B acceptance evidence is committed at `docs/run-b-acceptance-report-2026-05-17.md` with two visual screenshots.
 - Run C local bridge endpoints respond in-process and `/screen-cue` moves the yellow ball after Broker `accept`.
 - Run C popup-triggered acceptance is committed at `docs/run-c-completion-report-2026-05-17.md`.
+- Run D outbound WebSocket bridge connects to a test Builder, receives a test cue, requires user approval, then renders the ball through the local Broker path.
 
 ## Not Yet Verified
 
 - OCR and Vision-LLM provider defaults are not selected yet.
-- Builder outbound bridge, LiveTalk implementation, and action gating do not exist yet.
+- LiveTalk implementation and action gating do not exist yet.

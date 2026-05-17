@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import urllib.request
 from importlib import resources
 from threading import Thread
@@ -9,6 +10,7 @@ from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QAction, QIcon, QPainter, QPixmap
 from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
+from goat_desktop.builder_bridge import BuilderBridgeClient
 from goat_desktop.bridge import CueDispatcher, LocalBridge
 from goat_desktop.hotkey import EmergencyHotkey
 from goat_desktop.overlay import BallOverlay
@@ -26,6 +28,9 @@ class GoatTrayApp:
         self._ball_visible = True
         self.last_test_cue_response: dict | None = None
         self.last_test_cue_error: str | None = None
+        self.pending_builder_cue: dict | None = None
+        self.last_builder_cue_response: dict | None = None
+        self.builder_bridge: BuilderBridgeClient | None = None
         self.cue_dispatcher = CueDispatcher()
         self.cue_dispatcher.cue_requested.connect(self.move_ball_to_cue)
         self.bridge = LocalBridge(self.cue_dispatcher)
@@ -40,6 +45,7 @@ class GoatTrayApp:
         self.tray.setContextMenu(self._build_menu())
         self.tray.show()
         self.bridge.start()
+        self._start_builder_bridge_if_configured()
 
     def show_popup(self) -> None:
         if not self.popup.isVisible():
@@ -94,6 +100,8 @@ class GoatTrayApp:
         self.popup.hide()
 
     def shutdown(self) -> None:
+        if self.builder_bridge is not None:
+            self.builder_bridge.stop()
         self.bridge.stop()
         self.hotkey.unregister()
         self.overlay.hide()
@@ -106,6 +114,8 @@ class GoatTrayApp:
         self.popup.ball_down.clicked.connect(lambda: self.overlay.move_ball_by(0, 80))
         self.popup.ball_toggle.clicked.connect(self._toggle_ball)
         self.popup.cue_test.clicked.connect(self.request_test_cue)
+        self.popup.cue_approve.clicked.connect(self.approve_pending_cue)
+        self.popup.cue_reject.clicked.connect(self.reject_pending_cue)
 
     def request_test_cue(self) -> None:
         self.popup.hide()
@@ -129,6 +139,64 @@ class GoatTrayApp:
         except Exception as exc:
             self.last_test_cue_response = None
             self.last_test_cue_error = repr(exc)
+
+    def _start_builder_bridge_if_configured(self) -> None:
+        url = os.environ.get("GOAT_BUILDER_WS_URL")
+        token = os.environ.get("GOAT_BUILDER_TOKEN")
+        if not url or not token:
+            self.popup.connection_value.setText("lokal")
+            return
+        self.builder_bridge = BuilderBridgeClient(url=url, token=token)
+        self.builder_bridge.status_changed.connect(self.popup.connection_value.setText)
+        self.builder_bridge.cue_received.connect(self.receive_builder_cue)
+        self.builder_bridge.start()
+
+    def receive_builder_cue(self, message: dict) -> None:
+        self.pending_builder_cue = {
+            "source": message.get("source", "active_window"),
+            "label": message.get("label", "Builder test cue"),
+            "bbox": message.get("bbox"),
+            "confidence": message.get("confidence", 0.9),
+        }
+        if self.pending_builder_cue["bbox"] is None:
+            self.pending_builder_cue.pop("bbox")
+        self.popup.screen_context_value.setText("Builder-Cue wartet")
+        self.popup.maya_value.setText("Freigabe erforderlich")
+        self.popup.cue_approve.setEnabled(True)
+        self.popup.cue_reject.setEnabled(True)
+        self.show_popup()
+
+    def approve_pending_cue(self) -> None:
+        if self.pending_builder_cue is None:
+            return
+        payload = dict(self.pending_builder_cue)
+        self.popup.cue_approve.setEnabled(False)
+        self.popup.cue_reject.setEnabled(False)
+        self.popup.hide()
+        QTimer.singleShot(250, lambda: self._approve_pending_cue(payload))
+
+    def _approve_pending_cue(self, payload: dict) -> None:
+        Thread(target=self._approve_pending_cue_worker, args=(payload,), name="goat-builder-cue", daemon=True).start()
+
+    def _approve_pending_cue_worker(self, payload: dict) -> None:
+        request = urllib.request.Request(
+            "http://127.0.0.1:8765/screen-cue",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=5) as response:
+                self.last_builder_cue_response = json.loads(response.read().decode("utf-8"))
+        except Exception as exc:
+            self.last_builder_cue_response = {"safety_state": "stop", "error": repr(exc)}
+
+    def reject_pending_cue(self) -> None:
+        self.pending_builder_cue = None
+        self.popup.screen_context_value.setText("Builder-Cue abgelehnt")
+        self.popup.maya_value.setText("bereit, pausiert")
+        self.popup.cue_approve.setEnabled(False)
+        self.popup.cue_reject.setEnabled(False)
 
     def _toggle_ball(self) -> None:
         if self._ball_visible:

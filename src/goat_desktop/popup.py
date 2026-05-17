@@ -73,12 +73,16 @@ class GoatPopup(QWidget):
         grid.setHorizontalSpacing(12)
         grid.setVerticalSpacing(8)
 
+        self.connection_value = QLabel("offline")
+        self.screen_context_value = QLabel("-")
+        self.maya_value = QLabel("bereit, pausiert")
+
         grid.addWidget(QLabel("Verbindung"), 0, 0)
-        grid.addWidget(QLabel("offline"), 0, 1)
+        grid.addWidget(self.connection_value, 0, 1)
         grid.addWidget(QLabel("Screen-Kontext"), 1, 0)
-        grid.addWidget(QLabel("-"), 1, 1)
+        grid.addWidget(self.screen_context_value, 1, 1)
         grid.addWidget(QLabel("Maya"), 2, 0)
-        grid.addWidget(QLabel("bereit, pausiert"), 2, 1)
+        grid.addWidget(self.maya_value, 2, 1)
 
         root.addWidget(panel)
 
@@ -90,10 +94,16 @@ class GoatPopup(QWidget):
         talk_button = QPushButton("LiveTalk")
         talk_button.setEnabled(False)
         self.cue_test = QPushButton("Cue testen")
+        self.cue_approve = QPushButton("Cue freigeben")
+        self.cue_reject = QPushButton("Cue ablehnen")
+        self.cue_approve.setEnabled(False)
+        self.cue_reject.setEnabled(False)
 
         actions.addWidget(stop_button, 0, 0)
         actions.addWidget(talk_button, 0, 1)
         actions.addWidget(self.cue_test, 1, 0, 1, 2)
+        actions.addWidget(self.cue_approve, 2, 0)
+        actions.addWidget(self.cue_reject, 2, 1)
         root.addLayout(actions)
 
         overlay_controls = QHBoxLayout()
