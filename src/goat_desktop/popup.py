@@ -138,8 +138,8 @@ class GoatPopup(QWidget):
         self.chat_row.addWidget(self.chat_input, 1)
         self.chat_row.addWidget(self.chat_send)
         self.chat_row.addWidget(self.read_aloud)
-        self.chat_input.setVisible(False)
-        self.chat_send.setVisible(False)
+        self.chat_input.setVisible(True)
+        self.chat_send.setVisible(True)
         self.read_aloud.setVisible(False)
         root.addLayout(self.chat_row)
 
@@ -267,8 +267,8 @@ class GoatPopup(QWidget):
         self.cue_reject.setVisible(not active)
         self.exit_livetalk.setVisible(active)
         self.target_value.setVisible(not active)
-        self.chat_input.setVisible(active)
-        self.chat_send.setVisible(active)
+        self.chat_input.setVisible(True)
+        self.chat_send.setVisible(True)
         if not active:
             self.read_aloud.setVisible(False)
             self.read_aloud.setEnabled(True)

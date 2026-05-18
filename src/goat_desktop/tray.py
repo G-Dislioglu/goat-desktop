@@ -304,6 +304,7 @@ class GoatTrayApp:
                 record_seconds=recorder.recorded_seconds,
                 audio_recorded=audio_recorded,
                 play_audio=False,
+                screen_context=self._last_screen_context,
             )
             payload = result.to_dict()
             self.popup.push_to_talk_finished.emit({"status": "ok", "result": payload})

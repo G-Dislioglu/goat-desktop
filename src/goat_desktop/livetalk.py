@@ -14,7 +14,7 @@ from pathlib import Path
 from time import perf_counter
 
 from goat_desktop.chat_hint import request_chat_response
-from goat_desktop.livetalk_live import request_gemini_live_turn
+from goat_desktop.livetalk_live import load_gemini_live_config, request_gemini_live_turn, with_screen_context
 from goat_desktop.stt_hint import transcribe_audio
 from goat_desktop.tts_hint import synthesize_speech
 
@@ -202,12 +202,14 @@ class LiveTalkSession:
         record_seconds: float,
         audio_recorded: bool,
         play_audio: bool = True,
+        screen_context: str | None = None,
     ) -> LiveTalkResult:
         self.audio_dir.mkdir(parents=True, exist_ok=True)
         response_audio_path = self.audio_dir / "livetalk-live-response.wav"
         response_audio_path.unlink(missing_ok=True)
         self._set_state("thinking")
-        live_result = request_gemini_live_turn(audio_path, response_audio_path)
+        config = with_screen_context(load_gemini_live_config(), screen_context)
+        live_result = request_gemini_live_turn(audio_path, response_audio_path, config=config)
         transcript = live_result.transcript or ("Keine Sprache erkannt" if live_result.status != "ok" else "")
         response_text = live_result.response_text
         self._publish_response(transcript, response_text)

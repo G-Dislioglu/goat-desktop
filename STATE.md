@@ -65,6 +65,9 @@ livetalk_best_known_audio_setting_2026_05_18:
 screen_context_vision_button_2026_05_18:
 "Bildschirm-Kontext-Feature am 2026-05-18 umgesetzt. Neu: Im Vision-Panel gibt es `Bildschirm pruefen`. Der Button versteckt das GOAT-Popup kurz, nimmt einen temporaeren aktiven-Fenster-Screenshot auf, ruft Builder `/api/goat/vision-hint` mit dem ausgewaehlten Vision-Modell auf und speichert nur eine kurze semantische Zusammenfassung im Popup. Der Screenshot liegt nur in einem Temp-Ordner und wird geloescht. Die naechste Maya-Textfrage bekommt diesen Screen-Kontext im Chat-Context mit. Vision bleibt semantischer Kontext, keine Aktionsfreigabe. Live-Smoke: capture_ok=true, HTTP 200, provider gemini_flash_lite, ca. 1441ms. Tests gruen: compileall und 48 Vision/Chat/LiveTalk-Kontext-Tests."
 
+screen_context_livetalk_followup_2026_05_18:
+"Bildschirm-Kontext-UX am 2026-05-18 korrigiert. Problem: Nach `Bildschirm pruefen` war im Hauptfenster kein sichtbares Fragefeld; ausserdem bekam Gemini-Live-Audio den geprueften Kontext nicht. Neu: Das Textfeld bleibt auch im Hauptfenster sichtbar, sodass User direkt Fragen zum geprueften Bildschirm stellen kann. Der letzte Vision-Kontext wird ausserdem in die Gemini-Live-Instructions fuer Push-to-talk eingefuegt, damit Audio-Fragen wie `Siehst du StepStack?` den zuletzt geprueften Kontext nutzen. `LiveTalk beenden` bleibt der Rueckweg aus dem LiveTalk-Modus; im Hauptfenster ist kein Zurueck-Button noetig. Tests gruen: compileall und 48 relevante Tests. Audio-Testdateien geloescht."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 

@@ -185,6 +185,24 @@ def load_gemini_live_config() -> GeminiLiveConfig:
     )
 
 
+def with_screen_context(config: GeminiLiveConfig, screen_context: str | None) -> GeminiLiveConfig:
+    context = (screen_context or "").strip()
+    if not context or context == "-":
+        return config
+    return GeminiLiveConfig(
+        builder_url=config.builder_url,
+        builder_token=config.builder_token,
+        timeout_seconds=config.timeout_seconds,
+        model=config.model,
+        voice=config.voice,
+        instructions=(
+            f"{config.instructions} "
+            f"Aktueller gepruefter Bildschirm-Kontext: {context} "
+            "Wenn der User nach dem Bildschirm fragt, nutze diesen Kontext und sage klar, dass er aus der letzten Pruefung stammt."
+        ),
+    )
+
+
 def request_gemini_live_turn(
     audio_path: Path,
     output_path: Path,

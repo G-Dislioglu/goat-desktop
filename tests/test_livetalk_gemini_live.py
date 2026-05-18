@@ -16,6 +16,7 @@ from goat_desktop.livetalk_live import (
     load_gemini_live_config,
     request_gemini_live_turn,
     read_wav_as_16khz_pcm,
+    with_screen_context,
     wav_signal_stats,
     write_pcm_wav,
 )
@@ -42,6 +43,23 @@ def test_default_live_timeout_is_not_twenty_seconds(monkeypatch) -> None:
     config = load_gemini_live_config()
 
     assert config.timeout_seconds == 10.0
+
+
+def test_screen_context_is_added_to_gemini_live_instructions() -> None:
+    config = GeminiLiveConfig(
+        builder_url="https://builder.example",
+        builder_token="token",
+        timeout_seconds=10.0,
+        model="gemini-3.1-flash-live-preview",
+        voice="Kore",
+        instructions="Basis.",
+    )
+
+    updated = with_screen_context(config, "Chrome: StepStack Ordner sichtbar.")
+
+    assert "Aktueller gepruefter Bildschirm-Kontext" in updated.instructions
+    assert "StepStack" in updated.instructions
+    assert updated.builder_url == config.builder_url
 
 
 def test_wav_pcm_chunks_and_writer(tmp_path: Path, monkeypatch) -> None:
@@ -181,8 +199,11 @@ def test_livetalk_gemini_live_recorded_uses_push_to_talk_mode(monkeypatch, tmp_p
     audio_path = tmp_path / "held-input.wav"
     _fake_wav(audio_path)
 
-    def fake_live_turn(input_path: Path, output_path: Path):
+    seen_config: list[GeminiLiveConfig | None] = []
+
+    def fake_live_turn(input_path: Path, output_path: Path, config=None):
         assert input_path == audio_path
+        seen_config.append(config)
         output_path.write_bytes(b"RIFF" + b"\0" * 64)
         return GeminiLiveResult(
             status="ok",
@@ -203,6 +224,7 @@ def test_livetalk_gemini_live_recorded_uses_push_to_talk_mode(monkeypatch, tmp_p
         started=perf_counter(),
         record_seconds=7.5,
         audio_recorded=True,
+        screen_context="Explorer: StepStack sichtbar.",
     )
 
     assert result.mode == "push_to_talk_proxy"
@@ -210,6 +232,8 @@ def test_livetalk_gemini_live_recorded_uses_push_to_talk_mode(monkeypatch, tmp_p
     assert result.response_text == "Push-to-talk Antwort."
     assert result.record_seconds == 7.5
     assert result.audio_played is True
+    assert seen_config and seen_config[0] is not None
+    assert "StepStack" in seen_config[0].instructions
 
 
 def _fake_wav(path: Path) -> bool:
