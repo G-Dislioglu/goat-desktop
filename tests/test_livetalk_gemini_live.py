@@ -37,6 +37,13 @@ def test_default_instructions_describe_goat_desktop_capabilities(monkeypatch) ->
     assert "allgemeine KI-Faehigkeiten" in config.instructions
 
 
+def test_default_live_timeout_is_not_twenty_seconds(monkeypatch) -> None:
+    monkeypatch.delenv("GOAT_VOICE_TIMEOUT_SECONDS", raising=False)
+    config = load_gemini_live_config()
+
+    assert config.timeout_seconds == 10.0
+
+
 def test_wav_pcm_chunks_and_writer(tmp_path: Path, monkeypatch) -> None:
     source = tmp_path / "input.wav"
     with wave.open(str(source), "wb") as wav:

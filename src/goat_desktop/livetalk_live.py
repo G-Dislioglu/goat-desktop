@@ -52,7 +52,7 @@ class GeminiLiveResult:
 
 
 def load_gemini_live_config() -> GeminiLiveConfig:
-    timeout = float(_get_env("GOAT_VOICE_TIMEOUT_SECONDS", "20.0") or "20.0")
+    timeout = float(_get_env("GOAT_VOICE_TIMEOUT_SECONDS", "10.0") or "10.0")
     return GeminiLiveConfig(
         builder_url=_get_env("GOAT_BUILDER_URL"),
         builder_token=_get_env("GOAT_BUILDER_TOKEN"),
@@ -101,6 +101,7 @@ def request_gemini_live_turn(
     transcript_parts: list[str] = []
     response_text_parts: list[str] = []
     message_count = 0
+    first_response_started_at: float | None = None
 
     try:
         import websockets.sync.client
@@ -150,12 +151,19 @@ def request_gemini_live_turn(
                     output_text = _nested_text(parsed, ["serverContent", "outputTranscription", "text"])
                     if input_text:
                         transcript_parts.append(input_text)
+                    if input_text and first_response_started_at is None:
+                        first_response_started_at = perf_counter()
                     if output_text:
                         response_text_parts.append(output_text)
                     for audio_bytes in _extract_inline_audio(parsed):
+                        if first_response_started_at is None:
+                            first_response_started_at = perf_counter()
                         output_audio_chunks.append(audio_bytes)
                     if _nested_bool(parsed, ["serverContent", "turnComplete"]):
                         break
+                    if first_response_started_at and not response_text_parts and not _has_playable_audio(output_audio_chunks):
+                        if (perf_counter() - first_response_started_at) > _empty_response_grace_seconds():
+                            break
     except Exception as exc:  # noqa: BLE001 - fail closed into explicit Live result
         return _uncertain_result(type(exc).__name__, active_config, started)
 
@@ -255,6 +263,10 @@ def _parse_json_bytes(raw: bytes) -> dict | None:
 
 def _has_playable_audio(chunks: list[bytes]) -> bool:
     return sum(len(chunk) for chunk in chunks) >= 1600
+
+
+def _empty_response_grace_seconds() -> float:
+    return max(1.0, float(_get_env("GOAT_VOICE_EMPTY_RESPONSE_GRACE_SECONDS", "4.0") or "4.0"))
 
 
 def _is_low_input_signal(stats: dict[str, float]) -> bool:

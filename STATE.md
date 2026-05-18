@@ -41,6 +41,9 @@ livetalk_gemini_live_goat_context_2026_05_18:
 livetalk_push_to_talk_mouse_2026_05_18:
 "Mouse-Hold-Push-to-talk am 2026-05-18 implementiert. Im Gemini-Live-Modus startet die linke Maustaste auf dem LiveTalk-Button die Aufnahme; solange der Button gedrueckt bleibt, wird aufgenommen; Loslassen beendet die Eingabe und sendet an Gemini Live. Der Button zeigt im aktiven Modus `Gedrueckt halten` und waehrend Aufnahme `Loslassen zum Senden`. Sicherheitslimit: `GOAT_LIVETALK_PUSH_TO_TALK_MAX_SECONDS`, Default 30s, danach wird automatisch beendet. Alte Klick-Aufnahme mit fixer 3s Dauer bleibt fuer Nicht-Gemini-Fallbacks erhalten. Tests gruen: compileall und 37 relevante Tests. Audio-Testdateien geloescht."
 
+livetalk_gemini_live_timeout_2026_05_18:
+"Gemini-Live-Antworttimeout am 2026-05-18 gesenkt. Anlass: Bei Push-to-talk konnte Maya nach Loslassen ca. 20s haengen, wenn Gemini keine Antwort lieferte. Neu: Default `GOAT_VOICE_TIMEOUT_SECONDS` ist 10s statt 20s. Wenn Gemini eine Eingabe bestaetigt, aber keine Text-/Audioantwort startet, bricht GOAT nach `GOAT_VOICE_EMPTY_RESPONSE_GRACE_SECONDS` ab, Default 4s. Tests gruen: compileall und 38 relevante Tests. Audio-Testdateien geloescht."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 

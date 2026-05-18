@@ -23,6 +23,7 @@
 - Improved the active LiveTalk retry UX: button text is now `Weiter sprechen`, quiet recordings fail fast with a clear `Keine Sprache erkannt` message, and stale response WAVs are removed before every Gemini Live turn.
 - Expanded the default Gemini Live Maya instructions so capability questions are answered in terms of GOAT Desktop: voice, text chat, screen context, cue ball, Builder proxy, Vision hints, safety checks, and gated actions.
 - Added mouse hold-to-talk for Gemini Live: hold the left mouse button on the LiveTalk button to record, release to send; default max hold is 30 seconds via `GOAT_LIVETALK_PUSH_TO_TALK_MAX_SECONDS`.
+- Reduced Gemini Live response wait: default `GOAT_VOICE_TIMEOUT_SECONDS` is now 10s, with a 4s empty-response grace after Gemini acknowledges input.
 - Upgraded canonical GOAT Desktop Vision spec to v1.1 after Run 0c evidence.
 - Added Run A native PyQt6 tray shell with movable mini-popup.
 - Kept Run A scope limited: no overlay, bridge, UIA, OCR, Vision, LiveTalk implementation, or actions.
