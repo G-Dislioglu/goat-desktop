@@ -71,7 +71,7 @@ screen_context_livetalk_followup_2026_05_18:
 screen_context_visible_desktop_2026_05_18:
 "Bildschirm-Pruefung am 2026-05-18 von aktivem Fenster auf sichtbaren Desktop umgestellt. Problem aus UI-Test: Vision erkannte `GOAT Desktop`/Codex statt Desktop-Ordnern wie StepStack, weil nur das aktive Fenster gecaptured wurde. Neu: `Bildschirm pruefen` nutzt `capture_visible_desktop()`, also den ganzen sichtbaren Windows-Desktop nach dem Verstecken des GOAT-Popups. Der Screenshot bleibt temporaer und wird geloescht. Live-Smoke: capture_ok=true, scope=visible_desktop, Builder Vision HTTP 200, provider gemini_flash_lite, ca. 1672ms, Temp-Ordner geloescht."
 
-gemini_live_primary_with_video_2026_05_18:
+gemini_live_primary_with_video_2026_05_17:
 "Gemini Live API ist primaerer LiveTalk-Pfad mit kontinuierlichem Video-Frame-Streaming (~1 FPS). Das Popup instanziiert standardmaessig `GeminiLiveSession`; der alte kaskadierte LiveTalk-Pfad ist nur noch via `GOAT_LIVETALK_FALLBACK=1` erreichbar. Streaming-Push-to-talk sendet 16 kHz PCM-Audio und JPEG-Frames des sichtbaren Desktops als `type=video.frame` an Builder `/api/goat/voice`. `Bildschirm pruefen` ist aus der sichtbaren Hauptfenster-UI entfernt und bleibt nur als versteckter Debug/Fallback-Pfad verdrahtet. Maya sieht den Bildschirm im LiveTalk-Modus kontinuierlich, ohne dass User einen manuellen Screen-Workflow ausloesen muss."
 
 run_0a_completed_2026_05_16:
