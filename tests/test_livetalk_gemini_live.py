@@ -12,6 +12,8 @@ from goat_desktop.livetalk_live import (
     DEFAULT_GOAT_VOICE_INSTRUCTIONS,
     GeminiLiveConfig,
     GeminiLiveResult,
+    WaveInError,
+    _wave_check,
     _parse_json_bytes,
     _send_audio_and_video_loop,
     build_goat_voice_ws_url,
@@ -136,6 +138,23 @@ def test_binary_json_message_is_not_treated_as_audio() -> None:
     assert _parse_json_bytes(b"\x01\x02\x03\x04") is None
 
 
+def test_wave_check_reports_operation(monkeypatch) -> None:
+    class FakeWinmm:
+        def waveInGetErrorTextW(self, code, buffer, _length):
+            buffer.value = f"fake error {code}"
+
+    monkeypatch.setattr(livetalk_live.ctypes, "windll", type("FakeWindll", (), {"winmm": FakeWinmm()})())
+
+    _wave_check(0, "waveInOpen")
+    try:
+        _wave_check(7, "waveInOpen")
+    except WaveInError as exc:
+        assert "waveInOpen" in str(exc)
+        assert "fake error 7" in str(exc)
+    else:
+        raise AssertionError("WaveInError was not raised")
+
+
 def test_video_frame_messages_are_sent_between_audio_chunks(monkeypatch) -> None:
     class FakeSocket:
         def __init__(self) -> None:
@@ -147,7 +166,7 @@ def test_video_frame_messages_are_sent_between_audio_chunks(monkeypatch) -> None
     socket = FakeSocket()
     monkeypatch.setattr(livetalk_live, "capture_visible_desktop_jpeg", lambda quality=None: b"jpeg-frame")
 
-    sent_audio, sent_video = _send_audio_and_video_loop(socket, [b"audio-1", b"audio-2"], perf_counter())
+    sent_audio, sent_video = _send_audio_and_video_loop(socket, [b"audio-1", b"audio-2"], perf_counter(), perf_counter() + 5.0)
 
     assert sent_audio == 2
     assert sent_video == 1
@@ -156,6 +175,19 @@ def test_video_frame_messages_are_sent_between_audio_chunks(monkeypatch) -> None
     assert frame_message["realtimeInput"]["video"]["mimeType"] == "image/jpeg"
     assert frame_message["realtimeInput"]["video"]["data"]
     assert socket.sent[2] == b"audio-2"
+
+
+def test_audio_video_send_loop_times_out(monkeypatch) -> None:
+    class FakeSocket:
+        def send(self, _payload) -> None:
+            raise AssertionError("send should not run after deadline")
+
+    try:
+        _send_audio_and_video_loop(FakeSocket(), [b"audio"], perf_counter(), perf_counter() - 1.0)
+    except TimeoutError as exc:
+        assert "send timeout" in str(exc)
+    else:
+        raise AssertionError("TimeoutError was not raised")
 
 
 def test_builder_offline_returns_clear_live_error_without_legacy_fallback(tmp_path: Path) -> None:

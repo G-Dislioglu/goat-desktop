@@ -131,3 +131,4 @@
 - Made Gemini Live the default LiveTalk path again, this time as primary audio+video streaming: default `GeminiLiveSession` streams PCM audio plus visible-desktop JPEG frames to Builder `/api/goat/voice`; the old kaskaded LiveTalk session is gated behind `GOAT_LIVETALK_FALLBACK=1`.
 - Removed the manual `Bildschirm pruefen` controls from the visible main popup layout; the wiring remains hidden only as a debug/fallback path.
 - Fixed the live video wire format after UI acceptance showed Maya could not see the screen. Desktop now sends frames as native Gemini Live `realtimeInput.video` messages instead of custom `type=video.frame`, matching the existing Builder proxy pass-through.
+- Fixed the default streaming LiveTalk worker after a self-run showed `NameError`: `WaveInPcmStreamer` referenced missing `_wave_check()`. Added `_wave_check()` and a hard send-loop deadline so LiveTalk returns with an explicit error instead of leaving the UI stuck on `Sende...`.

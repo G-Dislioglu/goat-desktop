@@ -103,6 +103,15 @@ class WaveInError(RuntimeError):
     pass
 
 
+def _wave_check(code: int, operation: str) -> None:
+    if code == 0:
+        return
+    buffer = ctypes.create_unicode_buffer(256)
+    ctypes.windll.winmm.waveInGetErrorTextW(code, buffer, len(buffer))
+    message = buffer.value or f"waveIn error {code}"
+    raise WaveInError(f"{operation}: {message}")
+
+
 class WaveInPcmStreamer:
     def __init__(self, stop_event: threading.Event, max_seconds: float, sample_rate: int = 16000, chunk_ms: int = 100) -> None:
         self.stop_event = stop_event
@@ -263,6 +272,7 @@ def request_gemini_live_turn(
                 open_timeout=min(8.0, active_config.timeout_seconds),
                 close_timeout=2.0,
             ) as websocket:
+                deadline = perf_counter() + active_config.timeout_seconds
                 websocket.send(
                     json.dumps(
                         {
@@ -276,6 +286,8 @@ def request_gemini_live_turn(
                     )
                 )
                 for chunk in iter_wav_pcm_chunks(audio_path):
+                    if perf_counter() >= deadline:
+                        raise TimeoutError("gemini live send timeout")
                     websocket.send(chunk)
                 websocket.send(json.dumps({"type": "audio.end"}))
 
@@ -391,6 +403,7 @@ def request_gemini_live_pcm_chunks(
                 open_timeout=min(8.0, active_config.timeout_seconds),
                 close_timeout=2.0,
             ) as websocket:
+                deadline = perf_counter() + active_config.timeout_seconds
                 websocket.send(
                     json.dumps(
                         {
@@ -407,6 +420,7 @@ def request_gemini_live_pcm_chunks(
                     websocket,
                     pcm_chunks,
                     started,
+                    deadline,
                     video_enabled=video_enabled,
                 )
                 websocket.send(json.dumps({"type": "audio.end"}))
@@ -447,6 +461,7 @@ def _send_audio_and_video_loop(
     websocket,
     pcm_chunks: Iterable[bytes],
     started: float,
+    deadline: float,
     video_enabled: bool = True,
 ) -> tuple[int, int]:
     sent_chunks = 0
@@ -454,6 +469,8 @@ def _send_audio_and_video_loop(
     next_video_at = started
     interval = _video_frame_interval_seconds()
     for chunk in pcm_chunks:
+        if perf_counter() >= deadline:
+            raise TimeoutError("gemini live send timeout")
         if chunk:
             websocket.send(chunk)
             sent_chunks += 1

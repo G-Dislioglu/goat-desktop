@@ -77,6 +77,9 @@ gemini_live_primary_with_video_2026_05_17:
 gemini_live_video_protocol_fix_2026_05_18:
 "Live-Acceptance zeigte: Maya antwortete `Ich kann deinen Bildschirm nicht sehen`, obwohl Desktop Frames sendete. Ursache: Desktop sendete `type=video.frame`, aber Builder `/api/goat/voice` leitet nur native Gemini-Live-Nachrichten wie `realtimeInput` unveraendert weiter; `video.frame` wurde als unsupported behandelt. Fix: Desktop sendet JPEG-Frames jetzt direkt als `realtimeInput.video` mit `mimeType=image/jpeg`, sodass der bestehende Builder ohne Deploy-Aenderung an Gemini Live weiterreichen kann."
 
+gemini_live_stream_hang_fix_2026_05_18:
+"Live-Acceptance zeigte nach dem Protocol-Fix einen haengenden UI-Zustand `Verarbeite Sprache / Gemini Live laeuft`. Ursache im lokalen Desktop: Der neue Streaming-Pfad nutzte `WaveInPcmStreamer`, aber `_wave_check()` fehlte in `livetalk_live.py`; dadurch crashte die Worker-Route beim Mikrofonstart. Fix: `_wave_check()` ergaenzt und per Unit-Test abgesichert. Zusaetzlich hat der Audio+Video-Sendeloop jetzt einen harten Turn-Deadline-Check, damit GOAT bei Builder/Gemini-Haengern nicht minutenlang im `Sende...`-Zustand bleibt."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 
