@@ -256,11 +256,6 @@ class GoatTrayApp:
                 max_seconds=max_seconds,
             )
             record_seconds = float(result.raw_evidence.get("record_seconds") or round(perf_counter() - started, 2))
-            audio_played = False
-            if result.audio_path:
-                from goat_desktop.livetalk import play_windows_wav
-
-                audio_played = play_windows_wav(Path(result.audio_path))
             self.popup.push_to_talk_finished.emit(
                 {
                     "status": "ok",
@@ -271,11 +266,16 @@ class GoatTrayApp:
                         "response_text": result.response_text,
                         "chat_time_ms": result.time_ms,
                         "record_seconds": record_seconds,
-                        "audio_played": audio_played,
+                        "audio_played": False,
                     },
                     "audio_path": result.audio_path,
                 }
             )
+            if result.audio_path:
+                from goat_desktop.livetalk import play_windows_wav
+
+                played = play_windows_wav(Path(result.audio_path))
+                self.popup.push_to_talk_finished.emit({"status": "audio_done", "audio_played": played})
         except Exception as exc:  # noqa: BLE001 - show user-visible failure in popup
             self.popup.push_to_talk_finished.emit({"status": "error", "error": str(exc)})
 

@@ -26,7 +26,7 @@ DEFAULT_GOAT_VOICE_INSTRUCTIONS = (
     "lokale Sicherheitspruefungen und harte Freigaben fuer riskante Aktionen. "
     "Du darfst keine Desktop-Aktion behaupten oder ausfuehren, wenn der User sie nicht explizit freigegeben hat. "
     "Wenn der User nach deinen Faehigkeiten fragt, erklaere konkret deine GOAT-Desktop-Faehigkeiten, nicht nur allgemeine KI-Faehigkeiten. "
-    "Antworte im LiveTalk normalerweise mit einem kurzen Satz und maximal 18 Woertern. Keine langen Listen, ausser der User fragt danach."
+    "Antworte im LiveTalk normalerweise mit einem kurzen Satz und maximal 12 Woertern. Keine langen Listen, ausser der User fragt danach."
 )
 
 CALLBACK_FUNCTION = 0x00030000
