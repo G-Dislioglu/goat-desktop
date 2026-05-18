@@ -7,6 +7,7 @@ import socket
 import time
 import urllib.error
 import urllib.request
+import winreg
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from enum import StrEnum
@@ -86,25 +87,25 @@ class VisionHint:
 
 def load_vision_hint_config() -> VisionHintConfig:
     persisted = _load_persisted_user_choice()
-    mode_value = os.environ.get("GOAT_VISION_MODE")
-    legacy_provider_value = os.environ.get("GOAT_VISION_PROVIDER")
+    mode_value = _get_env("GOAT_VISION_MODE")
+    legacy_provider_value = _get_env("GOAT_VISION_PROVIDER")
     if mode_value is None and legacy_provider_value in {mode.value for mode in VisionMode}:
         mode_value = legacy_provider_value
     mode = _parse_enum(VisionMode, mode_value, VisionMode.DISABLED)
-    provider_value = os.environ.get("GOAT_VISION_PROVIDER") or persisted.get("provider")
-    reasoning_value = os.environ.get("GOAT_VISION_REASONING") or persisted.get("reasoning_level")
+    provider_value = _get_env("GOAT_VISION_PROVIDER") or persisted.get("provider")
+    reasoning_value = _get_env("GOAT_VISION_REASONING") or persisted.get("reasoning_level")
     provider = _parse_enum(VisionProvider, provider_value, VisionProvider.GEMINI_FLASH_LITE)
     reasoning = _parse_enum(ReasoningLevel, reasoning_value, ReasoningLevel.MINIMAL)
     timeout = _timeout_for_reasoning(reasoning)
-    timeout_override = os.environ.get("GOAT_VISION_TIMEOUT_SECONDS")
+    timeout_override = _get_env("GOAT_VISION_TIMEOUT_SECONDS")
     if timeout_override:
         timeout = max(0.1, float(timeout_override))
     return VisionHintConfig(
         mode=mode,
         provider=provider,
         reasoning_level=reasoning,
-        builder_url=os.environ.get("GOAT_BUILDER_URL"),
-        builder_token=os.environ.get("GOAT_BUILDER_TOKEN"),
+        builder_url=_get_env("GOAT_BUILDER_URL"),
+        builder_token=_get_env("GOAT_BUILDER_TOKEN"),
         timeout_seconds=timeout,
     )
 
@@ -245,9 +246,9 @@ def _builder_proxy_hint(image_path: Path, prompt: str, config: VisionHintConfig)
 
 
 def _openai_compatible_hint(image_path: Path, prompt: str, config: VisionHintConfig) -> VisionHint:
-    api_key = os.environ.get("GOAT_VISION_API_KEY")
-    base_url = os.environ.get("GOAT_VISION_BASE_URL")
-    model = os.environ.get("GOAT_VISION_MODEL")
+    api_key = _get_env("GOAT_VISION_API_KEY")
+    base_url = _get_env("GOAT_VISION_BASE_URL")
+    model = _get_env("GOAT_VISION_MODEL")
     started = time.perf_counter()
     if not api_key or not base_url or not model:
         return _uncertain_hint(
@@ -346,13 +347,16 @@ def _uncertain_hint(
 
 @contextmanager
 def _temporary_resolve_override(url: str | None):
-    override_ip = os.environ.get("GOAT_BUILDER_RESOLVE_IP")
+    override_ip = _get_env("GOAT_BUILDER_RESOLVE_IP")
     if not url or not override_ip:
         yield
         return
 
     hostname = urlparse(url).hostname
     if not hostname:
+        yield
+        return
+    if hostname in {"127.0.0.1", "localhost", "::1"}:
         yield
         return
 
@@ -368,3 +372,15 @@ def _temporary_resolve_override(url: str | None):
         yield
     finally:
         socket.getaddrinfo = original_getaddrinfo
+
+
+def _get_env(name: str, default: str | None = None) -> str | None:
+    value = os.environ.get(name)
+    if value:
+        return value
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as key:
+            value, _value_type = winreg.QueryValueEx(key, name)
+    except OSError:
+        return default
+    return str(value) if value else default

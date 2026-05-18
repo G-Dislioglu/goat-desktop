@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 import threading
 import urllib.request
 from pathlib import Path
@@ -21,9 +22,19 @@ from goat_desktop.livetalk import LiveTalkSession, read_response_aloud, start_wi
 from goat_desktop.livetalk_live import request_gemini_live_stream
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
+from goat_desktop.screen import capture_active_window
+from goat_desktop.screen_context import VISION_CONTEXT_PROMPT, build_chat_context, build_screen_context_summary
 from goat_desktop.stt_hint import load_stt_config
 from goat_desktop.tts_hint import load_tts_config
 from goat_desktop.vision_config import load_vision_config, save_vision_config
+from goat_desktop.vision_hint import (
+    ReasoningLevel,
+    VisionHintConfig,
+    VisionMode,
+    VisionProvider,
+    get_vision_hint,
+    load_vision_hint_config,
+)
 
 
 class GoatTrayApp:
@@ -46,6 +57,9 @@ class GoatTrayApp:
         self._push_to_talk_recorder = None
         self._push_to_talk_started = 0.0
         self._push_to_talk_click_handled = False
+        self._last_screen_context = ""
+        self._screen_context_provider = "gemini_flash_lite"
+        self._screen_context_reasoning = "minimal"
         self.livetalk = LiveTalkSession(
             status_callback=self._update_livetalk_status,
             response_callback=self._update_livetalk_response,
@@ -141,6 +155,8 @@ class GoatTrayApp:
         self.popup.read_aloud.clicked.connect(self.read_livetalk_response_aloud)
         self.popup.read_aloud_finished.connect(self._finish_read_livetalk_response_aloud)
         self.popup.push_to_talk_finished.connect(self._finish_push_to_talk_payload)
+        self.popup.screen_context_button.clicked.connect(self.request_screen_context)
+        self.popup.screen_context_finished.connect(self._finish_screen_context)
         self.popup.vision_provider.currentIndexChanged.connect(self._save_vision_config)
         self.popup.vision_reasoning.currentIndexChanged.connect(self._save_vision_config)
 
@@ -329,20 +345,76 @@ class GoatTrayApp:
         text = self.popup.chat_input.text().strip()
         if not text:
             return
+        screen_context = self._last_screen_context or self.popup.screen_context_value.text()
         self.popup.chat_input.clear()
         self.popup.screen_context_value.setText(text)
         self.popup.maya_value.setText("Maya wird angefragt...")
         QApplication.processEvents()
         result = request_chat_response(
             text,
-            context={
-                "screen_context": self.popup.screen_context_value.text(),
-                "target": self.popup.target_value.text(),
-                "safety_rule": "desktop actions require explicit user approval",
-            },
+            context=build_chat_context(screen_context, self.popup.target_value.text()),
         )
         self.popup.maya_value.setText(result.response_text)
         self._set_read_aloud_available(result.response_text)
+
+    def request_screen_context(self) -> None:
+        self.popup.screen_context_button.setEnabled(False)
+        self.popup.screen_context_button.setText("Pruefe...")
+        self.popup.screen_context_value.setText("Bildschirm wird geprueft...")
+        self.popup.maya_value.setText("Vision Builder laeuft")
+        self._screen_context_provider = str(self.popup.vision_provider.currentData())
+        self._screen_context_reasoning = str(self.popup.vision_reasoning.currentData())
+        self.popup.hide()
+        QTimer.singleShot(250, self._start_screen_context_worker)
+
+    def _start_screen_context_worker(self) -> None:
+        Thread(target=self._screen_context_worker, name="goat-screen-context", daemon=True).start()
+
+    def _screen_context_worker(self) -> None:
+        try:
+            with tempfile.TemporaryDirectory(prefix="goat-screen-context-") as tmp:
+                image_path = Path(tmp) / "active-window.png"
+                capture = capture_active_window(output_path=image_path)
+                if not capture.get("ok"):
+                    self.popup.screen_context_finished.emit(
+                        {"status": "error", "error": capture.get("error", "screen capture failed"), "capture": capture}
+                    )
+                    return
+                base_config = load_vision_hint_config()
+                config = VisionHintConfig(
+                    mode=VisionMode.BUILDER_PROXY,
+                    provider=VisionProvider(self._screen_context_provider),
+                    reasoning_level=ReasoningLevel(self._screen_context_reasoning),
+                    builder_url=base_config.builder_url,
+                    builder_token=base_config.builder_token,
+                    timeout_seconds=base_config.timeout_seconds,
+                )
+                hint = get_vision_hint(image_path, VISION_CONTEXT_PROMPT, config=config)
+                if hint.status != "ok":
+                    self.popup.screen_context_finished.emit(
+                        {"status": "error", "error": hint.error or "vision failed", "capture": capture, "hint": hint.to_dict()}
+                    )
+                    return
+                summary = build_screen_context_summary(capture, hint)
+                self.popup.screen_context_finished.emit(
+                    {"status": "ok", "summary": summary, "capture": capture, "hint": hint.to_dict()}
+                )
+        except Exception as exc:  # noqa: BLE001 - user-visible failure in popup
+            self.popup.screen_context_finished.emit({"status": "error", "error": str(exc)})
+
+    def _finish_screen_context(self, payload: dict) -> None:
+        self.popup.showNormal()
+        self.popup.ensure_visible()
+        self.popup.screen_context_button.setEnabled(True)
+        self.popup.screen_context_button.setText("Bildschirm pruefen")
+        if payload.get("status") != "ok":
+            self.popup.screen_context_value.setText("Bildschirm-Kontext fehlgeschlagen")
+            self.popup.maya_value.setText(str(payload.get("error") or "Vision fehlgeschlagen"))
+            return
+        summary = str(payload.get("summary") or "")
+        self._last_screen_context = summary
+        self.popup.screen_context_value.setText(summary)
+        self.popup.maya_value.setText("Kontext bereit fuer Maya")
 
     def _set_read_aloud_available(self, text: str) -> None:
         self._read_aloud_request_id += 1

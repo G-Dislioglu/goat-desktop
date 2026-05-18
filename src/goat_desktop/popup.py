@@ -21,6 +21,7 @@ class GoatPopup(QWidget):
 
     read_aloud_finished = pyqtSignal(dict)
     push_to_talk_finished = pyqtSignal(dict)
+    screen_context_finished = pyqtSignal(dict)
 
     def __init__(self) -> None:
         super().__init__()
@@ -176,8 +177,10 @@ class GoatPopup(QWidget):
         self.vision_reasoning.addItem("Denkmodus: niedrig", "low")
         self.vision_reasoning.addItem("Denkmodus: mittel", "medium")
         self.vision_reasoning.addItem("Denkmodus: hoch", "high")
+        self.screen_context_button = QPushButton("Bildschirm pruefen")
         vision_grid.addWidget(self.vision_provider, 0, 0)
         vision_grid.addWidget(self.vision_reasoning, 0, 1)
+        vision_grid.addWidget(self.screen_context_button, 1, 0, 1, 2)
         root.addWidget(self.vision_panel)
         self._set_reasoning_tooltips()
 

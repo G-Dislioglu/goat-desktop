@@ -62,6 +62,9 @@ livetalk_hold_button_release_fix_2026_05_18:
 livetalk_best_known_audio_setting_2026_05_18:
 "Aktueller Best-Stand fuer LiveTalk am 2026-05-18 festgehalten. Empfohlene Laufzeit-Einstellung: `GOAT_LIVETALK_PROVIDER=gemini_live`, `GOAT_LIVETALK_STREAMING_PTT` unset/aus, `GOAT_LIVETALK_AUTO_TTS` unset, `GOAT_LIVETALK_ALLOW_SAPI_FALLBACK` unset, `GOAT_BUILDER_RESOLVE_IP=216.24.57.7`. Diese Kombination ist stabiler als der Streaming-Testmodus und liefert bisher die beste Nutzer-Rueckmeldung. Maya antwortet im LiveTalk kurz, aber nicht extrem knapp: maximal 12 Woerter. Audio-Testdateien geloescht."
 
+screen_context_vision_button_2026_05_18:
+"Bildschirm-Kontext-Feature am 2026-05-18 umgesetzt. Neu: Im Vision-Panel gibt es `Bildschirm pruefen`. Der Button versteckt das GOAT-Popup kurz, nimmt einen temporaeren aktiven-Fenster-Screenshot auf, ruft Builder `/api/goat/vision-hint` mit dem ausgewaehlten Vision-Modell auf und speichert nur eine kurze semantische Zusammenfassung im Popup. Der Screenshot liegt nur in einem Temp-Ordner und wird geloescht. Die naechste Maya-Textfrage bekommt diesen Screen-Kontext im Chat-Context mit. Vision bleibt semantischer Kontext, keine Aktionsfreigabe. Live-Smoke: capture_ok=true, HTTP 200, provider gemini_flash_lite, ca. 1441ms. Tests gruen: compileall und 48 Vision/Chat/LiveTalk-Kontext-Tests."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 
