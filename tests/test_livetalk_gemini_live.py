@@ -153,8 +153,8 @@ def test_video_frame_messages_are_sent_between_audio_chunks(monkeypatch) -> None
     assert sent_video == 1
     assert socket.sent[0] == b"audio-1"
     frame_message = json.loads(socket.sent[1])
-    assert frame_message["type"] == "video.frame"
-    assert frame_message["mime_type"] == "image/jpeg"
+    assert frame_message["realtimeInput"]["video"]["mimeType"] == "image/jpeg"
+    assert frame_message["realtimeInput"]["video"]["data"]
     assert socket.sent[2] == b"audio-2"
 
 

@@ -463,10 +463,12 @@ def _send_audio_and_video_loop(
                 websocket.send(
                     json.dumps(
                         {
-                            "type": "video.frame",
-                            "mime_type": "image/jpeg",
-                            "mimeType": "image/jpeg",
-                            "data": base64.b64encode(frame).decode("ascii"),
+                            "realtimeInput": {
+                                "video": {
+                                    "mimeType": "image/jpeg",
+                                    "data": base64.b64encode(frame).decode("ascii"),
+                                },
+                            },
                         }
                     )
                 )
