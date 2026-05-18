@@ -50,6 +50,9 @@ livetalk_push_to_talk_streaming_2026_05_18:
 livetalk_streaming_ptt_default_off_2026_05_18:
 "Push-to-talk-Streaming am 2026-05-18 auf Opt-in gestellt. Anlass: User meldete nach Streaming-Start `GOAT funktioniert nicht`; App-Prozess lief, aber der neue `waveIn*`-Pfad ist live noch nicht stabil genug. Neu: Standard ist wieder stabiler Hold-to-record/send-on-release. Streaming bleibt im Code, aber nur mit `GOAT_LIVETALK_STREAMING_PTT=1` aktiv. Tests gruen: compileall und 38 relevante Tests."
 
+livetalk_short_audio_response_2026_05_18:
+"Gemini-Live-Audio-Latenz am 2026-05-18 reduziert. Diagnose: Die letzte Push-to-talk-Aufnahme war fast 29s lang; die Antwort-WAV war 9.35s lang. Neu: Maya soll im LiveTalk normalerweise mit einem kurzen Satz und maximal 18 Woertern antworten. Der Push-to-talk-Pfad zeigt Text/Status sofort an und spielt die Antwort danach ab, statt die UI bis zum Ende der lokalen Wiedergabe zu blockieren. Ziel: kuerzere Audioantworten und weniger gefuehltes Warten. Tests gruen: compileall und 38 relevante Tests. Audio-Testdateien geloescht."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 

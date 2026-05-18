@@ -201,6 +201,7 @@ class LiveTalkSession:
         started: float,
         record_seconds: float,
         audio_recorded: bool,
+        play_audio: bool = True,
     ) -> LiveTalkResult:
         self.audio_dir.mkdir(parents=True, exist_ok=True)
         response_audio_path = self.audio_dir / "livetalk-live-response.wav"
@@ -211,7 +212,7 @@ class LiveTalkSession:
         response_text = live_result.response_text
         self._publish_response(transcript, response_text)
         self._set_state("speaking")
-        audio_played = bool(live_result.audio_path and play_windows_wav(Path(live_result.audio_path)))
+        audio_played = bool(play_audio and live_result.audio_path and play_windows_wav(Path(live_result.audio_path)))
         return LiveTalkResult(
             provider="gemini_live",
             mode="push_to_talk_proxy",

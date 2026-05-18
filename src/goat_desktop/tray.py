@@ -287,12 +287,21 @@ class GoatTrayApp:
                 started=started,
                 record_seconds=recorder.recorded_seconds,
                 audio_recorded=audio_recorded,
+                play_audio=False,
             )
-            self.popup.push_to_talk_finished.emit({"status": "ok", "result": result.to_dict()})
+            payload = result.to_dict()
+            self.popup.push_to_talk_finished.emit({"status": "ok", "result": payload})
+            if result.response_audio_path:
+                from goat_desktop.livetalk import play_windows_wav
+
+                played = play_windows_wav(Path(result.response_audio_path))
+                self.popup.push_to_talk_finished.emit({"status": "audio_done", "audio_played": played})
         except Exception as exc:  # noqa: BLE001 - show user-visible failure in popup
             self.popup.push_to_talk_finished.emit({"status": "error", "error": str(exc)})
 
     def _finish_push_to_talk_payload(self, payload: dict) -> None:
+        if payload.get("status") == "audio_done":
+            return
         if payload.get("status") != "ok":
             self.popup.screen_context_value.setText("LiveTalk Fehler")
             self.popup.maya_value.setText(str(payload.get("error") or "Push-to-talk fehlgeschlagen"))

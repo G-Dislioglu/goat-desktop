@@ -11,6 +11,7 @@ import pytest
 
 from goat_desktop import livetalk
 from goat_desktop.livetalk import LiveTalkSession, read_response_aloud
+from goat_desktop.stt_hint import SttResult
 from goat_desktop.tts_hint import TtsMode, load_tts_config, synthesize_speech
 
 
@@ -169,6 +170,19 @@ def test_livetalk_completion_requires_builder_tts(monkeypatch, mock_tts_server, 
     monkeypatch.delenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", raising=False)
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
+    monkeypatch.setattr(
+        livetalk,
+        "transcribe_audio",
+        lambda audio_path: SttResult(
+            status="ok",
+            transcript="zeige das suchfeld",
+            confidence=0.9,
+            provider="test_stt",
+            time_ms=111.0,
+            raw_evidence={},
+            http_status=200,
+        ),
+    )
     monkeypatch.setattr(livetalk, "request_chat_response", lambda message, context=None: ChatOk())
     monkeypatch.setattr(livetalk, "play_windows_wav", lambda audio_path: audio_path.exists())
     monkeypatch.setattr(livetalk, "speak_windows_sapi", lambda text: False)
@@ -191,6 +205,19 @@ def test_livetalk_default_returns_after_chat_without_blocking_tts(monkeypatch, m
     monkeypatch.delenv("GOAT_LIVETALK_MANUAL_TRANSCRIPT", raising=False)
     monkeypatch.setattr(livetalk, "record_windows_wav", lambda output_path, seconds: _fake_wav(output_path))
     monkeypatch.setattr(livetalk, "signal_recording_start", lambda prepare_seconds: None)
+    monkeypatch.setattr(
+        livetalk,
+        "transcribe_audio",
+        lambda audio_path: SttResult(
+            status="ok",
+            transcript="zeige das suchfeld",
+            confidence=0.9,
+            provider="test_stt",
+            time_ms=111.0,
+            raw_evidence={},
+            http_status=200,
+        ),
+    )
     monkeypatch.setattr(livetalk, "request_chat_response", lambda message, context=None: ChatOk())
     monkeypatch.setattr(livetalk, "synthesize_speech", lambda text, output_path: (_ for _ in ()).throw(AssertionError("TTS should not block default LiveTalk")))
 
