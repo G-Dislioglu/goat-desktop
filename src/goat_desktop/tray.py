@@ -645,7 +645,7 @@ def _livetalk_fallback_enabled() -> bool:
 
 
 def _streaming_livetalk_enabled() -> bool:
-    return os.environ.get("GOAT_LIVETALK_STREAMING_PTT", "1").strip().lower() not in {"0", "false", "no", "off"}
+    return os.environ.get("GOAT_LIVETALK_STREAMING_PTT", "0").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _video_frames_enabled() -> bool:

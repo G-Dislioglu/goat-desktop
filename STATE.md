@@ -86,6 +86,9 @@ gemini_live_turn_coverage_fix_2026_05_18:
 gemini_live_streaming_default_video_toggle_2026_05_18:
 "Zielarchitektur korrigiert: LiveTalk nutzt wieder den echten Gemini-Live-Streaming-Pfad als Default; alter kaskadierter Fallback bleibt nur via `GOAT_LIVETALK_FALLBACK=1`. Video-Frames sind gebaut, aber konservativ default aus via `GOAT_LIVETALK_VIDEO_FRAMES=0`; User kann im LiveTalk-Popup `Maya sieht Bildschirm` einschalten. Modus `1` sendet ca. 1 FPS, Modus `2` ca. 0.5 FPS. Headless-Latenzmessung mit 5 Streaming-Runs: ohne Video median first_response_ms 3970ms / total 6097ms, mit Video median first_response_ms 5113ms / total 6996ms. Ergebnis: Video ist funktionsfaehig, aber nicht kostenlos; default bleibt aus."
 
+livetalk_recorded_ptt_default_2026_05_18:
+"Live-Usertest zeigte: Der Streaming-Mikrofonpfad (`waveIn`) startet, liefert auf dem Zielsystem aber keine erkannte Sprache (`Keine Sprache erkannt`). Korrektur: Hold-to-talk nutzt default wieder den stabilen Windows-WAV-Aufnahmepfad und sendet danach an Gemini Live. Reines Streaming bleibt optional via `GOAT_LIVETALK_STREAMING_PTT=1`; alter kaskadierter Fallback bleibt separat via `GOAT_LIVETALK_FALLBACK=1`."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 
