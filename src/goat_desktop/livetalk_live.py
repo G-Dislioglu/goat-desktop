@@ -220,16 +220,43 @@ def with_screen_context(config: GeminiLiveConfig, screen_context: str | None) ->
         voice=config.voice,
         instructions=(
             f"{config.instructions} "
-            f"Aktueller gepruefter Bildschirm-Kontext: {context} "
-            "Wenn der User nach dem Bildschirm fragt, nutze diesen Kontext und sage klar, dass er aus der letzten Pruefung stammt."
+            f"Aktueller Bildschirm-Kontext: {context} "
+            "Wenn der User nach dem Bildschirm fragt, nutze diesen Kontext natuerlich und ohne auf eine Pruefung oder einen Screenshot zu verweisen."
         ),
     )
+
+
+def build_live_setup_message(config: GeminiLiveConfig) -> dict:
+    return {
+        "setup": {
+            "model": _live_model_name(config.model),
+            "generationConfig": {
+                "responseModalities": ["AUDIO"],
+                "speechConfig": {
+                    "voiceConfig": {
+                        "prebuiltVoiceConfig": {
+                            "voiceName": config.voice,
+                        },
+                    },
+                },
+            },
+            "systemInstruction": {
+                "parts": [{"text": config.instructions}],
+            },
+            "inputAudioTranscription": {},
+            "outputAudioTranscription": {},
+            "realtimeInputConfig": {
+                "turnCoverage": "TURN_INCLUDES_AUDIO_ACTIVITY_AND_ALL_VIDEO",
+            },
+        },
+    }
 
 
 def request_gemini_live_turn(
     audio_path: Path,
     output_path: Path,
     config: GeminiLiveConfig | None = None,
+    video_enabled: bool | None = None,
 ) -> GeminiLiveResult:
     active_config = config or load_gemini_live_config()
     started = perf_counter()
@@ -253,7 +280,6 @@ def request_gemini_live_turn(
                 "input_signal": input_signal,
             },
         )
-
     uri = build_goat_voice_ws_url(active_config.builder_url)
     headers = {"Authorization": f"Bearer {active_config.builder_token}"}
     output_audio_chunks: list[bytes] = []
@@ -273,23 +299,17 @@ def request_gemini_live_turn(
                 close_timeout=2.0,
             ) as websocket:
                 deadline = perf_counter() + active_config.timeout_seconds
-                websocket.send(
-                    json.dumps(
-                        {
-                            "type": "session.update",
-                            "session": {
-                                "model": active_config.model,
-                                "voice": active_config.voice,
-                                "instructions": active_config.instructions,
-                            },
-                        }
-                    )
+                websocket.send(json.dumps(build_live_setup_message(active_config)))
+                setup_messages = _wait_for_setup_complete(websocket, deadline)
+                sent_chunks, sent_video_frames = _send_audio_and_video_loop(
+                    websocket,
+                    iter_wav_pcm_chunks(audio_path),
+                    started,
+                    deadline,
+                    video_enabled=_video_frames_enabled() if video_enabled is None else video_enabled,
                 )
-                for chunk in iter_wav_pcm_chunks(audio_path):
-                    if perf_counter() >= deadline:
-                        raise TimeoutError("gemini live send timeout")
-                    websocket.send(chunk)
                 websocket.send(json.dumps({"type": "audio.end"}))
+                message_count += setup_messages
 
                 while (perf_counter() - started) < active_config.timeout_seconds:
                     try:
@@ -350,6 +370,8 @@ def request_gemini_live_turn(
             "messages": message_count,
             "audio_chunks": len(output_audio_chunks),
             "input_signal": input_signal,
+            "sent_chunks": sent_chunks,
+            "video_frames": sent_video_frames,
         },
     )
 
@@ -377,7 +399,7 @@ def request_gemini_live_pcm_chunks(
     pcm_chunks: Iterable[bytes],
     output_path: Path,
     config: GeminiLiveConfig | None = None,
-    video_enabled: bool = True,
+    video_enabled: bool | None = None,
 ) -> GeminiLiveResult:
     active_config = config or load_gemini_live_config()
     started = perf_counter()
@@ -404,31 +426,22 @@ def request_gemini_live_pcm_chunks(
                 close_timeout=2.0,
             ) as websocket:
                 deadline = perf_counter() + active_config.timeout_seconds
-                websocket.send(
-                    json.dumps(
-                        {
-                            "type": "session.update",
-                            "session": {
-                                "model": active_config.model,
-                                "voice": active_config.voice,
-                                "instructions": active_config.instructions,
-                            },
-                        }
-                    )
-                )
+                websocket.send(json.dumps(build_live_setup_message(active_config)))
+                setup_messages = _wait_for_setup_complete(websocket, deadline)
                 sent_chunks, sent_video_frames = _send_audio_and_video_loop(
                     websocket,
                     pcm_chunks,
                     started,
                     deadline,
-                    video_enabled=video_enabled,
+                    video_enabled=_video_frames_enabled() if video_enabled is None else video_enabled,
                 )
                 websocket.send(json.dumps({"type": "audio.end"}))
-                message_count, transcript_parts, response_text_parts, output_audio_chunks = _receive_live_response(
+                message_count, transcript_parts, response_text_parts, output_audio_chunks, first_response_ms = _receive_live_response(
                     websocket,
                     started,
                     active_config.timeout_seconds,
                 )
+                message_count += setup_messages
     except Exception as exc:  # noqa: BLE001 - fail closed into explicit Live result
         return _uncertain_result(type(exc).__name__, active_config, started)
 
@@ -440,7 +453,7 @@ def request_gemini_live_pcm_chunks(
         transcript_parts,
         response_text_parts,
         output_audio_chunks,
-        extra_evidence={"sent_chunks": sent_chunks, "video_frames": sent_video_frames},
+        extra_evidence={"sent_chunks": sent_chunks, "video_frames": sent_video_frames, "first_response_ms": first_response_ms},
     )
 
 
@@ -448,6 +461,31 @@ def build_goat_voice_ws_url(builder_url: str) -> str:
     parsed = urlparse(builder_url.rstrip("/"))
     scheme = "wss" if parsed.scheme == "https" else "ws"
     return urlunparse((scheme, parsed.netloc, "/api/goat/voice", "", "", ""))
+
+
+def _live_model_name(model: str) -> str:
+    return model if model.startswith("models/") else f"models/{model}"
+
+
+def _wait_for_setup_complete(websocket, deadline: float) -> int:
+    messages = 0
+    while perf_counter() < deadline:
+        try:
+            raw_message = websocket.recv(timeout=0.75)
+        except TimeoutError:
+            continue
+        messages += 1
+        parsed = _parse_json_bytes(raw_message) if isinstance(raw_message, bytes) else _parse_json_object(raw_message)
+        if not parsed:
+            continue
+        if parsed.get("setupComplete") is not None:
+            return messages
+        if parsed.get("type") == "goat.voice.ready":
+            continue
+        error_text = _nested_text(parsed, ["error", "message"]) or _nested_text(parsed, ["message"])
+        if parsed.get("type") == "goat.voice.error" or error_text:
+            raise RuntimeError(error_text or "gemini live setup failed")
+    raise TimeoutError("gemini live setup timeout")
 
 
 def iter_wav_pcm_chunks(audio_path: Path, chunk_frames: int = 2048):
@@ -468,6 +506,11 @@ def _send_audio_and_video_loop(
     sent_video_frames = 0
     next_video_at = started
     interval = _video_frame_interval_seconds()
+    if perf_counter() >= deadline:
+        raise TimeoutError("gemini live send timeout")
+    if video_enabled:
+        sent_video_frames += _send_video_frame(websocket)
+        next_video_at = perf_counter() + interval
     for chunk in pcm_chunks:
         if perf_counter() >= deadline:
             raise TimeoutError("gemini live send timeout")
@@ -475,23 +518,28 @@ def _send_audio_and_video_loop(
             websocket.send(chunk)
             sent_chunks += 1
         if video_enabled and perf_counter() >= next_video_at:
-            frame = capture_visible_desktop_jpeg()
-            if frame:
-                websocket.send(
-                    json.dumps(
-                        {
-                            "realtimeInput": {
-                                "video": {
-                                    "mimeType": "image/jpeg",
-                                    "data": base64.b64encode(frame).decode("ascii"),
-                                },
-                            },
-                        }
-                    )
-                )
-                sent_video_frames += 1
+            sent_video_frames += _send_video_frame(websocket)
             next_video_at = perf_counter() + interval
     return sent_chunks, sent_video_frames
+
+
+def _send_video_frame(websocket) -> int:
+    frame = capture_visible_desktop_jpeg()
+    if not frame:
+        return 0
+    websocket.send(
+        json.dumps(
+            {
+                "realtimeInput": {
+                    "video": {
+                        "mimeType": "image/jpeg",
+                        "data": base64.b64encode(frame).decode("ascii"),
+                    },
+                },
+            }
+        )
+    )
+    return 1
 
 
 def capture_visible_desktop_jpeg(quality: int | None = None) -> bytes | None:
@@ -599,7 +647,8 @@ def _receive_live_response(websocket, started: float, timeout_seconds: float):
         if first_response_started_at and not response_text_parts and not _has_playable_audio(output_audio_chunks):
             if (perf_counter() - first_response_started_at) > _empty_response_grace_seconds():
                 break
-    return message_count, transcript_parts, response_text_parts, output_audio_chunks
+    first_response_ms = round((first_response_started_at - started) * 1000, 2) if first_response_started_at else None
+    return message_count, transcript_parts, response_text_parts, output_audio_chunks, first_response_ms
 
 
 def _live_result_from_parts(
@@ -655,7 +704,14 @@ def _empty_response_grace_seconds() -> float:
     return max(1.0, float(_get_env("GOAT_VOICE_EMPTY_RESPONSE_GRACE_SECONDS", "4.0") or "4.0"))
 
 
+def _video_frames_enabled() -> bool:
+    return (_get_env("GOAT_LIVETALK_VIDEO_FRAMES", "0") or "0").strip().lower() not in {"0", "false", "no", "off"}
+
+
 def _video_frame_interval_seconds() -> float:
+    mode = (_get_env("GOAT_LIVETALK_VIDEO_FRAMES", "0") or "0").strip().lower()
+    if mode == "2":
+        return 2.0
     return max(0.2, float(_get_env("GOAT_LIVETALK_VIDEO_INTERVAL_SECONDS", "1.0") or "1.0"))
 
 

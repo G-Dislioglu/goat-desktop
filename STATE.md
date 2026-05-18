@@ -80,6 +80,12 @@ gemini_live_video_protocol_fix_2026_05_18:
 gemini_live_stream_hang_fix_2026_05_18:
 "Live-Acceptance zeigte nach dem Protocol-Fix einen haengenden UI-Zustand `Verarbeite Sprache / Gemini Live laeuft`. Ursache im lokalen Desktop: Der neue Streaming-Pfad nutzte `WaveInPcmStreamer`, aber `_wave_check()` fehlte in `livetalk_live.py`; dadurch crashte die Worker-Route beim Mikrofonstart. Fix: `_wave_check()` ergaenzt und per Unit-Test abgesichert. Zusaetzlich hat der Audio+Video-Sendeloop jetzt einen harten Turn-Deadline-Check, damit GOAT bei Builder/Gemini-Haengern nicht minutenlang im `Sende...`-Zustand bleibt."
 
+gemini_live_turn_coverage_fix_2026_05_18:
+"Maschineller SAPI-Acceptance-Test erkannte die Audiofrage korrekt (`Siehst du den Step Stack Ordner...`) und sendete einen Video-Frame, Gemini antwortete aber trotzdem, es sehe den Ordner nicht. Ursache: Das Setup nutzte die Builder-Session-Abstraktion ohne `realtimeInputConfig.turnCoverage`; laut Gemini Live API kann Video ausserhalb der Audio-Aktivitaet sonst aus dem Turn fallen. Fix: Desktop sendet jetzt natives Gemini-Live-`setup` mit `TURN_INCLUDES_AUDIO_ACTIVITY_AND_ALL_VIDEO`, damit alle Video-Frames des Turns in die Antwort einbezogen werden."
+
+gemini_live_streaming_default_video_toggle_2026_05_18:
+"Zielarchitektur korrigiert: LiveTalk nutzt wieder den echten Gemini-Live-Streaming-Pfad als Default; alter kaskadierter Fallback bleibt nur via `GOAT_LIVETALK_FALLBACK=1`. Video-Frames sind gebaut, aber konservativ default aus via `GOAT_LIVETALK_VIDEO_FRAMES=0`; User kann im LiveTalk-Popup `Maya sieht Bildschirm` einschalten. Modus `1` sendet ca. 1 FPS, Modus `2` ca. 0.5 FPS. Headless-Latenzmessung mit 5 Streaming-Runs: ohne Video median first_response_ms 3970ms / total 6097ms, mit Video median first_response_ms 5113ms / total 6996ms. Ergebnis: Video ist funktionsfaehig, aber nicht kostenlos; default bleibt aus."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 

@@ -4,6 +4,7 @@ from PyQt6.QtCore import QPoint, Qt, pyqtSignal
 from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QComboBox,
     QFrame,
     QGridLayout,
@@ -148,17 +149,20 @@ class GoatPopup(QWidget):
         actions.setVerticalSpacing(8)
 
         self.talk_button = QPushButton("LiveTalk")
+        self.video_frames_toggle = QCheckBox("Maya sieht Bildschirm")
         self.exit_livetalk = QPushButton("LiveTalk beenden")
         self.cue_approve = QPushButton("Cue freigeben")
         self.cue_reject = QPushButton("Cue ablehnen")
         self.exit_livetalk.setVisible(False)
+        self.video_frames_toggle.setVisible(False)
         self.cue_approve.setEnabled(False)
         self.cue_reject.setEnabled(False)
 
         actions.addWidget(self.talk_button, 0, 0)
         actions.addWidget(self.exit_livetalk, 0, 1)
-        actions.addWidget(self.cue_approve, 1, 0)
-        actions.addWidget(self.cue_reject, 1, 1)
+        actions.addWidget(self.video_frames_toggle, 1, 0, 1, 2)
+        actions.addWidget(self.cue_approve, 2, 0)
+        actions.addWidget(self.cue_reject, 2, 1)
         self.actions_layout = actions
         root.addLayout(self.actions_layout)
 
@@ -238,6 +242,10 @@ class GoatPopup(QWidget):
                 color: #8d95a3;
                 background: #252b36;
             }
+            QCheckBox {
+                color: #d7dce6;
+                padding: 3px 2px;
+            }
             QComboBox, QLineEdit {
                 background: #2d3340;
                 border: 1px solid #4a5364;
@@ -265,6 +273,7 @@ class GoatPopup(QWidget):
         self.cue_approve.setVisible(not active)
         self.cue_reject.setVisible(not active)
         self.exit_livetalk.setVisible(active)
+        self.video_frames_toggle.setVisible(active)
         self.target_value.setVisible(not active)
         self.chat_input.setVisible(True)
         self.chat_send.setVisible(True)

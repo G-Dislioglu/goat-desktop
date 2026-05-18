@@ -4,6 +4,7 @@ import json
 import wave
 from pathlib import Path
 from time import perf_counter
+import websockets.sync.client
 
 from goat_desktop import livetalk
 from goat_desktop import livetalk_live
@@ -17,6 +18,7 @@ from goat_desktop.livetalk_live import (
     _parse_json_bytes,
     _send_audio_and_video_loop,
     build_goat_voice_ws_url,
+    build_live_setup_message,
     iter_wav_pcm_chunks,
     load_gemini_live_config,
     request_gemini_live_turn,
@@ -63,9 +65,27 @@ def test_screen_context_is_added_to_gemini_live_instructions() -> None:
 
     updated = with_screen_context(config, "Chrome: StepStack Ordner sichtbar.")
 
-    assert "Aktueller gepruefter Bildschirm-Kontext" in updated.instructions
+    assert "Aktueller Bildschirm-Kontext" in updated.instructions
     assert "StepStack" in updated.instructions
+    assert "ohne auf eine Pruefung oder einen Screenshot zu verweisen" in updated.instructions
     assert updated.builder_url == config.builder_url
+
+
+def test_live_setup_uses_all_video_turn_coverage() -> None:
+    setup = build_live_setup_message(
+        GeminiLiveConfig(
+            builder_url="https://builder.example",
+            builder_token="token",
+            timeout_seconds=10.0,
+            model="gemini-3.1-flash-live-preview",
+            voice="Kore",
+            instructions="test",
+        )
+    )
+
+    assert setup["setup"]["model"] == "models/gemini-3.1-flash-live-preview"
+    assert setup["setup"]["generationConfig"]["responseModalities"] == ["AUDIO"]
+    assert setup["setup"]["realtimeInputConfig"]["turnCoverage"] == "TURN_INCLUDES_AUDIO_ACTIVITY_AND_ALL_VIDEO"
 
 
 def test_wav_pcm_chunks_and_writer(tmp_path: Path, monkeypatch) -> None:
@@ -155,7 +175,7 @@ def test_wave_check_reports_operation(monkeypatch) -> None:
         raise AssertionError("WaveInError was not raised")
 
 
-def test_video_frame_messages_are_sent_between_audio_chunks(monkeypatch) -> None:
+def test_video_frame_message_is_sent_before_audio_chunks(monkeypatch) -> None:
     class FakeSocket:
         def __init__(self) -> None:
             self.sent = []
@@ -170,10 +190,10 @@ def test_video_frame_messages_are_sent_between_audio_chunks(monkeypatch) -> None
 
     assert sent_audio == 2
     assert sent_video == 1
-    assert socket.sent[0] == b"audio-1"
-    frame_message = json.loads(socket.sent[1])
+    frame_message = json.loads(socket.sent[0])
     assert frame_message["realtimeInput"]["video"]["mimeType"] == "image/jpeg"
     assert frame_message["realtimeInput"]["video"]["data"]
+    assert socket.sent[1] == b"audio-1"
     assert socket.sent[2] == b"audio-2"
 
 
@@ -240,6 +260,63 @@ def test_livetalk_gemini_live_records_sends_and_plays(monkeypatch, tmp_path: Pat
     assert result.audio_recorded is True
     assert result.audio_played is True
     assert result.completion_ready is True
+
+
+def test_recorded_gemini_live_turn_sends_video_frames(monkeypatch, tmp_path: Path) -> None:
+    source = tmp_path / "input.wav"
+    with wave.open(str(source), "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(16000)
+        wav.writeframes(b"\x01\x02" * 4096)
+
+    sent = []
+
+    class FakeSocket:
+        def __init__(self):
+            self._messages = [
+                json.dumps({"setupComplete": {}}),
+                json.dumps({"serverContent": {"outputTranscription": {"text": "Ich sehe den Bildschirm."}, "turnComplete": True}}),
+            ]
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def send(self, payload):
+            sent.append(payload)
+
+        def recv(self, timeout=None):
+            if self._messages:
+                return self._messages.pop(0)
+            raise TimeoutError()
+
+    class FakeConnect:
+        def __call__(self, *args, **kwargs):
+            return FakeSocket()
+
+    monkeypatch.setattr(livetalk_live, "capture_visible_desktop_jpeg", lambda quality=None: b"jpeg-frame")
+    monkeypatch.setattr(websockets.sync.client, "connect", FakeConnect())
+
+    result = request_gemini_live_turn(
+        source,
+        tmp_path / "response.wav",
+        video_enabled=True,
+        config=GeminiLiveConfig(
+            builder_url="https://builder.example",
+            builder_token="token",
+            timeout_seconds=5.0,
+            model="gemini-3.1-flash-live-preview",
+            voice="Kore",
+            instructions="test",
+        ),
+    )
+
+    assert result.status == "ok"
+    assert result.raw_evidence["video_frames"] >= 1
+    assert any(isinstance(item, str) and '"video"' in item and "image/jpeg" in item for item in sent)
 
 
 def test_livetalk_gemini_live_uncertain_result_shows_clear_transcript(monkeypatch, tmp_path: Path) -> None:

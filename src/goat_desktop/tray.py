@@ -84,6 +84,7 @@ class GoatTrayApp:
         self.bridge.start()
         self._start_builder_bridge_if_configured()
         self._load_vision_config()
+        self.popup.video_frames_toggle.setChecked(_video_frames_enabled())
         self._refresh_audio_status()
 
     def show_popup(self) -> None:
@@ -158,6 +159,7 @@ class GoatTrayApp:
         self.popup.read_aloud.clicked.connect(self.read_livetalk_response_aloud)
         self.popup.read_aloud_finished.connect(self._finish_read_livetalk_response_aloud)
         self.popup.push_to_talk_finished.connect(self._finish_push_to_talk_payload)
+        self.popup.video_frames_toggle.toggled.connect(self._set_video_frames_enabled)
         self.popup.screen_context_button.clicked.connect(self.request_screen_context)
         self.popup.screen_context_finished.connect(self._finish_screen_context)
         self.popup.vision_provider.currentIndexChanged.connect(self._save_vision_config)
@@ -177,6 +179,9 @@ class GoatTrayApp:
             str(self.popup.vision_provider.currentData()),
             str(self.popup.vision_reasoning.currentData()),
         )
+
+    def _set_video_frames_enabled(self, enabled: bool) -> None:
+        os.environ["GOAT_LIVETALK_VIDEO_FRAMES"] = "1" if enabled else "0"
 
     def run_livetalk_once(self) -> None:
         if self._push_to_talk_click_handled:
@@ -235,7 +240,7 @@ class GoatTrayApp:
         self.popup.maya_value.setText("Loslassen zum Senden")
         self.popup.talk_button.setText("Loslassen zum Senden")
         QApplication.processEvents()
-        if not _livetalk_fallback_enabled():
+        if _streaming_livetalk_enabled():
             Thread(
                 target=self._push_to_talk_stream_worker,
                 args=(self._push_to_talk_stop_event, max_seconds, self._push_to_talk_started),
@@ -637,3 +642,11 @@ class GoatTrayApp:
 
 def _livetalk_fallback_enabled() -> bool:
     return os.environ.get("GOAT_LIVETALK_FALLBACK", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _streaming_livetalk_enabled() -> bool:
+    return os.environ.get("GOAT_LIVETALK_STREAMING_PTT", "1").strip().lower() not in {"0", "false", "no", "off"}
+
+
+def _video_frames_enabled() -> bool:
+    return os.environ.get("GOAT_LIVETALK_VIDEO_FRAMES", "0").strip().lower() not in {"0", "false", "no", "off"}
