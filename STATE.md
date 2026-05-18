@@ -44,6 +44,9 @@ livetalk_push_to_talk_mouse_2026_05_18:
 livetalk_gemini_live_timeout_2026_05_18:
 "Gemini-Live-Antworttimeout am 2026-05-18 gesenkt. Anlass: Bei Push-to-talk konnte Maya nach Loslassen ca. 20s haengen, wenn Gemini keine Antwort lieferte. Neu: Default `GOAT_VOICE_TIMEOUT_SECONDS` ist 10s statt 20s. Wenn Gemini eine Eingabe bestaetigt, aber keine Text-/Audioantwort startet, bricht GOAT nach `GOAT_VOICE_EMPTY_RESPONSE_GRACE_SECONDS` ab, Default 4s. Tests gruen: compileall und 38 relevante Tests. Audio-Testdateien geloescht."
 
+livetalk_push_to_talk_streaming_2026_05_18:
+"Push-to-talk-Streaming am 2026-05-18 implementiert. Vorher wurde beim Halten weiter lokal aufgenommen und erst nach Loslassen als komplette WAV gesendet. Neu: GOAT nutzt Windows `waveIn*` via `winmm` direkt und streamt waehrend gedrueckter linker Maustaste 16 kHz / 16-bit / mono PCM in ca. 100ms-Chunks an Builder `WSS /api/goat/voice`. Beim Loslassen wird `audio.end` gesendet und Gemini Live kann schneller antworten, weil die Sprache schon waehrend des Sprechens uebertragen wurde. Keine neuen Python-Audio-Pakete noetig; `sounddevice`, `pyaudio`, `numpy` waren lokal nicht installiert. Sicherheitslimit bleibt `GOAT_LIVETALK_PUSH_TO_TALK_MAX_SECONDS` Default 30s. Tests gruen: compileall und 38 relevante Tests. Audio-Testdateien geloescht."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 

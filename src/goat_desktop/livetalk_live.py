@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import base64
+import ctypes
 import json
 import math
 import os
+import queue
 import socket
+import threading
 import wave
 import winreg
 from contextlib import contextmanager
@@ -25,6 +28,37 @@ DEFAULT_GOAT_VOICE_INSTRUCTIONS = (
     "Wenn der User nach deinen Faehigkeiten fragt, erklaere konkret deine GOAT-Desktop-Faehigkeiten, nicht nur allgemeine KI-Faehigkeiten. "
     "Antworte kurz, hilfreich und deutsch."
 )
+
+CALLBACK_FUNCTION = 0x00030000
+WIM_DATA = 0x3C0
+
+
+class WAVEFORMATEX(ctypes.Structure):
+    _fields_ = [
+        ("wFormatTag", ctypes.c_ushort),
+        ("nChannels", ctypes.c_ushort),
+        ("nSamplesPerSec", ctypes.c_uint),
+        ("nAvgBytesPerSec", ctypes.c_uint),
+        ("nBlockAlign", ctypes.c_ushort),
+        ("wBitsPerSample", ctypes.c_ushort),
+        ("cbSize", ctypes.c_ushort),
+    ]
+
+
+class WAVEHDR(ctypes.Structure):
+    _fields_ = [
+        ("lpData", ctypes.c_void_p),
+        ("dwBufferLength", ctypes.c_uint),
+        ("dwBytesRecorded", ctypes.c_uint),
+        ("dwUser", ctypes.c_size_t),
+        ("dwFlags", ctypes.c_uint),
+        ("dwLoops", ctypes.c_uint),
+        ("lpNext", ctypes.c_void_p),
+        ("reserved", ctypes.c_size_t),
+    ]
+
+
+WAVEINPROC = ctypes.WINFUNCTYPE(None, ctypes.c_void_p, ctypes.c_uint, ctypes.c_size_t, ctypes.c_size_t, ctypes.c_size_t)
 
 
 @dataclass(frozen=True)
@@ -49,6 +83,90 @@ class GeminiLiveResult:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+
+class WaveInError(RuntimeError):
+    pass
+
+
+class WaveInPcmStreamer:
+    def __init__(self, stop_event: threading.Event, max_seconds: float, sample_rate: int = 16000, chunk_ms: int = 100) -> None:
+        self.stop_event = stop_event
+        self.max_seconds = max(0.3, max_seconds)
+        self.sample_rate = sample_rate
+        self.chunk_bytes = int(sample_rate * 2 * max(20, chunk_ms) / 1000)
+        self.recorded_seconds = 0.0
+        self._queue: queue.Queue[bytes | None] = queue.Queue()
+        self._handle = ctypes.c_void_p()
+        self._headers: list[WAVEHDR] = []
+        self._buffers: list[ctypes.Array] = []
+        self._callback_ref = WAVEINPROC(self._callback)
+
+    def __iter__(self):
+        self._open()
+        started = perf_counter()
+        try:
+            _wave_check(ctypes.windll.winmm.waveInStart(self._handle), "waveInStart")
+            while not self.stop_event.is_set() and (perf_counter() - started) < self.max_seconds:
+                try:
+                    chunk = self._queue.get(timeout=0.25)
+                except queue.Empty:
+                    continue
+                if chunk:
+                    yield chunk
+            self.recorded_seconds = round(perf_counter() - started, 2)
+        finally:
+            self._close()
+
+    def _open(self) -> None:
+        fmt = WAVEFORMATEX()
+        fmt.wFormatTag = 1
+        fmt.nChannels = 1
+        fmt.nSamplesPerSec = self.sample_rate
+        fmt.wBitsPerSample = 16
+        fmt.nBlockAlign = 2
+        fmt.nAvgBytesPerSec = self.sample_rate * fmt.nBlockAlign
+        fmt.cbSize = 0
+        _wave_check(
+            ctypes.windll.winmm.waveInOpen(
+                ctypes.byref(self._handle),
+                0xFFFFFFFF,
+                ctypes.byref(fmt),
+                self._callback_ref,
+                0,
+                CALLBACK_FUNCTION,
+            ),
+            "waveInOpen",
+        )
+        for _index in range(4):
+            buffer = ctypes.create_string_buffer(self.chunk_bytes)
+            header = WAVEHDR()
+            header.lpData = ctypes.cast(buffer, ctypes.c_void_p)
+            header.dwBufferLength = self.chunk_bytes
+            _wave_check(ctypes.windll.winmm.waveInPrepareHeader(self._handle, ctypes.byref(header), ctypes.sizeof(header)), "waveInPrepareHeader")
+            _wave_check(ctypes.windll.winmm.waveInAddBuffer(self._handle, ctypes.byref(header), ctypes.sizeof(header)), "waveInAddBuffer")
+            self._buffers.append(buffer)
+            self._headers.append(header)
+
+    def _close(self) -> None:
+        if not self._handle:
+            return
+        ctypes.windll.winmm.waveInStop(self._handle)
+        ctypes.windll.winmm.waveInReset(self._handle)
+        for header in self._headers:
+            ctypes.windll.winmm.waveInUnprepareHeader(self._handle, ctypes.byref(header), ctypes.sizeof(header))
+        ctypes.windll.winmm.waveInClose(self._handle)
+        self._handle = ctypes.c_void_p()
+
+    def _callback(self, _handle, message, _instance, param1, _param2) -> None:
+        if message != WIM_DATA or not param1:
+            return
+        header = ctypes.cast(param1, ctypes.POINTER(WAVEHDR)).contents
+        if header.dwBytesRecorded:
+            data = ctypes.string_at(header.lpData, header.dwBytesRecorded)
+            self._queue.put(data)
+        if not self.stop_event.is_set():
+            ctypes.windll.winmm.waveInAddBuffer(self._handle, param1, ctypes.sizeof(WAVEHDR))
 
 
 def load_gemini_live_config() -> GeminiLiveConfig:
@@ -192,6 +310,90 @@ def request_gemini_live_turn(
     )
 
 
+def request_gemini_live_stream(
+    stop_event: threading.Event,
+    output_path: Path,
+    max_seconds: float = 30.0,
+    config: GeminiLiveConfig | None = None,
+) -> GeminiLiveResult:
+    streamer = WaveInPcmStreamer(stop_event, max_seconds=max_seconds)
+    result = request_gemini_live_pcm_chunks(iter(streamer), output_path, config=config)
+    return GeminiLiveResult(
+        status=result.status,
+        transcript=result.transcript,
+        response_text=result.response_text,
+        audio_path=result.audio_path,
+        time_ms=result.time_ms,
+        raw_evidence={**result.raw_evidence, "record_seconds": streamer.recorded_seconds, "streaming": True},
+        error=result.error,
+    )
+
+
+def request_gemini_live_pcm_chunks(
+    pcm_chunks,
+    output_path: Path,
+    config: GeminiLiveConfig | None = None,
+) -> GeminiLiveResult:
+    active_config = config or load_gemini_live_config()
+    started = perf_counter()
+    if not active_config.builder_url or not active_config.builder_token:
+        return _uncertain_result("GOAT_BUILDER_URL and GOAT_BUILDER_TOKEN are required", active_config, started)
+
+    uri = build_goat_voice_ws_url(active_config.builder_url)
+    headers = {"Authorization": f"Bearer {active_config.builder_token}"}
+    output_audio_chunks: list[bytes] = []
+    transcript_parts: list[str] = []
+    response_text_parts: list[str] = []
+    message_count = 0
+    sent_chunks = 0
+
+    try:
+        import websockets.sync.client
+
+        with _temporary_resolve_override(active_config.builder_url):
+            with websockets.sync.client.connect(
+                uri,
+                additional_headers=headers,
+                open_timeout=min(8.0, active_config.timeout_seconds),
+                close_timeout=2.0,
+            ) as websocket:
+                websocket.send(
+                    json.dumps(
+                        {
+                            "type": "session.update",
+                            "session": {
+                                "model": active_config.model,
+                                "voice": active_config.voice,
+                                "instructions": active_config.instructions,
+                            },
+                        }
+                    )
+                )
+                for chunk in pcm_chunks:
+                    if chunk:
+                        websocket.send(chunk)
+                        sent_chunks += 1
+                websocket.send(json.dumps({"type": "audio.end"}))
+                message_count, transcript_parts, response_text_parts, output_audio_chunks = _receive_live_response(
+                    websocket,
+                    started,
+                    active_config.timeout_seconds,
+                )
+    except Exception as exc:  # noqa: BLE001 - fail closed into explicit Live result
+        return _uncertain_result(type(exc).__name__, active_config, started)
+
+    return _live_result_from_parts(
+        active_config,
+        started,
+        output_path,
+        message_count,
+        transcript_parts,
+        response_text_parts,
+        output_audio_chunks,
+        extra_evidence={"sent_chunks": sent_chunks},
+    )
+
+
 def build_goat_voice_ws_url(builder_url: str) -> str:
     parsed = urlparse(builder_url.rstrip("/"))
     scheme = "wss" if parsed.scheme == "https" else "ws"
@@ -249,6 +451,86 @@ def _parse_json_object(raw: str) -> dict | None:
     except json.JSONDecodeError:
         return None
     return parsed if isinstance(parsed, dict) else None
+
+
+def _receive_live_response(websocket, started: float, timeout_seconds: float):
+    output_audio_chunks: list[bytes] = []
+    transcript_parts: list[str] = []
+    response_text_parts: list[str] = []
+    message_count = 0
+    first_response_started_at: float | None = None
+
+    while (perf_counter() - started) < timeout_seconds:
+        try:
+            raw_message = websocket.recv(timeout=0.75)
+        except TimeoutError:
+            if response_text_parts or _has_playable_audio(output_audio_chunks):
+                break
+            continue
+        message_count += 1
+        if isinstance(raw_message, bytes):
+            parsed_bytes = _parse_json_bytes(raw_message)
+            if parsed_bytes is None:
+                output_audio_chunks.append(raw_message)
+                continue
+            parsed = parsed_bytes
+        else:
+            parsed = _parse_json_object(raw_message)
+            if parsed is None:
+                continue
+        input_text = _nested_text(parsed, ["serverContent", "inputTranscription", "text"])
+        output_text = _nested_text(parsed, ["serverContent", "outputTranscription", "text"])
+        if input_text:
+            transcript_parts.append(input_text)
+        if input_text and first_response_started_at is None:
+            first_response_started_at = perf_counter()
+        if output_text:
+            response_text_parts.append(output_text)
+        for audio_bytes in _extract_inline_audio(parsed):
+            if first_response_started_at is None:
+                first_response_started_at = perf_counter()
+            output_audio_chunks.append(audio_bytes)
+        if _nested_bool(parsed, ["serverContent", "turnComplete"]):
+            break
+        if first_response_started_at and not response_text_parts and not _has_playable_audio(output_audio_chunks):
+            if (perf_counter() - first_response_started_at) > _empty_response_grace_seconds():
+                break
+    return message_count, transcript_parts, response_text_parts, output_audio_chunks
+
+
+def _live_result_from_parts(
+    config: GeminiLiveConfig,
+    started: float,
+    output_path: Path,
+    message_count: int,
+    transcript_parts: list[str],
+    response_text_parts: list[str],
+    output_audio_chunks: list[bytes],
+    extra_evidence: dict | None = None,
+) -> GeminiLiveResult:
+    final_audio_path: str | None = None
+    if _has_playable_audio(output_audio_chunks):
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        write_pcm_wav(output_path, b"".join(output_audio_chunks))
+        final_audio_path = str(output_path)
+
+    return GeminiLiveResult(
+        status="ok" if final_audio_path or response_text_parts else "uncertain",
+        transcript=" ".join(part.strip() for part in transcript_parts if part.strip()).strip(),
+        response_text=" ".join(part.strip() for part in response_text_parts if part.strip()).strip()
+        or ("Gemini Live hat Audio geliefert." if final_audio_path else "Gemini Live hat keine Antwort geliefert."),
+        audio_path=final_audio_path,
+        time_ms=round((perf_counter() - started) * 1000, 2),
+        error=None if final_audio_path or response_text_parts else "empty live response",
+        raw_evidence={
+            "mode": "gemini_live",
+            "model": config.model,
+            "voice": config.voice,
+            "messages": message_count,
+            "audio_chunks": len(output_audio_chunks),
+            **(extra_evidence or {}),
+        },
+    )
 
 
 def _parse_json_bytes(raw: bytes) -> dict | None:

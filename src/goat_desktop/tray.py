@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 import urllib.request
 from pathlib import Path
 from importlib import resources
@@ -16,7 +17,8 @@ from goat_desktop.builder_bridge import BuilderBridgeClient
 from goat_desktop.bridge import CueDispatcher, LocalBridge
 from goat_desktop.chat_hint import request_chat_response
 from goat_desktop.hotkey import EmergencyHotkey, VK_G
-from goat_desktop.livetalk import LiveTalkSession, read_response_aloud, start_windows_wav_recording
+from goat_desktop.livetalk import LiveTalkSession, read_response_aloud
+from goat_desktop.livetalk_live import request_gemini_live_stream
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
 from goat_desktop.stt_hint import load_stt_config
@@ -40,7 +42,7 @@ class GoatTrayApp:
         self.builder_bridge: BuilderBridgeClient | None = None
         self._read_aloud_text = ""
         self._read_aloud_request_id = 0
-        self._push_to_talk_recorder = None
+        self._push_to_talk_stop_event: threading.Event | None = None
         self._push_to_talk_started = 0.0
         self._push_to_talk_click_handled = False
         self.livetalk = LiveTalkSession(
@@ -195,50 +197,70 @@ class GoatTrayApp:
             self.popup.talk_button.setEnabled(True)
 
     def start_push_to_talk(self) -> None:
-        if self.livetalk.provider != "gemini_live" or self._push_to_talk_recorder is not None:
+        if self.livetalk.provider != "gemini_live" or self._push_to_talk_stop_event is not None:
             return
         self._push_to_talk_click_handled = True
         self.popup.set_livetalk_mode(True)
         self._set_read_aloud_available("")
         self._refresh_audio_status()
         self.livetalk.audio_dir.mkdir(parents=True, exist_ok=True)
-        audio_path = self.livetalk.audio_dir / "livetalk-last-recording.wav"
         max_seconds = float(os.environ.get("GOAT_LIVETALK_PUSH_TO_TALK_MAX_SECONDS", "30.0"))
         self._push_to_talk_started = perf_counter()
+        self._push_to_talk_stop_event = threading.Event()
         self.popup.screen_context_value.setText("Nimmt auf")
         self.popup.maya_value.setText("Loslassen zum Senden")
         self.popup.talk_button.setText("Loslassen zum Senden")
         QApplication.processEvents()
-        self._push_to_talk_recorder = start_windows_wav_recording(audio_path, max_seconds=max_seconds)
+        Thread(
+            target=self._push_to_talk_stream_worker,
+            args=(self._push_to_talk_stop_event, max_seconds, self._push_to_talk_started),
+            name="goat-push-to-talk-stream",
+            daemon=True,
+        ).start()
         QTimer.singleShot(int(max_seconds * 1000), self.finish_push_to_talk)
 
     def finish_push_to_talk(self) -> None:
-        recorder = self._push_to_talk_recorder
-        if recorder is None:
+        stop_event = self._push_to_talk_stop_event
+        if stop_event is None:
             return
-        self._push_to_talk_recorder = None
+        self._push_to_talk_stop_event = None
+        stop_event.set()
         self.popup.talk_button.setEnabled(False)
         self.popup.talk_button.setText("Sende...")
         self.popup.screen_context_value.setText("Verarbeite Sprache")
         self.popup.maya_value.setText("Gemini Live laeuft")
         QApplication.processEvents()
-        Thread(
-            target=self._finish_push_to_talk_worker,
-            args=(recorder, self._push_to_talk_started),
-            name="goat-push-to-talk",
-            daemon=True,
-        ).start()
 
-    def _finish_push_to_talk_worker(self, recorder, started: float) -> None:
+    def _push_to_talk_stream_worker(self, stop_event: threading.Event, max_seconds: float, started: float) -> None:
         try:
-            audio_recorded = recorder.stop()
-            result = self.livetalk.run_gemini_live_recorded(
-                Path(recorder.output_path),
-                started=started,
-                record_seconds=recorder.recorded_seconds,
-                audio_recorded=audio_recorded,
+            response_audio_path = self.livetalk.audio_dir / "livetalk-live-response.wav"
+            response_audio_path.unlink(missing_ok=True)
+            result = request_gemini_live_stream(
+                stop_event,
+                response_audio_path,
+                max_seconds=max_seconds,
             )
-            self.popup.push_to_talk_finished.emit({"status": "ok", "result": result.to_dict()})
+            record_seconds = float(result.raw_evidence.get("record_seconds") or round(perf_counter() - started, 2))
+            audio_played = False
+            if result.audio_path:
+                from goat_desktop.livetalk import play_windows_wav
+
+                audio_played = play_windows_wav(Path(result.audio_path))
+            self.popup.push_to_talk_finished.emit(
+                {
+                    "status": "ok",
+                    "result": {
+                        "provider": "gemini_live",
+                        "mode": "push_to_talk_stream",
+                        "transcript": result.transcript or ("Keine Sprache erkannt" if result.status != "ok" else ""),
+                        "response_text": result.response_text,
+                        "chat_time_ms": result.time_ms,
+                        "record_seconds": record_seconds,
+                        "audio_played": audio_played,
+                    },
+                    "audio_path": result.audio_path,
+                }
+            )
         except Exception as exc:  # noqa: BLE001 - show user-visible failure in popup
             self.popup.push_to_talk_finished.emit({"status": "error", "error": str(exc)})
 
