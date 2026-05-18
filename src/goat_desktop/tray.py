@@ -3,8 +3,10 @@ from __future__ import annotations
 import json
 import os
 import urllib.request
+from pathlib import Path
 from importlib import resources
 from threading import Thread
+from time import perf_counter
 
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QAction, QIcon, QPainter, QPixmap
@@ -14,7 +16,7 @@ from goat_desktop.builder_bridge import BuilderBridgeClient
 from goat_desktop.bridge import CueDispatcher, LocalBridge
 from goat_desktop.chat_hint import request_chat_response
 from goat_desktop.hotkey import EmergencyHotkey, VK_G
-from goat_desktop.livetalk import LiveTalkSession, read_response_aloud
+from goat_desktop.livetalk import LiveTalkSession, read_response_aloud, start_windows_wav_recording
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
 from goat_desktop.stt_hint import load_stt_config
@@ -38,6 +40,9 @@ class GoatTrayApp:
         self.builder_bridge: BuilderBridgeClient | None = None
         self._read_aloud_text = ""
         self._read_aloud_request_id = 0
+        self._push_to_talk_recorder = None
+        self._push_to_talk_started = 0.0
+        self._push_to_talk_click_handled = False
         self.livetalk = LiveTalkSession(
             status_callback=self._update_livetalk_status,
             response_callback=self._update_livetalk_response,
@@ -124,12 +129,15 @@ class GoatTrayApp:
     def _connect_popup_controls(self) -> None:
         self.popup.cue_approve.clicked.connect(self.approve_pending_cue)
         self.popup.cue_reject.clicked.connect(self.reject_pending_cue)
+        self.popup.talk_button.pressed.connect(self.start_push_to_talk)
+        self.popup.talk_button.released.connect(self.finish_push_to_talk)
         self.popup.talk_button.clicked.connect(self.run_livetalk_once)
         self.popup.exit_livetalk.clicked.connect(self.exit_livetalk_mode)
         self.popup.chat_send.clicked.connect(self.send_chat_message)
         self.popup.chat_input.returnPressed.connect(self.send_chat_message)
         self.popup.read_aloud.clicked.connect(self.read_livetalk_response_aloud)
         self.popup.read_aloud_finished.connect(self._finish_read_livetalk_response_aloud)
+        self.popup.push_to_talk_finished.connect(self._finish_push_to_talk_payload)
         self.popup.vision_provider.currentIndexChanged.connect(self._save_vision_config)
         self.popup.vision_reasoning.currentIndexChanged.connect(self._save_vision_config)
 
@@ -149,6 +157,9 @@ class GoatTrayApp:
         )
 
     def run_livetalk_once(self) -> None:
+        if self._push_to_talk_click_handled:
+            self._push_to_talk_click_handled = False
+            return
         self.popup.set_livetalk_mode(True)
         self.popup.talk_button.setEnabled(False)
         self._set_read_aloud_available("")
@@ -182,6 +193,72 @@ class GoatTrayApp:
             self.popup.maya_value.setText(str(exc))
         finally:
             self.popup.talk_button.setEnabled(True)
+
+    def start_push_to_talk(self) -> None:
+        if self.livetalk.provider != "gemini_live" or self._push_to_talk_recorder is not None:
+            return
+        self._push_to_talk_click_handled = True
+        self.popup.set_livetalk_mode(True)
+        self._set_read_aloud_available("")
+        self._refresh_audio_status()
+        self.livetalk.audio_dir.mkdir(parents=True, exist_ok=True)
+        audio_path = self.livetalk.audio_dir / "livetalk-last-recording.wav"
+        max_seconds = float(os.environ.get("GOAT_LIVETALK_PUSH_TO_TALK_MAX_SECONDS", "30.0"))
+        self._push_to_talk_started = perf_counter()
+        self.popup.screen_context_value.setText("Nimmt auf")
+        self.popup.maya_value.setText("Loslassen zum Senden")
+        self.popup.talk_button.setText("Loslassen zum Senden")
+        QApplication.processEvents()
+        self._push_to_talk_recorder = start_windows_wav_recording(audio_path, max_seconds=max_seconds)
+        QTimer.singleShot(int(max_seconds * 1000), self.finish_push_to_talk)
+
+    def finish_push_to_talk(self) -> None:
+        recorder = self._push_to_talk_recorder
+        if recorder is None:
+            return
+        self._push_to_talk_recorder = None
+        self.popup.talk_button.setEnabled(False)
+        self.popup.talk_button.setText("Sende...")
+        self.popup.screen_context_value.setText("Verarbeite Sprache")
+        self.popup.maya_value.setText("Gemini Live laeuft")
+        QApplication.processEvents()
+        Thread(
+            target=self._finish_push_to_talk_worker,
+            args=(recorder, self._push_to_talk_started),
+            name="goat-push-to-talk",
+            daemon=True,
+        ).start()
+
+    def _finish_push_to_talk_worker(self, recorder, started: float) -> None:
+        try:
+            audio_recorded = recorder.stop()
+            result = self.livetalk.run_gemini_live_recorded(
+                Path(recorder.output_path),
+                started=started,
+                record_seconds=recorder.recorded_seconds,
+                audio_recorded=audio_recorded,
+            )
+            self.popup.push_to_talk_finished.emit({"status": "ok", "result": result.to_dict()})
+        except Exception as exc:  # noqa: BLE001 - show user-visible failure in popup
+            self.popup.push_to_talk_finished.emit({"status": "error", "error": str(exc)})
+
+    def _finish_push_to_talk_payload(self, payload: dict) -> None:
+        if payload.get("status") != "ok":
+            self.popup.screen_context_value.setText("LiveTalk Fehler")
+            self.popup.maya_value.setText(str(payload.get("error") or "Push-to-talk fehlgeschlagen"))
+        else:
+            result = dict(payload.get("result") or {})
+            self.last_livetalk_result = result
+            self.popup.screen_context_value.setText(str(result.get("transcript") or ""))
+            self.popup.maya_value.setText(str(result.get("response_text") or ""))
+            self.popup.audio_value.setText(
+                "Gemini Live {time:.0f}ms / Aufnahme {rec:.1f}s".format(
+                    time=float(result.get("chat_time_ms") or 0.0),
+                    rec=float(result.get("record_seconds") or 0.0),
+                )
+            )
+        self.popup.talk_button.setEnabled(True)
+        self.popup.talk_button.setText("Gedrueckt halten")
 
     def exit_livetalk_mode(self) -> None:
         self.popup.set_livetalk_mode(False)

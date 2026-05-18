@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import wave
 from pathlib import Path
+from time import perf_counter
 
 from goat_desktop import livetalk
 from goat_desktop.livetalk import LiveTalkSession
@@ -167,6 +168,41 @@ def test_livetalk_gemini_live_uncertain_result_shows_clear_transcript(monkeypatc
     assert result.response_text == "Keine Sprache erkannt. Bitte nach dem Ton sprechen."
     assert result.audio_played is False
     assert result.completion_ready is False
+
+
+def test_livetalk_gemini_live_recorded_uses_push_to_talk_mode(monkeypatch, tmp_path: Path) -> None:
+    audio_path = tmp_path / "held-input.wav"
+    _fake_wav(audio_path)
+
+    def fake_live_turn(input_path: Path, output_path: Path):
+        assert input_path == audio_path
+        output_path.write_bytes(b"RIFF" + b"\0" * 64)
+        return GeminiLiveResult(
+            status="ok",
+            transcript="lange frage",
+            response_text="Push-to-talk Antwort.",
+            audio_path=str(output_path),
+            time_ms=456.0,
+            raw_evidence={"mode": "gemini_live"},
+        )
+
+    monkeypatch.setenv("GOAT_LIVETALK_PROVIDER", "gemini_live")
+    monkeypatch.setenv("GOAT_LIVETALK_AUDIO_DIR", str(tmp_path))
+    monkeypatch.setattr(livetalk, "request_gemini_live_turn", fake_live_turn)
+    monkeypatch.setattr(livetalk, "play_windows_wav", lambda path: path.exists())
+
+    result = LiveTalkSession().run_gemini_live_recorded(
+        audio_path,
+        started=perf_counter(),
+        record_seconds=7.5,
+        audio_recorded=True,
+    )
+
+    assert result.mode == "push_to_talk_proxy"
+    assert result.transcript == "lange frage"
+    assert result.response_text == "Push-to-talk Antwort."
+    assert result.record_seconds == 7.5
+    assert result.audio_played is True
 
 
 def _fake_wav(path: Path) -> bool:

@@ -20,6 +20,7 @@ class GoatPopup(QWidget):
     """Small native status popup for Run A."""
 
     read_aloud_finished = pyqtSignal(dict)
+    push_to_talk_finished = pyqtSignal(dict)
 
     def __init__(self) -> None:
         super().__init__()
@@ -269,7 +270,7 @@ class GoatPopup(QWidget):
             self.read_aloud.setVisible(False)
             self.read_aloud.setEnabled(True)
             self.read_aloud.setText("Vorlesen")
-        self.talk_button.setText("Weiter sprechen" if active else "LiveTalk")
+        self.talk_button.setText("Gedrueckt halten" if active else "LiveTalk")
         width, height = self._livetalk_size if active else self._preferred_size
         self.resize(width, height)
         self.ensure_visible()

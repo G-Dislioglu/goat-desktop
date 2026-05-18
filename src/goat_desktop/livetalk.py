@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import threading
 import time
 import winsound
 from collections.abc import Callable
@@ -50,6 +51,51 @@ class ReadAloudResult:
     tts_time_ms: float
     audio_path: str | None = None
     error: str | None = None
+
+
+class WindowsWavRecorder:
+    def __init__(self, output_path: Path, max_seconds: float) -> None:
+        self.output_path = output_path
+        self.max_seconds = max(0.3, max_seconds)
+        self.recorded_seconds = 0.0
+        self.error: Exception | None = None
+        self._stop_event = threading.Event()
+        self._done_event = threading.Event()
+        self._thread = threading.Thread(target=self._run, name="goat-ptt-recorder", daemon=True)
+
+    def start(self) -> None:
+        self._thread.start()
+
+    def stop(self, timeout: float = 5.0) -> bool:
+        self._stop_event.set()
+        self._done_event.wait(timeout)
+        if self.error is not None:
+            raise self.error
+        return self.output_path.exists() and self.output_path.stat().st_size > 44
+
+    def _run(self) -> None:
+        started = perf_counter()
+        temp_path = Path(tempfile.gettempdir()) / "goatlt-ptt.wav"
+        try:
+            self.output_path.parent.mkdir(parents=True, exist_ok=True)
+            self.output_path.unlink(missing_ok=True)
+            temp_path.unlink(missing_ok=True)
+            _mci("open new type waveaudio alias goat_livetalk_ptt")
+            try:
+                _mci("record goat_livetalk_ptt")
+                self._stop_event.wait(self.max_seconds)
+                self.recorded_seconds = round(perf_counter() - started, 2)
+                _mci("stop goat_livetalk_ptt")
+                _mci(f'save goat_livetalk_ptt "{temp_path}"')
+            finally:
+                _mci("close goat_livetalk_ptt", raise_on_error=False)
+            if temp_path.exists():
+                shutil.copyfile(temp_path, self.output_path)
+        except Exception as exc:  # noqa: BLE001 - surfaced to caller on stop()
+            self.error = exc
+        finally:
+            temp_path.unlink(missing_ok=True)
+            self._done_event.set()
 
 
 class LiveTalkSession:
@@ -132,6 +178,43 @@ class LiveTalkSession:
         return LiveTalkResult(
             provider="gemini_live",
             mode="full_duplex_proxy",
+            transcript=transcript,
+            response_text=response_text,
+            time_ms=round((perf_counter() - started) * 1000, 2),
+            audio_recorded=audio_recorded,
+            audio_played=audio_played,
+            stt_provider="gemini_live",
+            tts_provider="gemini_live",
+            stt_time_ms=0.0,
+            chat_time_ms=float(live_result.time_ms),
+            tts_time_ms=0.0,
+            record_seconds=record_seconds,
+            audio_path=str(audio_path),
+            response_audio_path=live_result.audio_path,
+            completion_ready=bool(audio_recorded and live_result.status == "ok" and (audio_played or response_text)),
+            audio_pending=False,
+        )
+
+    def run_gemini_live_recorded(
+        self,
+        audio_path: Path,
+        started: float,
+        record_seconds: float,
+        audio_recorded: bool,
+    ) -> LiveTalkResult:
+        self.audio_dir.mkdir(parents=True, exist_ok=True)
+        response_audio_path = self.audio_dir / "livetalk-live-response.wav"
+        response_audio_path.unlink(missing_ok=True)
+        self._set_state("thinking")
+        live_result = request_gemini_live_turn(audio_path, response_audio_path)
+        transcript = live_result.transcript or ("Keine Sprache erkannt" if live_result.status != "ok" else "")
+        response_text = live_result.response_text
+        self._publish_response(transcript, response_text)
+        self._set_state("speaking")
+        audio_played = bool(live_result.audio_path and play_windows_wav(Path(live_result.audio_path)))
+        return LiveTalkResult(
+            provider="gemini_live",
+            mode="push_to_talk_proxy",
             transcript=transcript,
             response_text=response_text,
             time_ms=round((perf_counter() - started) * 1000, 2),
@@ -317,6 +400,12 @@ def record_windows_wav(output_path: Path, seconds: float = 1.0) -> bool:
     if temp_path.exists():
         shutil.copyfile(temp_path, output_path)
     return output_path.exists() and output_path.stat().st_size > 44
+
+
+def start_windows_wav_recording(output_path: Path, max_seconds: float = 30.0) -> WindowsWavRecorder:
+    recorder = WindowsWavRecorder(output_path, max_seconds)
+    recorder.start()
+    return recorder
 
 
 def speak_windows_sapi(text: str) -> bool:
