@@ -124,3 +124,4 @@
 - Shortened Gemini Live's default spoken style to one short sentence, max 18 words, and changed push-to-talk so the UI updates before local audio playback finishes.
 - Tightened Gemini Live spoken style again to max 12 words and changed the streaming push-to-talk worker to emit UI results before audio playback.
 - Fixed push-to-talk release handling by keeping focus on the talk button during hold recording; button text now says `Halten zum Sprechen`.
+- Recorded the current best LiveTalk setting: Gemini Live stable hold-to-record mode, streaming off, auto-TTS off, SAPI fallback off, DNS override on.
