@@ -90,3 +90,49 @@ def capture_active_window(output_path: Path | None = None) -> dict[str, Any]:
             "saved_to": saved_to,
         },
     }
+
+
+def capture_visible_desktop(output_path: Path | None = None) -> dict[str, Any]:
+    try:
+        import mss
+        from PIL import Image
+    except ImportError as exc:  # pragma: no cover - exercised by runtime health only
+        return {
+            "ok": False,
+            "error": f"missing dependency: {exc.name}",
+            "active_window": get_active_window().to_dict(),
+        }
+
+    started = perf_counter()
+    with mss.mss() as sct:
+        monitor = sct.monitors[0]
+        raw = sct.grab(monitor)
+        image = Image.frombytes("RGB", raw.size, raw.rgb)
+        scope = {
+            "left": int(monitor["left"]),
+            "top": int(monitor["top"]),
+            "width": int(monitor["width"]),
+            "height": int(monitor["height"]),
+        }
+    elapsed_ms = round((perf_counter() - started) * 1000, 2)
+
+    saved_to: str | None = None
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        image.save(output_path, optimize=True)
+        saved_to = str(output_path)
+
+    return {
+        "ok": True,
+        "active_window": get_active_window().to_dict(),
+        "capture": {
+            "source": "mss",
+            "scope": "visible_desktop",
+            "left": scope["left"],
+            "top": scope["top"],
+            "width": image.width,
+            "height": image.height,
+            "time_ms": elapsed_ms,
+            "saved_to": saved_to,
+        },
+    }

@@ -68,6 +68,9 @@ screen_context_vision_button_2026_05_18:
 screen_context_livetalk_followup_2026_05_18:
 "Bildschirm-Kontext-UX am 2026-05-18 korrigiert. Problem: Nach `Bildschirm pruefen` war im Hauptfenster kein sichtbares Fragefeld; ausserdem bekam Gemini-Live-Audio den geprueften Kontext nicht. Neu: Das Textfeld bleibt auch im Hauptfenster sichtbar, sodass User direkt Fragen zum geprueften Bildschirm stellen kann. Der letzte Vision-Kontext wird ausserdem in die Gemini-Live-Instructions fuer Push-to-talk eingefuegt, damit Audio-Fragen wie `Siehst du StepStack?` den zuletzt geprueften Kontext nutzen. `LiveTalk beenden` bleibt der Rueckweg aus dem LiveTalk-Modus; im Hauptfenster ist kein Zurueck-Button noetig. Tests gruen: compileall und 48 relevante Tests. Audio-Testdateien geloescht."
 
+screen_context_visible_desktop_2026_05_18:
+"Bildschirm-Pruefung am 2026-05-18 von aktivem Fenster auf sichtbaren Desktop umgestellt. Problem aus UI-Test: Vision erkannte `GOAT Desktop`/Codex statt Desktop-Ordnern wie StepStack, weil nur das aktive Fenster gecaptured wurde. Neu: `Bildschirm pruefen` nutzt `capture_visible_desktop()`, also den ganzen sichtbaren Windows-Desktop nach dem Verstecken des GOAT-Popups. Der Screenshot bleibt temporaer und wird geloescht. Live-Smoke: capture_ok=true, scope=visible_desktop, Builder Vision HTTP 200, provider gemini_flash_lite, ca. 1672ms, Temp-Ordner geloescht."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 

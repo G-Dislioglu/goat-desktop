@@ -22,7 +22,7 @@ from goat_desktop.livetalk import LiveTalkSession, read_response_aloud, start_wi
 from goat_desktop.livetalk_live import request_gemini_live_stream
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
-from goat_desktop.screen import capture_active_window
+from goat_desktop.screen import capture_visible_desktop
 from goat_desktop.screen_context import VISION_CONTEXT_PROMPT, build_chat_context, build_screen_context_summary
 from goat_desktop.stt_hint import load_stt_config
 from goat_desktop.tts_hint import load_tts_config
@@ -375,7 +375,7 @@ class GoatTrayApp:
         try:
             with tempfile.TemporaryDirectory(prefix="goat-screen-context-") as tmp:
                 image_path = Path(tmp) / "active-window.png"
-                capture = capture_active_window(output_path=image_path)
+                capture = capture_visible_desktop(output_path=image_path)
                 if not capture.get("ok"):
                     self.popup.screen_context_finished.emit(
                         {"status": "error", "error": capture.get("error", "screen capture failed"), "capture": capture}

@@ -127,3 +127,4 @@
 - Recorded the current best LiveTalk setting: Gemini Live stable hold-to-record mode, streaming off, auto-TTS off, SAPI fallback off, DNS override on.
 - Added a `Bildschirm pruefen` Vision button that captures the active window only to a temp file, asks Builder Vision for semantic context, deletes the temp screenshot, and passes the summary into Maya text chat.
 - Kept the text question field visible in the main window and injected the latest screen context into Gemini Live push-to-talk instructions.
+- Changed screen context capture from active window to visible desktop so Vision can see desktop icons/folders instead of only GOAT/Codex.

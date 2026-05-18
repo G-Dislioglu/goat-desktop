@@ -13,11 +13,12 @@ class Hint:
 
 def test_build_screen_context_summary_is_short_and_actionable() -> None:
     summary = build_screen_context_summary(
-        {"active_window": {"title": "GOAT Desktop"}},
+        {"active_window": {"title": "GOAT Desktop"}, "capture": {"scope": "visible_desktop"}},
         Hint(),
     )
 
     assert "GOAT Desktop" in summary
+    assert "visible_desktop" in summary
     assert "Senden-Button" in summary
     assert "unten rechts" in summary
     assert "0.82" in summary
