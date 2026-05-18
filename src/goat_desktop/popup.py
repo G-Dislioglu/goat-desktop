@@ -257,7 +257,7 @@ class GoatPopup(QWidget):
         label.setWordWrap(True)
         return label
 
-    def set_livetalk_mode(self, active: bool) -> None:
+    def set_livetalk_mode(self, active: bool, focus_chat: bool = True) -> None:
         self.connection_chip.setVisible(not active)
         self.vision_panel.setVisible(not active)
         self.cue_approve.setVisible(not active)
@@ -270,11 +270,11 @@ class GoatPopup(QWidget):
             self.read_aloud.setVisible(False)
             self.read_aloud.setEnabled(True)
             self.read_aloud.setText("Vorlesen")
-        self.talk_button.setText("Gedrueckt halten" if active else "LiveTalk")
+        self.talk_button.setText("Halten zum Sprechen" if active else "LiveTalk")
         width, height = self._livetalk_size if active else self._preferred_size
         self.resize(width, height)
         self.ensure_visible()
-        if active:
+        if active and focus_chat:
             self.chat_input.setFocus()
 
     def _set_reasoning_tooltips(self) -> None:

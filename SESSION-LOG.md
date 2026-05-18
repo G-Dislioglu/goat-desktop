@@ -123,3 +123,4 @@
 - Diagnosed long Gemini Live audio wait: the latest push-to-talk sample was almost 29s long and Maya's response WAV was 9.35s.
 - Shortened Gemini Live's default spoken style to one short sentence, max 18 words, and changed push-to-talk so the UI updates before local audio playback finishes.
 - Tightened Gemini Live spoken style again to max 12 words and changed the streaming push-to-talk worker to emit UI results before audio playback.
+- Fixed push-to-talk release handling by keeping focus on the talk button during hold recording; button text now says `Halten zum Sprechen`.

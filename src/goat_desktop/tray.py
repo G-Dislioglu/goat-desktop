@@ -201,7 +201,7 @@ class GoatTrayApp:
         if self.livetalk.provider != "gemini_live" or self._push_to_talk_stop_event is not None:
             return
         self._push_to_talk_click_handled = True
-        self.popup.set_livetalk_mode(True)
+        self.popup.set_livetalk_mode(True, focus_chat=False)
         self._set_read_aloud_available("")
         self._refresh_audio_status()
         self.livetalk.audio_dir.mkdir(parents=True, exist_ok=True)
@@ -317,7 +317,7 @@ class GoatTrayApp:
                 )
             )
         self.popup.talk_button.setEnabled(True)
-        self.popup.talk_button.setText("Gedrueckt halten")
+        self.popup.talk_button.setText("Halten zum Sprechen")
 
     def exit_livetalk_mode(self) -> None:
         self.popup.set_livetalk_mode(False)

@@ -56,6 +56,9 @@ livetalk_short_audio_response_2026_05_18:
 livetalk_faster_streaming_trial_2026_05_18:
 "Gemini-Live-Speed-Fix am 2026-05-18 nach Nutzer-Test. Diagnose der letzten Runde: Aufnahme 2.7s, Antwort-WAV 2.31s, Antwortdatei ca. 4s nach Aufnahme-Ende. Neu: Maya soll im LiveTalk normalerweise maximal 12 Woerter nutzen. Ausserdem blockiert der Streaming-Push-to-talk-Pfad die UI nicht mehr bis zum Ende der lokalen Audiowiedergabe; Text/Status werden sofort emittiert, Audio wird danach abgespielt. Streaming bleibt bewusst Testmodus per `GOAT_LIVETALK_STREAMING_PTT=1`, bis Live-Test stabil ist. Tests gruen: compileall und 38 relevante Tests. Audio-Testdateien geloescht."
 
+livetalk_hold_button_release_fix_2026_05_18:
+"Push-to-talk-Button-Fix am 2026-05-18. Nutzerbeobachtung: Statt gedrueckt halten und loslassen musste man scheinbar einmal klicken zum Start und nochmal klicken zum Senden. Ursache im Desktop-Code: `set_livetalk_mode(True)` fokussierte beim Druecken direkt das Chat-Textfeld, wodurch der Button das Release-Event verlieren konnte. Neu: `set_livetalk_mode()` hat `focus_chat`; beim Push-to-talk bleibt der Fokus auf dem Button. Buttontext ist klarer: `Halten zum Sprechen` und waehrend Aufnahme `Loslassen zum Senden`. Tests gruen: compileall und 38 relevante Tests."
+
 run_0a_completed_2026_05_16:
 "Wahrheitsklaerung GOAT Control Adapter 79ec22b durchgefuehrt am 2026-05-16. Ergebnis: phantom_claim. Hash existiert in keinem der vier Repos (Big-Bro, Maya, aicos-registry, soulmatch), weder lokal noch remote. GOAT Desktop startet ohne Vorgaenger-Code. Detail-Bericht: docs/run-0a-truth-report-2026-05-16.md."
 
