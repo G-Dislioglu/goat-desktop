@@ -128,3 +128,5 @@
 - Added a `Bildschirm pruefen` Vision button that captures the active window only to a temp file, asks Builder Vision for semantic context, deletes the temp screenshot, and passes the summary into Maya text chat.
 - Kept the text question field visible in the main window and injected the latest screen context into Gemini Live push-to-talk instructions.
 - Changed screen context capture from active window to visible desktop so Vision can see desktop icons/folders instead of only GOAT/Codex.
+- Made Gemini Live the default LiveTalk path again, this time as primary audio+video streaming: default `GeminiLiveSession` streams PCM audio plus visible-desktop JPEG frames to Builder `/api/goat/voice`; the old kaskaded LiveTalk session is gated behind `GOAT_LIVETALK_FALLBACK=1`.
+- Removed the manual `Bildschirm pruefen` controls from the visible main popup layout; the wiring remains hidden only as a debug/fallback path.

@@ -10,6 +10,7 @@ import socket
 import threading
 import wave
 import winreg
+from collections.abc import Iterable
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -21,9 +22,10 @@ DEFAULT_GOAT_VOICE_INSTRUCTIONS = (
     "Du bist Maya, die Sprachassistenz im lokalen Windows-Programm GOAT Desktop. "
     "GOAT Desktop hilft dem User am PC mit Sprache, Textchat, Bildschirmkontext, Zielmarkierung und sicher gegateten Aktionen. "
     "Aktuell kannst du im LiveTalk-Modus Fragen beantworten, erkannte Sprache als Text anzeigen, per Gemini Live sprechen, "
-    "den Kontext der GOAT-Desktop-Oberflaeche erklaeren und bei naechsten Schritten helfen. "
+    "den kontinuierlich per Video-Frames sichtbaren Bildschirm erklaeren und bei naechsten Schritten helfen. "
     "GOAT Desktop hat ausserdem einen gelben Cue-Ball fuer markierte Ziele, Builder-Proxy-Anbindung, Vision-Hints, "
     "lokale Sicherheitspruefungen und harte Freigaben fuer riskante Aktionen. "
+    "Du siehst im LiveTalk kontinuierlich den Bildschirm ueber Video-Frames; frage nicht nach Bildschirmpruefung oder Screenshot. "
     "Du darfst keine Desktop-Aktion behaupten oder ausfuehren, wenn der User sie nicht explizit freigegeben hat. "
     "Wenn der User nach deinen Faehigkeiten fragt, erklaere konkret deine GOAT-Desktop-Faehigkeiten, nicht nur allgemeine KI-Faehigkeiten. "
     "Antworte im LiveTalk normalerweise mit einem kurzen Satz und maximal 12 Woertern. Keine langen Listen, ausser der User fragt danach."
@@ -83,6 +85,18 @@ class GeminiLiveResult:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+
+class GeminiLiveSession:
+    def __init__(self, audio_dir: Path | str | None = None) -> None:
+        self.provider = "gemini_live"
+        self.audio_dir = Path(audio_dir or _get_env("GOAT_LIVETALK_AUDIO_DIR", Path.home() / "AppData" / "Roaming" / "GoatDesktop"))
+
+    def run_stream(self, stop_event: threading.Event, max_seconds: float = 30.0) -> GeminiLiveResult:
+        self.audio_dir.mkdir(parents=True, exist_ok=True)
+        response_audio_path = self.audio_dir / "livetalk-live-response.wav"
+        response_audio_path.unlink(missing_ok=True)
+        return request_gemini_live_stream(stop_event, response_audio_path, max_seconds=max_seconds)
 
 
 class WaveInError(RuntimeError):
@@ -348,9 +362,10 @@ def request_gemini_live_stream(
 
 
 def request_gemini_live_pcm_chunks(
-    pcm_chunks,
+    pcm_chunks: Iterable[bytes],
     output_path: Path,
     config: GeminiLiveConfig | None = None,
+    video_enabled: bool = True,
 ) -> GeminiLiveResult:
     active_config = config or load_gemini_live_config()
     started = perf_counter()
@@ -364,6 +379,7 @@ def request_gemini_live_pcm_chunks(
     response_text_parts: list[str] = []
     message_count = 0
     sent_chunks = 0
+    sent_video_frames = 0
 
     try:
         import websockets.sync.client
@@ -387,10 +403,12 @@ def request_gemini_live_pcm_chunks(
                         }
                     )
                 )
-                for chunk in pcm_chunks:
-                    if chunk:
-                        websocket.send(chunk)
-                        sent_chunks += 1
+                sent_chunks, sent_video_frames = _send_audio_and_video_loop(
+                    websocket,
+                    pcm_chunks,
+                    started,
+                    video_enabled=video_enabled,
+                )
                 websocket.send(json.dumps({"type": "audio.end"}))
                 message_count, transcript_parts, response_text_parts, output_audio_chunks = _receive_live_response(
                     websocket,
@@ -408,7 +426,7 @@ def request_gemini_live_pcm_chunks(
         transcript_parts,
         response_text_parts,
         output_audio_chunks,
-        extra_evidence={"sent_chunks": sent_chunks},
+        extra_evidence={"sent_chunks": sent_chunks, "video_frames": sent_video_frames},
     )
 
 
@@ -423,6 +441,55 @@ def iter_wav_pcm_chunks(audio_path: Path, chunk_frames: int = 2048):
     chunk_size = chunk_frames * 2
     for offset in range(0, len(pcm_data), chunk_size):
         yield pcm_data[offset : offset + chunk_size]
+
+
+def _send_audio_and_video_loop(
+    websocket,
+    pcm_chunks: Iterable[bytes],
+    started: float,
+    video_enabled: bool = True,
+) -> tuple[int, int]:
+    sent_chunks = 0
+    sent_video_frames = 0
+    next_video_at = started
+    interval = _video_frame_interval_seconds()
+    for chunk in pcm_chunks:
+        if chunk:
+            websocket.send(chunk)
+            sent_chunks += 1
+        if video_enabled and perf_counter() >= next_video_at:
+            frame = capture_visible_desktop_jpeg()
+            if frame:
+                websocket.send(
+                    json.dumps(
+                        {
+                            "type": "video.frame",
+                            "mime_type": "image/jpeg",
+                            "mimeType": "image/jpeg",
+                            "data": base64.b64encode(frame).decode("ascii"),
+                        }
+                    )
+                )
+                sent_video_frames += 1
+            next_video_at = perf_counter() + interval
+    return sent_chunks, sent_video_frames
+
+
+def capture_visible_desktop_jpeg(quality: int | None = None) -> bytes | None:
+    try:
+        import mss
+        from PIL import Image
+    except ImportError:
+        return None
+
+    with mss.mss() as sct:
+        raw = sct.grab(sct.monitors[0])
+        image = Image.frombytes("RGB", raw.size, raw.rgb)
+    from io import BytesIO
+
+    buffer = BytesIO()
+    image.save(buffer, format="JPEG", quality=quality or _video_frame_quality(), optimize=True)
+    return buffer.getvalue()
 
 
 def read_wav_as_16khz_pcm(audio_path: Path) -> bytes:
@@ -567,6 +634,15 @@ def _has_playable_audio(chunks: list[bytes]) -> bool:
 
 def _empty_response_grace_seconds() -> float:
     return max(1.0, float(_get_env("GOAT_VOICE_EMPTY_RESPONSE_GRACE_SECONDS", "4.0") or "4.0"))
+
+
+def _video_frame_interval_seconds() -> float:
+    return max(0.2, float(_get_env("GOAT_LIVETALK_VIDEO_INTERVAL_SECONDS", "1.0") or "1.0"))
+
+
+def _video_frame_quality() -> int:
+    value = int(_get_env("GOAT_LIVETALK_VIDEO_JPEG_QUALITY", "65") or "65")
+    return max(40, min(85, value))
 
 
 def _is_low_input_signal(stats: dict[str, float]) -> bool:

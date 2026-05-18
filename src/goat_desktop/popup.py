@@ -162,7 +162,7 @@ class GoatPopup(QWidget):
         self.actions_layout = actions
         root.addLayout(self.actions_layout)
 
-        self.vision_panel = QFrame()
+        self.vision_panel = QFrame(self)
         self.vision_panel.setObjectName("panel")
         vision_grid = QGridLayout(self.vision_panel)
         vision_grid.setContentsMargins(10, 8, 10, 8)
@@ -181,7 +181,7 @@ class GoatPopup(QWidget):
         vision_grid.addWidget(self.vision_provider, 0, 0)
         vision_grid.addWidget(self.vision_reasoning, 0, 1)
         vision_grid.addWidget(self.screen_context_button, 1, 0, 1, 2)
-        root.addWidget(self.vision_panel)
+        self.vision_panel.setVisible(False)
         self._set_reasoning_tooltips()
 
         self.setStyleSheet(
@@ -262,7 +262,6 @@ class GoatPopup(QWidget):
 
     def set_livetalk_mode(self, active: bool, focus_chat: bool = True) -> None:
         self.connection_chip.setVisible(not active)
-        self.vision_panel.setVisible(not active)
         self.cue_approve.setVisible(not active)
         self.cue_reject.setVisible(not active)
         self.exit_livetalk.setVisible(active)

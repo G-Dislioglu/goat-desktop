@@ -19,7 +19,7 @@ from goat_desktop.bridge import CueDispatcher, LocalBridge
 from goat_desktop.chat_hint import request_chat_response
 from goat_desktop.hotkey import EmergencyHotkey, VK_G
 from goat_desktop.livetalk import LiveTalkSession, read_response_aloud, start_windows_wav_recording
-from goat_desktop.livetalk_live import request_gemini_live_stream
+from goat_desktop.livetalk_live import GeminiLiveSession
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
 from goat_desktop.screen import capture_visible_desktop
@@ -60,10 +60,13 @@ class GoatTrayApp:
         self._last_screen_context = ""
         self._screen_context_provider = "gemini_flash_lite"
         self._screen_context_reasoning = "minimal"
-        self.livetalk = LiveTalkSession(
-            status_callback=self._update_livetalk_status,
-            response_callback=self._update_livetalk_response,
-        )
+        if _livetalk_fallback_enabled():
+            self.livetalk = LiveTalkSession(
+                status_callback=self._update_livetalk_status,
+                response_callback=self._update_livetalk_response,
+            )
+        else:
+            self.livetalk = GeminiLiveSession()
         self.cue_dispatcher = CueDispatcher()
         self.cue_dispatcher.cue_requested.connect(self.move_ball_to_cue)
         self.bridge = LocalBridge(self.cue_dispatcher)
@@ -148,7 +151,7 @@ class GoatTrayApp:
         self.popup.cue_reject.clicked.connect(self.reject_pending_cue)
         self.popup.talk_button.pressed.connect(self.start_push_to_talk)
         self.popup.talk_button.released.connect(self.finish_push_to_talk)
-        self.popup.talk_button.clicked.connect(self.run_livetalk_once)
+        self.popup.talk_button.clicked.connect(self.run_gemini_live)
         self.popup.exit_livetalk.clicked.connect(self.exit_livetalk_mode)
         self.popup.chat_send.clicked.connect(self.send_chat_message)
         self.popup.chat_input.returnPressed.connect(self.send_chat_message)
@@ -213,6 +216,9 @@ class GoatTrayApp:
         finally:
             self.popup.talk_button.setEnabled(True)
 
+    def run_gemini_live(self) -> None:
+        self.run_livetalk_once()
+
     def start_push_to_talk(self) -> None:
         if self.livetalk.provider != "gemini_live" or self._push_to_talk_stop_event is not None:
             return
@@ -229,7 +235,7 @@ class GoatTrayApp:
         self.popup.maya_value.setText("Loslassen zum Senden")
         self.popup.talk_button.setText("Loslassen zum Senden")
         QApplication.processEvents()
-        if _streaming_push_to_talk_enabled():
+        if not _livetalk_fallback_enabled():
             Thread(
                 target=self._push_to_talk_stream_worker,
                 args=(self._push_to_talk_stop_event, max_seconds, self._push_to_talk_started),
@@ -264,13 +270,7 @@ class GoatTrayApp:
 
     def _push_to_talk_stream_worker(self, stop_event: threading.Event, max_seconds: float, started: float) -> None:
         try:
-            response_audio_path = self.livetalk.audio_dir / "livetalk-live-response.wav"
-            response_audio_path.unlink(missing_ok=True)
-            result = request_gemini_live_stream(
-                stop_event,
-                response_audio_path,
-                max_seconds=max_seconds,
-            )
+            result = self.livetalk.run_stream(stop_event, max_seconds=max_seconds)
             record_seconds = float(result.raw_evidence.get("record_seconds") or round(perf_counter() - started, 2))
             self.popup.push_to_talk_finished.emit(
                 {
@@ -635,5 +635,5 @@ class GoatTrayApp:
         return QIcon(pixmap)
 
 
-def _streaming_push_to_talk_enabled() -> bool:
-    return os.environ.get("GOAT_LIVETALK_STREAMING_PTT", "").strip().lower() in {"1", "true", "yes", "on"}
+def _livetalk_fallback_enabled() -> bool:
+    return os.environ.get("GOAT_LIVETALK_FALLBACK", "").strip().lower() in {"1", "true", "yes", "on"}

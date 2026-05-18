@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+import json
 import wave
 from pathlib import Path
 from time import perf_counter
 
 from goat_desktop import livetalk
+from goat_desktop import livetalk_live
 from goat_desktop.livetalk import LiveTalkSession
 from goat_desktop.livetalk_live import (
     DEFAULT_GOAT_VOICE_INSTRUCTIONS,
     GeminiLiveConfig,
     GeminiLiveResult,
     _parse_json_bytes,
+    _send_audio_and_video_loop,
     build_goat_voice_ws_url,
     iter_wav_pcm_chunks,
     load_gemini_live_config,
@@ -36,6 +39,7 @@ def test_default_instructions_describe_goat_desktop_capabilities(monkeypatch) ->
     assert "gelben Cue-Ball" in config.instructions
     assert "sicher gegateten Aktionen" in config.instructions
     assert "allgemeine KI-Faehigkeiten" in config.instructions
+    assert "kontinuierlich den Bildschirm ueber Video-Frames" in config.instructions
 
 
 def test_default_live_timeout_is_not_twenty_seconds(monkeypatch) -> None:
@@ -130,6 +134,47 @@ def test_low_signal_audio_fails_fast(tmp_path: Path) -> None:
 def test_binary_json_message_is_not_treated_as_audio() -> None:
     assert _parse_json_bytes(b'{\n  "setupComplete": {}\n}\n') == {"setupComplete": {}}
     assert _parse_json_bytes(b"\x01\x02\x03\x04") is None
+
+
+def test_video_frame_messages_are_sent_between_audio_chunks(monkeypatch) -> None:
+    class FakeSocket:
+        def __init__(self) -> None:
+            self.sent = []
+
+        def send(self, payload) -> None:
+            self.sent.append(payload)
+
+    socket = FakeSocket()
+    monkeypatch.setattr(livetalk_live, "capture_visible_desktop_jpeg", lambda quality=None: b"jpeg-frame")
+
+    sent_audio, sent_video = _send_audio_and_video_loop(socket, [b"audio-1", b"audio-2"], perf_counter())
+
+    assert sent_audio == 2
+    assert sent_video == 1
+    assert socket.sent[0] == b"audio-1"
+    frame_message = json.loads(socket.sent[1])
+    assert frame_message["type"] == "video.frame"
+    assert frame_message["mime_type"] == "image/jpeg"
+    assert socket.sent[2] == b"audio-2"
+
+
+def test_builder_offline_returns_clear_live_error_without_legacy_fallback(tmp_path: Path) -> None:
+    result = request_gemini_live_turn(
+        tmp_path / "missing.wav",
+        tmp_path / "response.wav",
+        config=GeminiLiveConfig(
+            builder_url=None,
+            builder_token=None,
+            timeout_seconds=1.0,
+            model="gemini-3.1-flash-live-preview",
+            voice="Kore",
+            instructions="test",
+        ),
+    )
+
+    assert result.status == "uncertain"
+    assert result.error == "GOAT_BUILDER_URL and GOAT_BUILDER_TOKEN are required"
+    assert result.raw_evidence["mode"] == "gemini_live"
 
 
 def test_livetalk_gemini_live_records_sends_and_plays(monkeypatch, tmp_path: Path) -> None:
