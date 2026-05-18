@@ -17,7 +17,7 @@ from goat_desktop.builder_bridge import BuilderBridgeClient
 from goat_desktop.bridge import CueDispatcher, LocalBridge
 from goat_desktop.chat_hint import request_chat_response
 from goat_desktop.hotkey import EmergencyHotkey, VK_G
-from goat_desktop.livetalk import LiveTalkSession, read_response_aloud
+from goat_desktop.livetalk import LiveTalkSession, read_response_aloud, start_windows_wav_recording
 from goat_desktop.livetalk_live import request_gemini_live_stream
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
@@ -43,6 +43,7 @@ class GoatTrayApp:
         self._read_aloud_text = ""
         self._read_aloud_request_id = 0
         self._push_to_talk_stop_event: threading.Event | None = None
+        self._push_to_talk_recorder = None
         self._push_to_talk_started = 0.0
         self._push_to_talk_click_handled = False
         self.livetalk = LiveTalkSession(
@@ -204,6 +205,7 @@ class GoatTrayApp:
         self._set_read_aloud_available("")
         self._refresh_audio_status()
         self.livetalk.audio_dir.mkdir(parents=True, exist_ok=True)
+        audio_path = self.livetalk.audio_dir / "livetalk-last-recording.wav"
         max_seconds = float(os.environ.get("GOAT_LIVETALK_PUSH_TO_TALK_MAX_SECONDS", "30.0"))
         self._push_to_talk_started = perf_counter()
         self._push_to_talk_stop_event = threading.Event()
@@ -211,25 +213,38 @@ class GoatTrayApp:
         self.popup.maya_value.setText("Loslassen zum Senden")
         self.popup.talk_button.setText("Loslassen zum Senden")
         QApplication.processEvents()
-        Thread(
-            target=self._push_to_talk_stream_worker,
-            args=(self._push_to_talk_stop_event, max_seconds, self._push_to_talk_started),
-            name="goat-push-to-talk-stream",
-            daemon=True,
-        ).start()
+        if _streaming_push_to_talk_enabled():
+            Thread(
+                target=self._push_to_talk_stream_worker,
+                args=(self._push_to_talk_stop_event, max_seconds, self._push_to_talk_started),
+                name="goat-push-to-talk-stream",
+                daemon=True,
+            ).start()
+        else:
+            self._push_to_talk_recorder = start_windows_wav_recording(audio_path, max_seconds=max_seconds)
         QTimer.singleShot(int(max_seconds * 1000), self.finish_push_to_talk)
 
     def finish_push_to_talk(self) -> None:
         stop_event = self._push_to_talk_stop_event
-        if stop_event is None:
+        recorder = self._push_to_talk_recorder
+        if stop_event is None and recorder is None:
             return
         self._push_to_talk_stop_event = None
-        stop_event.set()
+        self._push_to_talk_recorder = None
+        if stop_event is not None:
+            stop_event.set()
         self.popup.talk_button.setEnabled(False)
         self.popup.talk_button.setText("Sende...")
         self.popup.screen_context_value.setText("Verarbeite Sprache")
         self.popup.maya_value.setText("Gemini Live laeuft")
         QApplication.processEvents()
+        if recorder is not None:
+            Thread(
+                target=self._finish_push_to_talk_recorded_worker,
+                args=(recorder, self._push_to_talk_started),
+                name="goat-push-to-talk-recorded",
+                daemon=True,
+            ).start()
 
     def _push_to_talk_stream_worker(self, stop_event: threading.Event, max_seconds: float, started: float) -> None:
         try:
@@ -261,6 +276,19 @@ class GoatTrayApp:
                     "audio_path": result.audio_path,
                 }
             )
+        except Exception as exc:  # noqa: BLE001 - show user-visible failure in popup
+            self.popup.push_to_talk_finished.emit({"status": "error", "error": str(exc)})
+
+    def _finish_push_to_talk_recorded_worker(self, recorder, started: float) -> None:
+        try:
+            audio_recorded = recorder.stop()
+            result = self.livetalk.run_gemini_live_recorded(
+                Path(recorder.output_path),
+                started=started,
+                record_seconds=recorder.recorded_seconds,
+                audio_recorded=audio_recorded,
+            )
+            self.popup.push_to_talk_finished.emit({"status": "ok", "result": result.to_dict()})
         except Exception as exc:  # noqa: BLE001 - show user-visible failure in popup
             self.popup.push_to_talk_finished.emit({"status": "error", "error": str(exc)})
 
@@ -523,3 +551,7 @@ class GoatTrayApp:
         painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "G")
         painter.end()
         return QIcon(pixmap)
+
+
+def _streaming_push_to_talk_enabled() -> bool:
+    return os.environ.get("GOAT_LIVETALK_STREAMING_PTT", "").strip().lower() in {"1", "true", "yes", "on"}
