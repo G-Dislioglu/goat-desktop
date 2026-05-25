@@ -21,7 +21,10 @@ class CueDispatcher(QObject):
     cue_requested = pyqtSignal(int, int)
 
 
-def create_app(dispatch_cue: Callable[[int, int], None] | None = None) -> FastAPI:
+def create_app(
+    dispatch_cue: Callable[[int, int], None] | None = None,
+    screen_question_handler: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+) -> FastAPI:
     app = FastAPI(title="GOAT Desktop Local Bridge", version="0.1.0")
 
     @app.get("/healthz")
@@ -95,6 +98,17 @@ def create_app(dispatch_cue: Callable[[int, int], None] | None = None) -> FastAP
             region = decision["marker"]["region"]
             dispatch_cue(int(region["x"] + region["width"] / 2), int(region["y"] + region["height"] / 2))
         return decision
+
+    @app.post("/chat/screen-question")
+    def chat_screen_question(payload: dict[str, Any]) -> dict[str, Any]:
+        if screen_question_handler is None:
+            return {
+                "ok": False,
+                "status": "unavailable",
+                "error": "screen question handler is not attached",
+                "effects": _no_action_effects(),
+            }
+        return screen_question_handler(payload)
 
     @app.post("/action/stage1")
     def stage1_action(payload: dict[str, Any]) -> dict[str, Any]:
@@ -216,11 +230,17 @@ def _no_action_effects() -> dict[str, Any]:
 
 
 class LocalBridge:
-    def __init__(self, dispatcher: CueDispatcher, host: str = "127.0.0.1", port: int = 8765) -> None:
+    def __init__(
+        self,
+        dispatcher: CueDispatcher,
+        host: str = "127.0.0.1",
+        port: int = 8765,
+        screen_question_handler: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+    ) -> None:
         self.dispatcher = dispatcher
         self.host = host
         self.port = port
-        self.app = create_app(self.dispatcher.cue_requested.emit)
+        self.app = create_app(self.dispatcher.cue_requested.emit, screen_question_handler=screen_question_handler)
         self.server: uvicorn.Server | None = None
         self.thread: Thread | None = None
 

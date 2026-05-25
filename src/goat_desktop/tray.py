@@ -49,6 +49,17 @@ from goat_desktop.vision_hint import (
 )
 
 
+def _no_action_effects() -> dict[str, bool]:
+    return {
+        "providerCallsMade": False,
+        "desktopActionsExecuted": False,
+        "mouseActionsExecuted": False,
+        "keyboardActionsExecuted": False,
+        "tradingActionsExecuted": False,
+        "mayExecuteRealAction": False,
+    }
+
+
 class GoatTrayApp:
     def __init__(self, app: QApplication) -> None:
         if not QSystemTrayIcon.isSystemTrayAvailable():
@@ -81,7 +92,7 @@ class GoatTrayApp:
             self.livetalk = GeminiLiveSession()
         self.cue_dispatcher = CueDispatcher()
         self.cue_dispatcher.cue_requested.connect(self.move_ball_to_cue)
-        self.bridge = LocalBridge(self.cue_dispatcher)
+        self.bridge = LocalBridge(self.cue_dispatcher, screen_question_handler=self.handle_bridge_screen_question)
         self._connect_popup_controls()
         self.overlay.show_overlay()
         self.popup.place_near_tray()
@@ -379,6 +390,10 @@ class GoatTrayApp:
         ).start()
 
     def _chat_message_worker(self, text: str, target: str, provider: str, reasoning: str) -> None:
+        payload = self._build_chat_message_payload(text, target, provider, reasoning)
+        self.popup.chat_finished.emit(payload)
+
+    def _build_chat_message_payload(self, text: str, target: str, provider: str, reasoning: str) -> dict:
         screen_context = self._last_screen_context
         screen_marker = None
         is_screen_question = should_use_screen_context(text)
@@ -409,17 +424,25 @@ class GoatTrayApp:
                 response_text = build_screen_context_fallback_response(screen_context)
             chat_payload = result.to_dict()
             chat_status = result.status
-        self.popup.chat_finished.emit(
-            {
-                "status": chat_status,
-                "message": text,
-                "response_text": response_text,
-                "is_screen_question": is_screen_question,
-                "screen_context": screen_context,
-                "marker": screen_marker,
-                "chat": chat_payload,
-            }
-        )
+        return {
+            "status": chat_status,
+            "message": text,
+            "response_text": response_text,
+            "is_screen_question": is_screen_question,
+            "screen_context": screen_context,
+            "marker": screen_marker,
+            "chat": chat_payload,
+        }
+
+    def handle_bridge_screen_question(self, payload: dict) -> dict:
+        text = str(payload.get("message") or "").strip()
+        if not text:
+            return {"ok": False, "status": "error", "error": "message is required", "effects": _no_action_effects()}
+        provider = str(payload.get("provider") or self._screen_context_provider)
+        reasoning = str(payload.get("reasoning") or self._screen_context_reasoning)
+        result = self._build_chat_message_payload(text, self.popup.target_value.text(), provider, reasoning)
+        self.popup.chat_finished.emit(result)
+        return {"ok": result.get("status") == "ok", "payload": result, "effects": _no_action_effects()}
 
     def _resolve_screen_context_for_message(self, text: str, provider: str, reasoning: str) -> dict:
         uia_context = find_uia_match_for_message(text)

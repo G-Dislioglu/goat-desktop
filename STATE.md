@@ -227,6 +227,9 @@ screen_question_local_direct_answer_2026_05_25:
 desktop_icon_fast_path_2026_05_25:
 "Screenfragen nach Desktop-Icons nutzen jetzt zuerst einen read-only Win32-Desktop-Icon-Pfad vor dem langsameren UIA-Fallback. Live-Smoke mit sichtbarem `stepstack` fand das Ziel im isolierten ersten Lauf in ca. 1767ms und danach warm in ca. 244-316ms, statt mehrere Sekunden UIA-Vollscan. Der Status zeigt dafuer `Bildschirm: Desktop gesehen`; Cue-Marker behalten die Quelle `win32_desktop`."
 
+bridge_screen_question_smoke_2026_05_25:
+"Lokaler Bridge-Endpunkt `/chat/screen-question` ergaenzt, damit der laufende GOAT-Prozess Screenfragen ohne UI-Klick smoke-testen kann. Der Endpoint nutzt denselben Tray-Screen-Resolver und dieselbe `chat_finished`-Popup-Route wie Textchat. Live-Smoke gegen `http://127.0.0.1:8765/chat/screen-question` mit `Siehst du den StepStack Ordner auf meinem Desktop?` lieferte `Gesehen per Desktop: stepstack (ListItem) sichtbar.`, Markerquelle `win32_desktop`, Provider `goat_local_screen_context` und keine Desktop-/Maus-/Keyboard-/Provider-Aktionen."
+
 popup_product_simplification_2026_05_17:
 "Popup-UI produktnaeher verschlankt. Entfernt aus sichtbarer Haupt-UI: statische Tabellenbeschriftungen, Dev-Button 'Cue testen' und manuelle Ball-Pfeiltasten. Ballsteuerung bleibt im Tray-Menue fuer Debug/Recovery, aber normaler Produktpfad ist GOAT setzt den Ball auf erkannte Ziele/Felder/Buttons. Status wird als kompakte Chips angezeigt; Screen-Kontext, Maya-Antwort und Zielmarkierung sind groessere Ausgabefelder. Bevorzugte Popup-Groesse bleibt kompakt."
 
