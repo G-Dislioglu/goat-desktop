@@ -16,18 +16,19 @@ class UiaElementInfo:
         return asdict(self)
 
 
-def collect_visible_uia_elements(limit: int = 160) -> dict[str, Any]:
+def collect_visible_uia_elements(limit: int = 180) -> dict[str, Any]:
     started = perf_counter()
     try:
         from pywinauto import Desktop
 
         desktop = Desktop(backend="uia")
-        windows = desktop.windows(visible_only=True)
+        roots = _collect_roots(desktop)
         elements: list[UiaElementInfo] = []
-        for window in windows[:20]:
-            _append_element(elements, window)
-            for child in window.descendants()[:80]:
-                _append_element(elements, child)
+        seen: set[tuple[str, int, int, int, int]] = set()
+        for root in roots[:30]:
+            _append_element(elements, root, seen)
+            for child in _iter_bounded_children(root, max_count=90, max_depth=4):
+                _append_element(elements, child, seen)
                 if len(elements) >= limit:
                     break
             if len(elements) >= limit:
@@ -105,7 +106,52 @@ def build_uia_marker(match: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
-def _append_element(elements: list[UiaElementInfo], wrapper) -> None:
+def _collect_roots(desktop) -> list[Any]:
+    roots: list[Any] = []
+    seen_wrappers: set[int] = set()
+
+    def add(wrapper) -> None:
+        key = id(wrapper)
+        if key not in seen_wrappers:
+            seen_wrappers.add(key)
+            roots.append(wrapper)
+
+    for class_name in ("Progman", "WorkerW", "CabinetWClass", "Shell_TrayWnd"):
+        try:
+            for window in desktop.windows(class_name=class_name, visible_only=True):
+                add(window)
+        except Exception:
+            continue
+
+    try:
+        for window in desktop.windows(visible_only=True):
+            add(window)
+    except Exception:
+        pass
+
+    return roots
+
+
+def _iter_bounded_children(root, max_count: int, max_depth: int):
+    queue: list[tuple[Any, int]] = [(root, 0)]
+    yielded = 0
+    while queue and yielded < max_count:
+        parent, depth = queue.pop(0)
+        if depth >= max_depth:
+            continue
+        try:
+            children = parent.children()
+        except Exception:
+            continue
+        for child in children:
+            yield child
+            yielded += 1
+            if yielded >= max_count:
+                break
+            queue.append((child, depth + 1))
+
+
+def _append_element(elements: list[UiaElementInfo], wrapper, seen: set[tuple[str, int, int, int, int]] | None = None) -> None:
     try:
         info = wrapper.element_info
         name = str(getattr(info, "name", "") or "").strip()
@@ -119,6 +165,11 @@ def _append_element(elements: list[UiaElementInfo], wrapper) -> None:
         bottom = float(rect.bottom)
         if right <= left or bottom <= top:
             return
+        dedupe_key = (name.lower(), round(left), round(top), round(right), round(bottom))
+        if seen is not None:
+            if dedupe_key in seen:
+                return
+            seen.add(dedupe_key)
         elements.append(
             UiaElementInfo(
                 name=name,
@@ -152,7 +203,6 @@ def _target_terms(message: str) -> list[str]:
         "ordner",
         "button",
         "schaltflaeche",
-        "schaltfläche",
         "kannst",
         "mich",
         "zum",
@@ -184,10 +234,10 @@ def _match_score(target_terms: list[str], name: str) -> float:
 def _normalize(text: str) -> str:
     return (
         text.lower()
-        .replace("ä", "ae")
-        .replace("ö", "oe")
-        .replace("ü", "ue")
-        .replace("ß", "ss")
+        .replace("\u00e4", "ae")
+        .replace("\u00f6", "oe")
+        .replace("\u00fc", "ue")
+        .replace("\u00df", "ss")
         .replace("-", " ")
         .replace("_", " ")
         .replace(".", " ")

@@ -25,6 +25,22 @@ def test_find_best_uia_match_finds_named_target() -> None:
     assert match["score"] >= 0.95
 
 
+def test_find_best_uia_match_normalizes_german_umlauts() -> None:
+    match = find_best_uia_match(
+        [
+            {
+                "name": "Senden Schaltfl\u00e4che",
+                "control_type": "Button",
+                "rect": {"left": 20, "top": 30, "right": 120, "bottom": 80},
+            }
+        ],
+        "Wo ist die Senden Schaltflaeche?",
+    )
+
+    assert match is not None
+    assert match["element"]["name"] == "Senden Schaltfl\u00e4che"
+
+
 def test_find_best_uia_match_ignores_weak_match() -> None:
     match = find_best_uia_match(
         [{"name": "Downloads", "control_type": "ListItem", "rect": {"left": 0, "top": 0, "right": 1, "bottom": 1}}],

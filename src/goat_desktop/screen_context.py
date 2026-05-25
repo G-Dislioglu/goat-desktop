@@ -104,6 +104,8 @@ def build_screen_context_fallback_response(screen_context: str) -> str:
         return "Nicht sicher gesehen: Bildschirm konnte nicht gelesen werden."
     if is_uncertain_screen_context(context):
         return "Nicht sicher gesehen: Ziel ist nicht klar erkennbar."
+    if _is_uia_context(context):
+        return f"Gesehen per UIA: {_clean_seen_context(context)}"
     return f"Gesehen: {_clean_seen_context(context)}"
 
 
@@ -113,7 +115,9 @@ def build_screen_context_display_status(screen_context: str) -> str:
         return "Bildschirm: nicht gelesen"
     if is_uncertain_screen_context(context):
         return "Bildschirm: Ziel nicht sicher gesehen"
-    return "Bildschirm: Ziel gesehen"
+    if _is_uia_context(context):
+        return "Bildschirm: UIA gesehen"
+    return "Bildschirm: Vision gesehen"
 
 
 def is_uncertain_screen_context(screen_context: str) -> bool:
@@ -123,11 +127,18 @@ def is_uncertain_screen_context(screen_context: str) -> bool:
 
 def _clean_seen_context(screen_context: str) -> str:
     context = screen_context.strip()
+    if context.startswith("Lokales UIA: "):
+        context = context.removeprefix("Lokales UIA: ").strip()
     if "): " in context:
         context = context.split("): ", 1)[1]
     if ". Vertrauen " in context:
         context = context.split(". Vertrauen ", 1)[0].strip()
     return context.rstrip(".") + "."
+
+
+def _is_uia_context(screen_context: str) -> bool:
+    normalized = screen_context.strip().lower()
+    return normalized.startswith("lokales uia:") or " via uia" in normalized
 
 
 def _rough_position_to_center(position: str, left: float, top: float, width: float, height: float) -> tuple[float, float]:

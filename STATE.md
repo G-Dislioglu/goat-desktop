@@ -218,6 +218,9 @@ popup_recovery_preferred_size_2026_05_17:
 popup_minimize_recovery_2026_05_17:
 "GOAT-Popup faengt WindowStateChange=minimized jetzt ab und stellt sich automatisch mit showNormal(), bevorzugter Groesse und On-Screen-Clamping wieder her. Anlass: Windows legte das minimierte Popup bei -32000/-32000 ab; damit blieb nur der gelbe Overlay-Ball sichtbar. Minimieren wird fuer GOAT vorerst als Recovery-Fall behandelt, nicht als dauerhafter Hidden-State."
 
+local_uia_search_status_source_2026_05_25:
+"Lokaler UIA-Screen-Kontext verbreitert: GOAT liest sichtbare Fenster plus Desktop/Shell-Roots read-only aus, dedupliziert UIA-Elemente und normalisiert deutsche Umlaut-/ASCII-Schreibweisen fuer Treffer wie Schaltflaeche. Textchat-Screenfragen zeigen jetzt klarer die Quelle: `Bildschirm: UIA gesehen`, `Bildschirm: Vision gesehen`, `Bildschirm: Ziel nicht sicher gesehen` oder `Bildschirm: nicht gelesen`. Fallback-Antworten benennen UIA explizit als lokale Sichtquelle."
+
 popup_product_simplification_2026_05_17:
 "Popup-UI produktnaeher verschlankt. Entfernt aus sichtbarer Haupt-UI: statische Tabellenbeschriftungen, Dev-Button 'Cue testen' und manuelle Ball-Pfeiltasten. Ballsteuerung bleibt im Tray-Menue fuer Debug/Recovery, aber normaler Produktpfad ist GOAT setzt den Ball auf erkannte Ziele/Felder/Buttons. Status wird als kompakte Chips angezeigt; Screen-Kontext, Maya-Antwort und Zielmarkierung sind groessere Ausgabefelder. Bevorzugte Popup-Groesse bleibt kompakt."
 

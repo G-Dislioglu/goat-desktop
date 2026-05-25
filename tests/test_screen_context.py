@@ -85,9 +85,16 @@ def test_screen_context_fallback_response_cleans_summary_when_clear() -> None:
     assert response == "Gesehen: StepStack Ordner links oben sichtbar."
 
 
+def test_screen_context_fallback_response_names_uia_source() -> None:
+    response = build_screen_context_fallback_response("Lokales UIA: StepStack (ListItem) sichtbar. Vertrauen 0.95 via uia.")
+
+    assert response == "Gesehen per UIA: StepStack (ListItem) sichtbar."
+
+
 def test_screen_context_display_status_is_compact() -> None:
     assert build_screen_context_display_status("Codex: uncertain bei unknown. Vertrauen 0.00.") == "Bildschirm: Ziel nicht sicher gesehen"
-    assert build_screen_context_display_status("Explorer: StepStack sichtbar. Vertrauen 0.82.") == "Bildschirm: Ziel gesehen"
+    assert build_screen_context_display_status("Explorer: StepStack sichtbar. Vertrauen 0.82.") == "Bildschirm: Vision gesehen"
+    assert build_screen_context_display_status("Lokales UIA: StepStack (ListItem) sichtbar. Vertrauen 0.95 via uia.") == "Bildschirm: UIA gesehen"
 
 
 def test_unavailable_chat_response_detection() -> None:
