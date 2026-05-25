@@ -9,6 +9,26 @@ VISION_CONTEXT_PROMPT = (
     "Keine sensiblen Inhalte abschreiben; nur UI-Kontext kurz zusammenfassen."
 )
 
+_SCREEN_CONTEXT_TRIGGERS = (
+    "siehst du",
+    "siehst du den",
+    "siehst du die",
+    "wo ist",
+    "wo finde",
+    "finde",
+    "zeig mir",
+    "welcher button",
+    "welche schaltflaeche",
+    "welche schaltfläche",
+    "ist der ordner",
+    "ist die datei",
+    "auf meinem desktop",
+    "auf dem desktop",
+    "auf dem bildschirm",
+    "im fenster",
+    "navigier",
+)
+
 
 def build_screen_context_summary(capture: dict[str, Any], hint: Any) -> str:
     window = capture.get("active_window") or {}
@@ -25,6 +45,22 @@ def build_screen_context_summary(capture: dict[str, Any], hint: Any) -> str:
     where = f" bei {position}" if position else ""
     source = f" via {provider}" if provider else ""
     return f"{title} ({scope}): {label}{where}. Vertrauen {confidence:.2f}, {time_ms:.0f}ms{source}."
+
+
+def should_use_screen_context(message: str) -> bool:
+    normalized = " ".join(message.strip().lower().split())
+    return any(trigger in normalized for trigger in _SCREEN_CONTEXT_TRIGGERS)
+
+
+def build_screen_context_prompt(message: str) -> str:
+    clean_message = message.strip()
+    if not clean_message:
+        return VISION_CONTEXT_PROMPT
+    return (
+        f"{VISION_CONTEXT_PROMPT} "
+        f"User-Frage: {clean_message}. "
+        "Erkenne besonders, ob das gesuchte Ziel sichtbar ist und wo es grob liegt."
+    )
 
 
 def build_chat_context(screen_context: str, target: str) -> dict[str, str]:

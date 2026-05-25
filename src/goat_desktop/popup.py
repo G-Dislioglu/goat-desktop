@@ -23,6 +23,7 @@ class GoatPopup(QWidget):
     read_aloud_finished = pyqtSignal(dict)
     push_to_talk_finished = pyqtSignal(dict)
     screen_context_finished = pyqtSignal(dict)
+    chat_finished = pyqtSignal(dict)
 
     def __init__(self) -> None:
         super().__init__()

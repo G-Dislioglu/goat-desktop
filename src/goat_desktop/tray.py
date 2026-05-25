@@ -23,7 +23,13 @@ from goat_desktop.livetalk_live import GeminiLiveSession
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
 from goat_desktop.screen import capture_visible_desktop
-from goat_desktop.screen_context import VISION_CONTEXT_PROMPT, build_chat_context, build_screen_context_summary
+from goat_desktop.screen_context import (
+    VISION_CONTEXT_PROMPT,
+    build_chat_context,
+    build_screen_context_prompt,
+    build_screen_context_summary,
+    should_use_screen_context,
+)
 from goat_desktop.stt_hint import load_stt_config
 from goat_desktop.tts_hint import load_tts_config
 from goat_desktop.vision_config import load_vision_config, save_vision_config
@@ -159,6 +165,7 @@ class GoatTrayApp:
         self.popup.read_aloud.clicked.connect(self.read_livetalk_response_aloud)
         self.popup.read_aloud_finished.connect(self._finish_read_livetalk_response_aloud)
         self.popup.push_to_talk_finished.connect(self._finish_push_to_talk_payload)
+        self.popup.chat_finished.connect(self._finish_chat_message)
         self.popup.video_frames_toggle.toggled.connect(self._set_video_frames_enabled)
         self.popup.screen_context_button.clicked.connect(self.request_screen_context)
         self.popup.screen_context_finished.connect(self._finish_screen_context)
@@ -351,17 +358,81 @@ class GoatTrayApp:
         text = self.popup.chat_input.text().strip()
         if not text:
             return
-        screen_context = self._last_screen_context or self.popup.screen_context_value.text()
         self.popup.chat_input.clear()
         self.popup.screen_context_value.setText(text)
-        self.popup.maya_value.setText("Maya wird angefragt...")
+        self.popup.maya_value.setText("Bildschirm wird gelesen..." if should_use_screen_context(text) else "Maya wird angefragt...")
+        self.popup.chat_send.setEnabled(False)
         QApplication.processEvents()
+        provider = str(self.popup.vision_provider.currentData())
+        reasoning = str(self.popup.vision_reasoning.currentData())
+        Thread(
+            target=self._chat_message_worker,
+            args=(text, self.popup.target_value.text(), provider, reasoning),
+            name="goat-chat-message",
+            daemon=True,
+        ).start()
+
+    def _chat_message_worker(self, text: str, target: str, provider: str, reasoning: str) -> None:
+        screen_context = self._last_screen_context
+        if should_use_screen_context(text):
+            screen_context_result = self._capture_screen_context_for_message(text, provider, reasoning)
+            if screen_context_result.get("status") == "ok":
+                screen_context = str(screen_context_result.get("summary") or "")
+            elif not screen_context:
+                screen_context = f"Bildschirm-Kontext nicht verfuegbar: {screen_context_result.get('error') or 'Vision fehlgeschlagen'}"
         result = request_chat_response(
             text,
-            context=build_chat_context(screen_context, self.popup.target_value.text()),
+            context=build_chat_context(screen_context, target),
         )
-        self.popup.maya_value.setText(result.response_text)
-        self._set_read_aloud_available(result.response_text)
+        self.popup.chat_finished.emit(
+            {
+                "status": result.status,
+                "message": text,
+                "response_text": result.response_text,
+                "screen_context": screen_context,
+                "chat": result.to_dict(),
+            }
+        )
+
+    def _capture_screen_context_for_message(self, text: str, provider: str, reasoning: str) -> dict:
+        try:
+            with tempfile.TemporaryDirectory(prefix="goat-chat-screen-") as tmp:
+                image_path = Path(tmp) / "visible-desktop.png"
+                capture = capture_visible_desktop(output_path=image_path)
+                if not capture.get("ok"):
+                    return {"status": "error", "error": capture.get("error", "screen capture failed"), "capture": capture}
+                base_config = load_vision_hint_config()
+                config = VisionHintConfig(
+                    mode=VisionMode.BUILDER_PROXY,
+                    provider=VisionProvider(provider),
+                    reasoning_level=ReasoningLevel(reasoning),
+                    builder_url=base_config.builder_url,
+                    builder_token=base_config.builder_token,
+                    timeout_seconds=base_config.timeout_seconds,
+                )
+                hint = get_vision_hint(image_path, build_screen_context_prompt(text), config=config)
+                if hint.status != "ok":
+                    return {"status": "error", "error": hint.error or "vision failed", "capture": capture, "hint": hint.to_dict()}
+                return {
+                    "status": "ok",
+                    "summary": build_screen_context_summary(capture, hint),
+                    "capture": capture,
+                    "hint": hint.to_dict(),
+                }
+        except Exception as exc:  # noqa: BLE001 - surfaced in chat context
+            return {"status": "error", "error": str(exc)}
+
+    def _finish_chat_message(self, payload: dict) -> None:
+        self.popup.chat_send.setEnabled(True)
+        screen_context = str(payload.get("screen_context") or "").strip()
+        if screen_context:
+            self._last_screen_context = screen_context
+            self.popup.screen_context_value.setText(screen_context)
+        else:
+            self.popup.screen_context_value.setText(str(payload.get("message") or ""))
+        response_text = str(payload.get("response_text") or "")
+        self.popup.maya_value.setText(response_text)
+        self._set_read_aloud_available(response_text)
 
     def request_screen_context(self) -> None:
         self.popup.screen_context_button.setEnabled(False)

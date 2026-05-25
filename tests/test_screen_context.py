@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from goat_desktop.screen_context import build_chat_context, build_screen_context_summary
+from goat_desktop.screen_context import (
+    VISION_CONTEXT_PROMPT,
+    build_chat_context,
+    build_screen_context_prompt,
+    build_screen_context_summary,
+    should_use_screen_context,
+)
 
 
 class Hint:
@@ -31,3 +37,22 @@ def test_build_chat_context_preserves_last_screen_context() -> None:
     assert context["screen_context"] == "Chrome: Login sichtbar."
     assert context["target"] == "Kein Ziel markiert"
     assert "approval" in context["safety_rule"]
+
+
+def test_should_use_screen_context_for_visible_target_questions() -> None:
+    assert should_use_screen_context("Siehst du den StepStack Ordner auf meinem Desktop?") is True
+    assert should_use_screen_context("Wo ist der Senden Button?") is True
+    assert should_use_screen_context("Kannst du mich zum richtigen Fenster navigieren?") is True
+
+
+def test_should_not_use_screen_context_for_plain_chat() -> None:
+    assert should_use_screen_context("Fasse mir den Plan kurz zusammen.") is False
+    assert should_use_screen_context("Was haben wir zuletzt committed?") is False
+
+
+def test_build_screen_context_prompt_includes_user_question() -> None:
+    prompt = build_screen_context_prompt("Wo ist StepStack?")
+
+    assert VISION_CONTEXT_PROMPT in prompt
+    assert "Wo ist StepStack?" in prompt
+    assert "gesuchte Ziel sichtbar" in prompt
