@@ -14,6 +14,7 @@ from goat_desktop.livetalk_live import (
     GeminiLiveConfig,
     GeminiLiveResult,
     WaveInError,
+    _is_low_input_signal,
     _wave_check,
     _parse_json_bytes,
     _send_audio_and_video_loop,
@@ -151,6 +152,24 @@ def test_low_signal_audio_fails_fast(tmp_path: Path) -> None:
     assert result.status == "uncertain"
     assert result.error == "low_input_signal"
     assert result.response_text == "Keine Sprache erkannt. Bitte nach dem Ton sprechen."
+
+
+def test_quiet_mci_style_speech_is_not_blocked_locally(tmp_path: Path) -> None:
+    source = tmp_path / "quiet-mci-speech.wav"
+    frames = bytearray(b"\x80" * 11025)
+    for index in range(0, len(frames), 20):
+        frames[index] = 0x82
+    with wave.open(str(source), "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(1)
+        wav.setframerate(11025)
+        wav.writeframes(bytes(frames))
+
+    stats = wav_signal_stats(source)
+
+    assert stats["rms"] > 35
+    assert stats["peak"] > 160
+    assert _is_low_input_signal(stats) is False
 
 
 def test_binary_json_message_is_not_treated_as_audio() -> None:

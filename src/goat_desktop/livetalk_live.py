@@ -721,9 +721,9 @@ def _video_frame_quality() -> int:
 
 
 def _is_low_input_signal(stats: dict[str, float]) -> bool:
-    min_rms = float(_get_env("GOAT_VOICE_MIN_RMS", "220") or "220")
-    min_loud_ratio = float(_get_env("GOAT_VOICE_MIN_LOUD_RATIO", "0.02") or "0.02")
-    return stats.get("duration_s", 0.0) > 0.0 and stats.get("rms", 0.0) < min_rms and stats.get("loud_ratio", 0.0) < min_loud_ratio
+    min_rms = float(_get_env("GOAT_VOICE_MIN_RMS", "35") or "35")
+    min_peak = float(_get_env("GOAT_VOICE_MIN_PEAK", "160") or "160")
+    return stats.get("duration_s", 0.0) > 0.0 and stats.get("rms", 0.0) < min_rms and stats.get("peak", 0.0) < min_peak
 
 
 def _decode_wav_samples(frames: bytes, channels: int, sample_width: int) -> list[int]:
