@@ -3,6 +3,7 @@ from __future__ import annotations
 from goat_desktop.screen_context import (
     VISION_CONTEXT_PROMPT,
     build_chat_context,
+    build_screen_context_display_status,
     build_screen_context_fallback_response,
     build_screen_context_prompt,
     build_screen_context_summary,
@@ -63,13 +64,26 @@ def test_build_screen_context_prompt_includes_user_question() -> None:
 def test_screen_context_fallback_response_handles_uncertain_context() -> None:
     response = build_screen_context_fallback_response("Codex (visible_desktop): uncertain bei unknown.")
 
-    assert response == "Ich sehe das gesuchte Ziel nicht sicher. Bitte freier sichtbar machen."
+    assert response == "Nicht sicher gesehen: Ziel ist nicht klar erkennbar."
 
 
 def test_screen_context_fallback_response_uses_context_when_clear() -> None:
     response = build_screen_context_fallback_response("Desktop: StepStack Ordner links oben sichtbar.")
 
-    assert "StepStack" in response
+    assert response == "Gesehen: Desktop: StepStack Ordner links oben sichtbar."
+
+
+def test_screen_context_fallback_response_cleans_summary_when_clear() -> None:
+    response = build_screen_context_fallback_response(
+        "Explorer (visible_desktop): StepStack Ordner links oben sichtbar. Vertrauen 0.82, 300ms via gemini_flash_lite."
+    )
+
+    assert response == "Gesehen: StepStack Ordner links oben sichtbar."
+
+
+def test_screen_context_display_status_is_compact() -> None:
+    assert build_screen_context_display_status("Codex: uncertain bei unknown. Vertrauen 0.00.") == "Bildschirm: Ziel nicht sicher gesehen"
+    assert build_screen_context_display_status("Explorer: StepStack sichtbar. Vertrauen 0.82.") == "Bildschirm: Ziel gesehen"
 
 
 def test_unavailable_chat_response_detection() -> None:

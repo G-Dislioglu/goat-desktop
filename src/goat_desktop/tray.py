@@ -26,6 +26,7 @@ from goat_desktop.screen import capture_visible_desktop
 from goat_desktop.screen_context import (
     VISION_CONTEXT_PROMPT,
     build_chat_context,
+    build_screen_context_display_status,
     build_screen_context_fallback_response,
     build_screen_context_prompt,
     build_screen_context_summary,
@@ -394,6 +395,7 @@ class GoatTrayApp:
                 "status": result.status,
                 "message": text,
                 "response_text": response_text,
+                "is_screen_question": should_use_screen_context(text),
                 "screen_context": screen_context,
                 "chat": result.to_dict(),
             }
@@ -432,7 +434,10 @@ class GoatTrayApp:
         screen_context = str(payload.get("screen_context") or "").strip()
         if screen_context:
             self._last_screen_context = screen_context
-            self.popup.screen_context_value.setText(screen_context)
+            if payload.get("is_screen_question"):
+                self.popup.screen_context_value.setText(build_screen_context_display_status(screen_context))
+            else:
+                self.popup.screen_context_value.setText(screen_context)
         else:
             self.popup.screen_context_value.setText(str(payload.get("message") or ""))
         response_text = str(payload.get("response_text") or "")
@@ -726,4 +731,3 @@ def _streaming_livetalk_enabled() -> bool:
 
 def _video_frames_enabled() -> bool:
     return os.environ.get("GOAT_LIVETALK_VIDEO_FRAMES", "0").strip().lower() not in {"0", "false", "no", "off"}
-

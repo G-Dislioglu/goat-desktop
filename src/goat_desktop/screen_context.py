@@ -65,10 +65,33 @@ def build_screen_context_prompt(message: str) -> str:
 def build_screen_context_fallback_response(screen_context: str) -> str:
     context = screen_context.strip()
     if not context or context == "-":
-        return "Ich kann den Bildschirm gerade nicht sicher lesen."
-    if "uncertain" in context.lower() or "kein klarer" in context.lower():
-        return "Ich sehe das gesuchte Ziel nicht sicher. Bitte freier sichtbar machen."
-    return context
+        return "Nicht sicher gesehen: Bildschirm konnte nicht gelesen werden."
+    if is_uncertain_screen_context(context):
+        return "Nicht sicher gesehen: Ziel ist nicht klar erkennbar."
+    return f"Gesehen: {_clean_seen_context(context)}"
+
+
+def build_screen_context_display_status(screen_context: str) -> str:
+    context = screen_context.strip()
+    if not context or context == "-":
+        return "Bildschirm: nicht gelesen"
+    if is_uncertain_screen_context(context):
+        return "Bildschirm: Ziel nicht sicher gesehen"
+    return "Bildschirm: Ziel gesehen"
+
+
+def is_uncertain_screen_context(screen_context: str) -> bool:
+    normalized = screen_context.strip().lower()
+    return "uncertain" in normalized or "kein klarer" in normalized or "vertrauen 0.00" in normalized
+
+
+def _clean_seen_context(screen_context: str) -> str:
+    context = screen_context.strip()
+    if "): " in context:
+        context = context.split("): ", 1)[1]
+    if ". Vertrauen " in context:
+        context = context.split(". Vertrauen ", 1)[0].strip()
+    return context.rstrip(".") + "."
 
 
 def is_unavailable_chat_response(response_text: str) -> bool:
