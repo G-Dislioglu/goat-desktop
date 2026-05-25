@@ -71,6 +71,15 @@ def build_screen_context_fallback_response(screen_context: str) -> str:
     return context
 
 
+def is_unavailable_chat_response(response_text: str) -> bool:
+    normalized = response_text.strip().lower()
+    return (
+        "maya-ki ist im builder gerade nicht erreichbar" in normalized
+        or "maya-ki ist noch nicht live angebunden" in normalized
+        or "goat_builder_url and goat_builder_token are required" in normalized
+    )
+
+
 def build_chat_context(screen_context: str, target: str) -> dict[str, str]:
     return {
         "screen_context": screen_context.strip() or "-",

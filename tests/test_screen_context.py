@@ -6,6 +6,7 @@ from goat_desktop.screen_context import (
     build_screen_context_fallback_response,
     build_screen_context_prompt,
     build_screen_context_summary,
+    is_unavailable_chat_response,
     should_use_screen_context,
 )
 
@@ -69,3 +70,9 @@ def test_screen_context_fallback_response_uses_context_when_clear() -> None:
     response = build_screen_context_fallback_response("Desktop: StepStack Ordner links oben sichtbar.")
 
     assert "StepStack" in response
+
+
+def test_unavailable_chat_response_detection() -> None:
+    assert is_unavailable_chat_response("Maya-KI ist im Builder gerade nicht erreichbar.") is True
+    assert is_unavailable_chat_response("GOAT_BUILDER_URL and GOAT_BUILDER_TOKEN are required") is True
+    assert is_unavailable_chat_response("Der Ordner ist links oben sichtbar.") is False
