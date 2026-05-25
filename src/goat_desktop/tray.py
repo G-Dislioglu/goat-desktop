@@ -36,6 +36,7 @@ from goat_desktop.screen_context import (
 )
 from goat_desktop.stt_hint import load_stt_config
 from goat_desktop.tts_hint import load_tts_config
+from goat_desktop.uia_context import build_uia_marker, build_uia_screen_context, collect_visible_uia_elements, find_best_uia_match
 from goat_desktop.vision_config import load_vision_config, save_vision_config
 from goat_desktop.vision_hint import (
     ReasoningLevel,
@@ -380,7 +381,7 @@ class GoatTrayApp:
         screen_context = self._last_screen_context
         screen_marker = None
         if should_use_screen_context(text):
-            screen_context_result = self._capture_screen_context_for_message(text, provider, reasoning)
+            screen_context_result = self._resolve_screen_context_for_message(text, provider, reasoning)
             if screen_context_result.get("status") == "ok":
                 screen_context = str(screen_context_result.get("summary") or "")
                 screen_marker = screen_context_result.get("marker") if isinstance(screen_context_result.get("marker"), dict) else None
@@ -404,6 +405,23 @@ class GoatTrayApp:
                 "chat": result.to_dict(),
             }
         )
+
+    def _resolve_screen_context_for_message(self, text: str, provider: str, reasoning: str) -> dict:
+        uia_context = collect_visible_uia_elements()
+        if uia_context.get("ok"):
+            match = find_best_uia_match(list(uia_context.get("elements") or []), text)
+            if match is not None:
+                return {
+                    "status": "ok",
+                    "summary": build_uia_screen_context(match),
+                    "marker": build_uia_marker(match),
+                    "source": "uia",
+                    "uia": {"time_ms": uia_context.get("time_ms"), "match": match},
+                }
+        vision_context = self._capture_screen_context_for_message(text, provider, reasoning)
+        if isinstance(vision_context, dict):
+            vision_context.setdefault("uia", {"status": "miss", "time_ms": uia_context.get("time_ms"), "error": uia_context.get("error")})
+        return vision_context
 
     def _capture_screen_context_for_message(self, text: str, provider: str, reasoning: str) -> dict:
         try:

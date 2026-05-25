@@ -17,6 +17,9 @@ text_chat_screen_marker_cue_2026_05_25:
 vision_prompt_target_fields_2026_05_25:
 "Vision-Prompt und Builder-Proxy-Parser fuer Screenfragen geschaerft. GOAT fordert nun immer strukturierte Zielsignale `semantic_label`, `approximate_position`, `confidence` an und akzeptiert auch alternative Builder-Felder wie `label`/`rough_position`. Wenn Builder `target_visible=false` meldet, setzt GOAT confidence auf 0.0 und markiert nichts. Live-Smoke: Builder Vision HTTP 200, liefert `label=uncertain`, `rough_position=unknown`, `confidence=0.0`; GOAT setzt korrekt keinen Cue. Full Suite gruen: 123 Tests."
 
+local_uia_screen_context_2026_05_25:
+"Lokaler UIA-Sensor fuer Textchat-Screenfragen hinzugefuegt. GOAT liest sichtbare Windows-UIA-Elementnamen und Rechtecke read-only, matcht Zielbegriffe aus Fragen wie `Siehst du den StepStack Ordner...` und erzeugt bei Treffer direkt Kontext + Cue-Region mit Quelle `uia`. Keine Provider-Calls, keine Klicks, keine Tastatur, keine Desktop-Aktion. Wenn UIA keinen Treffer findet, bleibt Vision der Fallback. Live-Smoke: UIA ok, 80 Elemente gelesen, StepStack aktuell nicht sichtbar/gefunden -> kein Marker, effects alle false. Full Suite gruen: 127 Tests."
+
 maya_chat_builder_proxy_code_ready_2026_05_17:
 "Desktop-seitige Maya-Textchat-Anbindung vorbereitet am 2026-05-17. Implementiert: chat_hint.py mit GOAT_CHAT_MODE=builder_proxy, POST /api/goat/chat, Bearer-Auth, Reasoning-Parameter, optionalem GOAT_BUILDER_RESOLVE_IP und fail-closed uncertain bei Fehlern. Das LiveTalk-Textfeld nutzt jetzt diesen Adapter statt einer lokalen Fake-Antwort. Live-Pruefung gegen Soulmatch: /api/goat/stt, /api/goat/tts und /api/goat/vision-hint sind erreichbar; /api/goat/chat liefert aktuell 404. Deshalb ist Maya-Text-KI code_ready, aber nicht completed. Tests gruen: test_chat_builder_proxy.py plus LiveTalk/STT/TTS-Subset."
 
