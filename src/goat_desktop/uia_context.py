@@ -70,12 +70,70 @@ def find_best_uia_match(elements: list[dict[str, Any]], message: str, min_score:
     }
 
 
+def find_uia_match_for_message(
+    message: str,
+    min_score: float = 0.58,
+    early_score: float = 0.95,
+    scan_limit: int = 180,
+) -> dict[str, Any]:
+    started = perf_counter()
+    try:
+        from pywinauto import Desktop
+
+        target_terms = _target_terms(message)
+        if not target_terms:
+            return {
+                "ok": True,
+                "match": None,
+                "elements_scanned": 0,
+                "time_ms": round((perf_counter() - started) * 1000, 2),
+                "effects": _no_action_effects(),
+            }
+        fast_match, fast_scanned = _find_desktop_icon_match_win32(target_terms, min_score=min_score, early_score=early_score)
+        if fast_match is not None:
+            return {
+                "ok": True,
+                "match": fast_match,
+                "elements_scanned": fast_scanned,
+                "time_ms": round((perf_counter() - started) * 1000, 2),
+                "source": "win32_desktop",
+                "effects": _no_action_effects(),
+            }
+        desktop = Desktop(backend="uia")
+        roots = _collect_roots(desktop)
+        match, scanned = _find_best_uia_match_in_wrappers(
+            roots,
+            target_terms,
+            min_score=min_score,
+            early_score=early_score,
+            scan_limit=scan_limit,
+        )
+        return {
+            "ok": True,
+            "match": match,
+            "elements_scanned": scanned,
+            "time_ms": round((perf_counter() - started) * 1000, 2),
+            "effects": _no_action_effects(),
+        }
+    except Exception as exc:  # noqa: BLE001 - UIA is an optional read-only hint
+        return {
+            "ok": False,
+            "match": None,
+            "error": type(exc).__name__,
+            "elements_scanned": 0,
+            "time_ms": round((perf_counter() - started) * 1000, 2),
+            "effects": _no_action_effects(),
+        }
+
+
 def build_uia_screen_context(match: dict[str, Any]) -> str:
     element = match.get("element") if isinstance(match.get("element"), dict) else {}
     name = str(element.get("name") or "Ziel").strip() or "Ziel"
     control_type = str(element.get("control_type") or "UI-Element").strip() or "UI-Element"
+    source = str(element.get("source") or "uia").strip() or "uia"
+    prefix = "Lokales UIA" if source == "uia" else "Lokaler Screen"
     score = float(match.get("score") or 0.0)
-    return f"Lokales UIA: {name} ({control_type}) sichtbar. Vertrauen {score:.2f} via uia."
+    return f"{prefix}: {name} ({control_type}) sichtbar. Vertrauen {score:.2f} via {source}."
 
 
 def build_uia_marker(match: dict[str, Any]) -> dict[str, Any] | None:
@@ -92,6 +150,7 @@ def build_uia_marker(match: dict[str, Any]) -> dict[str, Any] | None:
     height = bottom - top
     if width <= 0 or height <= 0:
         return None
+    source = str(element.get("source") or "uia").strip() or "uia"
     return {
         "available": True,
         "label": str(element.get("name") or "UIA-Ziel"),
@@ -102,7 +161,7 @@ def build_uia_marker(match: dict[str, Any]) -> dict[str, Any] | None:
             "height": round(height, 2),
         },
         "confidence": float(match.get("score") or 0.0),
-        "source": "uia",
+        "source": source,
     }
 
 
@@ -111,7 +170,7 @@ def _collect_roots(desktop) -> list[Any]:
     seen_wrappers: set[int] = set()
 
     def add(wrapper) -> None:
-        key = id(wrapper)
+        key = _wrapper_key(wrapper)
         if key not in seen_wrappers:
             seen_wrappers.add(key)
             roots.append(wrapper)
@@ -130,6 +189,89 @@ def _collect_roots(desktop) -> list[Any]:
         pass
 
     return roots
+
+
+def _find_best_uia_match_in_wrappers(
+    roots: list[Any],
+    target_terms: list[str],
+    min_score: float,
+    early_score: float,
+    scan_limit: int,
+) -> tuple[dict[str, Any] | None, int]:
+    best: tuple[float, dict[str, Any]] | None = None
+    seen: set[tuple[str, int, int, int, int]] = set()
+    scanned = 0
+    for root in roots[:30]:
+        for wrapper in _iter_wrapper_with_children(root, max_count=90, max_depth=4):
+            element = _read_element(wrapper, seen)
+            if element is None:
+                continue
+            scanned += 1
+            score = _match_score(target_terms, element.name)
+            if best is None or score > best[0]:
+                best = (score, element.to_dict())
+                if score >= early_score:
+                    return _build_match(best, target_terms), scanned
+            if scanned >= scan_limit:
+                break
+        if scanned >= scan_limit:
+            break
+    if best is None or best[0] < min_score:
+        return None, scanned
+    return _build_match(best, target_terms), scanned
+
+
+def _find_desktop_icon_match_win32(target_terms: list[str], min_score: float, early_score: float) -> tuple[dict[str, Any] | None, int]:
+    try:
+        from pywinauto import Desktop
+
+        desktop = Desktop(backend="win32")
+        list_view = desktop.window(class_name="Progman").child_window(class_name="SysListView32")
+        if not list_view.exists(timeout=0.5):
+            return None, 0
+        item_count = int(list_view.item_count())
+    except Exception:
+        return None, 0
+
+    best: tuple[float, dict[str, Any]] | None = None
+    scanned = 0
+    for index in range(max(0, item_count)):
+        try:
+            item = list_view.get_item(index)
+            name = str(item.text() or "").strip()
+            rect = item.rectangle()
+        except Exception:
+            continue
+        if not name:
+            continue
+        scanned += 1
+        score = _match_score(target_terms, name)
+        element = UiaElementInfo(
+            name=name,
+            control_type="ListItem",
+            rect={"left": float(rect.left), "top": float(rect.top), "right": float(rect.right), "bottom": float(rect.bottom)},
+            source="win32_desktop",
+        ).to_dict()
+        if best is None or score > best[0]:
+            best = (score, element)
+            if score >= early_score:
+                return _build_match(best, target_terms), scanned
+    if best is None or best[0] < min_score:
+        return None, scanned
+    return _build_match(best, target_terms), scanned
+
+
+def _build_match(best: tuple[float, dict[str, Any]], target_terms: list[str]) -> dict[str, Any]:
+    return {
+        "element": best[1],
+        "score": round(best[0], 3),
+        "target_terms": target_terms,
+    }
+
+
+def _iter_wrapper_with_children(root, max_count: int, max_depth: int):
+    yield root
+    yield from _iter_bounded_children(root, max_count=max_count, max_depth=max_depth)
 
 
 def _iter_bounded_children(root, max_count: int, max_depth: int):
@@ -152,6 +294,12 @@ def _iter_bounded_children(root, max_count: int, max_depth: int):
 
 
 def _append_element(elements: list[UiaElementInfo], wrapper, seen: set[tuple[str, int, int, int, int]] | None = None) -> None:
+    element = _read_element(wrapper, seen)
+    if element is not None:
+        elements.append(element)
+
+
+def _read_element(wrapper, seen: set[tuple[str, int, int, int, int]] | None = None) -> UiaElementInfo | None:
     try:
         info = wrapper.element_info
         name = str(getattr(info, "name", "") or "").strip()
@@ -168,17 +316,22 @@ def _append_element(elements: list[UiaElementInfo], wrapper, seen: set[tuple[str
         dedupe_key = (name.lower(), round(left), round(top), round(right), round(bottom))
         if seen is not None:
             if dedupe_key in seen:
-                return
+                return None
             seen.add(dedupe_key)
-        elements.append(
-            UiaElementInfo(
-                name=name,
-                control_type=control_type,
-                rect={"left": left, "top": top, "right": right, "bottom": bottom},
-            )
+        return UiaElementInfo(
+            name=name,
+            control_type=control_type,
+            rect={"left": left, "top": top, "right": right, "bottom": bottom},
         )
     except Exception:
-        return
+        return None
+
+
+def _wrapper_key(wrapper) -> int:
+    try:
+        return int(wrapper.handle)
+    except Exception:
+        return id(wrapper)
 
 
 def _target_terms(message: str) -> list[str]:

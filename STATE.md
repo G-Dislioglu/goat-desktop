@@ -224,6 +224,9 @@ local_uia_search_status_source_2026_05_25:
 screen_question_local_direct_answer_2026_05_25:
 "Textchat-Screenfragen werden direkt lokal beantwortet, wenn GOAT einen klaren UIA- oder Vision-Kontext hat. Dadurch wartet GOAT bei Fragen wie `Siehst du StepStack?` nicht mehr auf den Builder-Chat, sondern nutzt den bereits geprueften Screen-Kontext. Bei unsicherem oder nicht verfuegbarem Screen-Kontext bleibt der normale Builder-Chat/Fallback-Pfad erhalten."
 
+desktop_icon_fast_path_2026_05_25:
+"Screenfragen nach Desktop-Icons nutzen jetzt zuerst einen read-only Win32-Desktop-Icon-Pfad vor dem langsameren UIA-Fallback. Live-Smoke mit sichtbarem `stepstack` fand das Ziel im isolierten ersten Lauf in ca. 1767ms und danach warm in ca. 244-316ms, statt mehrere Sekunden UIA-Vollscan. Der Status zeigt dafuer `Bildschirm: Desktop gesehen`; Cue-Marker behalten die Quelle `win32_desktop`."
+
 popup_product_simplification_2026_05_17:
 "Popup-UI produktnaeher verschlankt. Entfernt aus sichtbarer Haupt-UI: statische Tabellenbeschriftungen, Dev-Button 'Cue testen' und manuelle Ball-Pfeiltasten. Ballsteuerung bleibt im Tray-Menue fuer Debug/Recovery, aber normaler Produktpfad ist GOAT setzt den Ball auf erkannte Ziele/Felder/Buttons. Status wird als kompakte Chips angezeigt; Screen-Kontext, Maya-Antwort und Zielmarkierung sind groessere Ausgabefelder. Bevorzugte Popup-Groesse bleibt kompakt."
 
