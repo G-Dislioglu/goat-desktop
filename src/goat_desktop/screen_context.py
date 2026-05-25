@@ -46,6 +46,38 @@ def build_screen_context_summary(capture: dict[str, Any], hint: Any) -> str:
     return f"{title} ({scope}): {label}{where}. Vertrauen {confidence:.2f}, {time_ms:.0f}ms{source}."
 
 
+def build_screen_marker_from_hint(capture: dict[str, Any], hint: Any, min_confidence: float = 0.35) -> dict[str, Any] | None:
+    label = str(getattr(hint, "label", "") or "").strip()
+    position = str(getattr(hint, "rough_position", "") or "").strip()
+    confidence = float(getattr(hint, "confidence", 0.0) or 0.0)
+    if not label or not position or confidence < min_confidence:
+        return None
+    if is_uncertain_screen_context(label):
+        return None
+    capture_info = capture.get("capture") if isinstance(capture.get("capture"), dict) else {}
+    width = float(capture_info.get("width") or 0.0)
+    height = float(capture_info.get("height") or 0.0)
+    left = float(capture_info.get("left") or 0.0)
+    top = float(capture_info.get("top") or 0.0)
+    if width <= 0 or height <= 0:
+        return None
+    center_x, center_y = _rough_position_to_center(position, left, top, width, height)
+    region_width = max(80.0, width * 0.12)
+    region_height = max(60.0, height * 0.10)
+    return {
+        "available": True,
+        "label": label,
+        "region": {
+            "x": round(center_x - region_width / 2, 2),
+            "y": round(center_y - region_height / 2, 2),
+            "width": round(region_width, 2),
+            "height": round(region_height, 2),
+        },
+        "confidence": confidence,
+        "source": "vision_rough_position",
+    }
+
+
 def should_use_screen_context(message: str) -> bool:
     normalized = " ".join(message.strip().lower().split())
     return any(trigger in normalized for trigger in _SCREEN_CONTEXT_TRIGGERS)
@@ -92,6 +124,21 @@ def _clean_seen_context(screen_context: str) -> str:
     if ". Vertrauen " in context:
         context = context.split(". Vertrauen ", 1)[0].strip()
     return context.rstrip(".") + "."
+
+
+def _rough_position_to_center(position: str, left: float, top: float, width: float, height: float) -> tuple[float, float]:
+    normalized = position.strip().lower()
+    x_fraction = 0.5
+    y_fraction = 0.5
+    if "links" in normalized or "left" in normalized:
+        x_fraction = 0.2
+    elif "rechts" in normalized or "right" in normalized:
+        x_fraction = 0.8
+    if "oben" in normalized or "top" in normalized:
+        y_fraction = 0.2
+    elif "unten" in normalized or "bottom" in normalized:
+        y_fraction = 0.8
+    return left + width * x_fraction, top + height * y_fraction
 
 
 def is_unavailable_chat_response(response_text: str) -> bool:

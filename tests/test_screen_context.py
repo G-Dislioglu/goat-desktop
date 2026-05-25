@@ -3,6 +3,7 @@ from __future__ import annotations
 from goat_desktop.screen_context import (
     VISION_CONTEXT_PROMPT,
     build_chat_context,
+    build_screen_marker_from_hint,
     build_screen_context_display_status,
     build_screen_context_fallback_response,
     build_screen_context_prompt,
@@ -90,3 +91,27 @@ def test_unavailable_chat_response_detection() -> None:
     assert is_unavailable_chat_response("Maya-KI ist im Builder gerade nicht erreichbar.") is True
     assert is_unavailable_chat_response("GOAT_BUILDER_URL and GOAT_BUILDER_TOKEN are required") is True
     assert is_unavailable_chat_response("Der Ordner ist links oben sichtbar.") is False
+
+
+def test_build_screen_marker_from_hint_maps_rough_position() -> None:
+    marker = build_screen_marker_from_hint(
+        {"capture": {"left": 0, "top": 0, "width": 1000, "height": 800}},
+        Hint(),
+    )
+
+    assert marker is not None
+    assert marker["label"] == "Senden-Button und Texteingabe sichtbar"
+    assert marker["region"] == {"x": 740.0, "y": 600.0, "width": 120.0, "height": 80.0}
+    assert marker["source"] == "vision_rough_position"
+
+
+def test_build_screen_marker_from_hint_requires_confidence() -> None:
+    class LowConfidenceHint(Hint):
+        confidence = 0.0
+
+    marker = build_screen_marker_from_hint(
+        {"capture": {"left": 0, "top": 0, "width": 1000, "height": 800}},
+        LowConfidenceHint(),
+    )
+
+    assert marker is None

@@ -11,6 +11,9 @@ text_chat_screen_context_fallback_2026_05_25:
 main_ux_screen_question_clarity_2026_05_25:
 "Haupt-UX fuer Textchat-Screenfragen vereinfacht. Der manuelle Vision/Button-Pfad bleibt aus der sichtbaren Haupt-UI heraus; Screenfragen laufen ueber den normalen Textchat. Antworten sind jetzt klar als `Gesehen: ...` oder `Nicht sicher gesehen: ...` formuliert, und das Statusfeld zeigt kompakt `Bildschirm: Ziel gesehen` bzw. `Bildschirm: Ziel nicht sicher gesehen` statt roher Vision-Zusammenfassung. Live-Smoke: visible_desktop capture ok, Vision ok, Temp-Screenshot geloescht, finale Antwort `Nicht sicher gesehen: Ziel ist nicht klar erkennbar.` Full Suite gruen: 119 Tests."
 
+text_chat_screen_marker_cue_2026_05_25:
+"Textchat-Screenfragen koennen jetzt bei ausreichend sicherem Vision-Hinweis einen read-only Cue-Ball setzen. GOAT wandelt `rough_position` wie `oben links` oder `unten rechts` in eine grobe Bildschirmregion um und bewegt nur den Marker; keine Klicks, keine Tastatur, keine Desktop-Aktion. Unsichere Vision (`confidence=0`, `unknown`) setzt bewusst keinen Cue. Live-Smoke: aktueller Desktop capture ok, Vision unsicher -> marker=None; synthetischer read-only /screen-marker Smoke akzeptiert und effects bleiben alle false. Full Suite gruen: 121 Tests."
+
 maya_chat_builder_proxy_code_ready_2026_05_17:
 "Desktop-seitige Maya-Textchat-Anbindung vorbereitet am 2026-05-17. Implementiert: chat_hint.py mit GOAT_CHAT_MODE=builder_proxy, POST /api/goat/chat, Bearer-Auth, Reasoning-Parameter, optionalem GOAT_BUILDER_RESOLVE_IP und fail-closed uncertain bei Fehlern. Das LiveTalk-Textfeld nutzt jetzt diesen Adapter statt einer lokalen Fake-Antwort. Live-Pruefung gegen Soulmatch: /api/goat/stt, /api/goat/tts und /api/goat/vision-hint sind erreichbar; /api/goat/chat liefert aktuell 404. Deshalb ist Maya-Text-KI code_ready, aber nicht completed. Tests gruen: test_chat_builder_proxy.py plus LiveTalk/STT/TTS-Subset."
 

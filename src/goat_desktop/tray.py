@@ -26,6 +26,7 @@ from goat_desktop.screen import capture_visible_desktop
 from goat_desktop.screen_context import (
     VISION_CONTEXT_PROMPT,
     build_chat_context,
+    build_screen_marker_from_hint,
     build_screen_context_display_status,
     build_screen_context_fallback_response,
     build_screen_context_prompt,
@@ -377,10 +378,12 @@ class GoatTrayApp:
 
     def _chat_message_worker(self, text: str, target: str, provider: str, reasoning: str) -> None:
         screen_context = self._last_screen_context
+        screen_marker = None
         if should_use_screen_context(text):
             screen_context_result = self._capture_screen_context_for_message(text, provider, reasoning)
             if screen_context_result.get("status") == "ok":
                 screen_context = str(screen_context_result.get("summary") or "")
+                screen_marker = screen_context_result.get("marker") if isinstance(screen_context_result.get("marker"), dict) else None
             elif not screen_context:
                 screen_context = f"Bildschirm-Kontext nicht verfuegbar: {screen_context_result.get('error') or 'Vision fehlgeschlagen'}"
         result = request_chat_response(
@@ -397,6 +400,7 @@ class GoatTrayApp:
                 "response_text": response_text,
                 "is_screen_question": should_use_screen_context(text),
                 "screen_context": screen_context,
+                "marker": screen_marker,
                 "chat": result.to_dict(),
             }
         )
@@ -423,6 +427,7 @@ class GoatTrayApp:
                 return {
                     "status": "ok",
                     "summary": build_screen_context_summary(capture, hint),
+                    "marker": build_screen_marker_from_hint(capture, hint),
                     "capture": capture,
                     "hint": hint.to_dict(),
                 }
@@ -442,6 +447,13 @@ class GoatTrayApp:
             self.popup.screen_context_value.setText(str(payload.get("message") or ""))
         response_text = str(payload.get("response_text") or "")
         self.popup.maya_value.setText(response_text)
+        marker = payload.get("marker") if isinstance(payload.get("marker"), dict) else None
+        if marker and isinstance(marker.get("region"), dict):
+            region = marker["region"]
+            x = int(float(region["x"]) + float(region["width"]) / 2)
+            y = int(float(region["y"]) + float(region["height"]) / 2)
+            self.move_ball_to_cue(x, y)
+            self.popup.target_value.setText(f"Ziel markiert: {marker.get('label') or 'Vision-Ziel'}")
         self._set_read_aloud_available(response_text)
 
     def request_screen_context(self) -> None:
