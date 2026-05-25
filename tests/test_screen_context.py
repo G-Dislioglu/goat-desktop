@@ -3,6 +3,7 @@ from __future__ import annotations
 from goat_desktop.screen_context import (
     VISION_CONTEXT_PROMPT,
     build_chat_context,
+    build_screen_context_fallback_response,
     build_screen_context_prompt,
     build_screen_context_summary,
     should_use_screen_context,
@@ -56,3 +57,15 @@ def test_build_screen_context_prompt_includes_user_question() -> None:
     assert VISION_CONTEXT_PROMPT in prompt
     assert "Wo ist StepStack?" in prompt
     assert "gesuchte Ziel sichtbar" in prompt
+
+
+def test_screen_context_fallback_response_handles_uncertain_context() -> None:
+    response = build_screen_context_fallback_response("Codex (visible_desktop): uncertain bei unknown.")
+
+    assert response == "Ich sehe das gesuchte Ziel nicht sicher. Bitte freier sichtbar machen."
+
+
+def test_screen_context_fallback_response_uses_context_when_clear() -> None:
+    response = build_screen_context_fallback_response("Desktop: StepStack Ordner links oben sichtbar.")
+
+    assert "StepStack" in response

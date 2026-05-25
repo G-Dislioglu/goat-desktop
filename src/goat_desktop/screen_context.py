@@ -19,7 +19,6 @@ _SCREEN_CONTEXT_TRIGGERS = (
     "zeig mir",
     "welcher button",
     "welche schaltflaeche",
-    "welche schaltfläche",
     "ist der ordner",
     "ist die datei",
     "auf meinem desktop",
@@ -61,6 +60,15 @@ def build_screen_context_prompt(message: str) -> str:
         f"User-Frage: {clean_message}. "
         "Erkenne besonders, ob das gesuchte Ziel sichtbar ist und wo es grob liegt."
     )
+
+
+def build_screen_context_fallback_response(screen_context: str) -> str:
+    context = screen_context.strip()
+    if not context or context == "-":
+        return "Ich kann den Bildschirm gerade nicht sicher lesen."
+    if "uncertain" in context.lower() or "kein klarer" in context.lower():
+        return "Ich sehe das gesuchte Ziel nicht sicher. Bitte freier sichtbar machen."
+    return context
 
 
 def build_chat_context(screen_context: str, target: str) -> dict[str, str]:

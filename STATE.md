@@ -5,6 +5,9 @@ last_verified_against_code: 2026-05-16
 text_chat_auto_screen_context_2026_05_25:
 "GOAT Desktop Textchat nutzt Bildschirmkontext jetzt automatisch fuer sichtbare Ziel-/Navigationsfragen wie `wo ist ...`, `siehst du ...`, `zeig mir ...` oder `navigier ...`. Der Hauptworkflow braucht dafuer keinen manuellen `Bildschirm pruefen`-Button: GOAT captured den sichtbaren Desktop in einem temporaeren Ordner, fragt Builder Vision nach kurzer semantischer Zusammenfassung, loescht den Screenshot automatisch und gibt den Kontext an Maya Chat weiter. Vision bleibt read-only; es werden keine Klicks, Tastatur- oder Desktop-Aktionen ausgefuehrt. Tests gruen: compileall, fokussiertes Screen/Chat/Vision-Subset und volle Suite mit 114 Tests."
 
+text_chat_screen_context_fallback_2026_05_25:
+"GOAT Desktop Textchat hat jetzt einen lokalen read-only Fallback fuer Bildschirmfragen, falls Builder-Chat inhaltlich `Maya-KI nicht erreichbar` meldet. Der Screen-/Vision-Kontext wird dann direkt als kurze Antwort genutzt; bei unsicherer Vision sagt GOAT klar, dass das Ziel nicht sicher sichtbar ist. Live-Smoke: visible_desktop capture ok, Temp-Screenshot geloescht, Vision gemini_flash_lite ok, Builder-Chat-Ausfall erkannt, finale Antwort lokal sinnvoll statt Builder-Fehler. Keine Desktop-Aktionen."
+
 maya_chat_builder_proxy_code_ready_2026_05_17:
 "Desktop-seitige Maya-Textchat-Anbindung vorbereitet am 2026-05-17. Implementiert: chat_hint.py mit GOAT_CHAT_MODE=builder_proxy, POST /api/goat/chat, Bearer-Auth, Reasoning-Parameter, optionalem GOAT_BUILDER_RESOLVE_IP und fail-closed uncertain bei Fehlern. Das LiveTalk-Textfeld nutzt jetzt diesen Adapter statt einer lokalen Fake-Antwort. Live-Pruefung gegen Soulmatch: /api/goat/stt, /api/goat/tts und /api/goat/vision-hint sind erreichbar; /api/goat/chat liefert aktuell 404. Deshalb ist Maya-Text-KI code_ready, aber nicht completed. Tests gruen: test_chat_builder_proxy.py plus LiveTalk/STT/TTS-Subset."
 

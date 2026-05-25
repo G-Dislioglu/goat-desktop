@@ -26,6 +26,7 @@ from goat_desktop.screen import capture_visible_desktop
 from goat_desktop.screen_context import (
     VISION_CONTEXT_PROMPT,
     build_chat_context,
+    build_screen_context_fallback_response,
     build_screen_context_prompt,
     build_screen_context_summary,
     should_use_screen_context,
@@ -384,11 +385,14 @@ class GoatTrayApp:
             text,
             context=build_chat_context(screen_context, target),
         )
+        response_text = result.response_text
+        if should_use_screen_context(text) and _chat_response_unavailable(response_text):
+            response_text = build_screen_context_fallback_response(screen_context)
         self.popup.chat_finished.emit(
             {
                 "status": result.status,
                 "message": text,
-                "response_text": result.response_text,
+                "response_text": response_text,
                 "screen_context": screen_context,
                 "chat": result.to_dict(),
             }
@@ -721,3 +725,12 @@ def _streaming_livetalk_enabled() -> bool:
 
 def _video_frames_enabled() -> bool:
     return os.environ.get("GOAT_LIVETALK_VIDEO_FRAMES", "0").strip().lower() not in {"0", "false", "no", "off"}
+
+
+def _chat_response_unavailable(response_text: str) -> bool:
+    normalized = response_text.strip().lower()
+    return (
+        "maya-ki ist im builder gerade nicht erreichbar" in normalized
+        or "maya-ki ist noch nicht live angebunden" in normalized
+        or "goat_builder_url and goat_builder_token are required" in normalized
+    )
