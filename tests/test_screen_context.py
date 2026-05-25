@@ -60,6 +60,9 @@ def test_build_screen_context_prompt_includes_user_question() -> None:
     assert VISION_CONTEXT_PROMPT in prompt
     assert "Wo ist StepStack?" in prompt
     assert "gesuchte Ziel sichtbar" in prompt
+    assert "semantic_label" in prompt
+    assert "approximate_position" in prompt
+    assert "confidence" in prompt
 
 
 def test_screen_context_fallback_response_handles_uncertain_context() -> None:

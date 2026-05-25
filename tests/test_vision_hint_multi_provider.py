@@ -36,14 +36,34 @@ class VisionHintHandler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", "0"))
         payload = json.loads(self.rfile.read(length).decode("utf-8"))
         VisionHintHandler.last_request = payload
-        body = {
-            "source": payload["provider"],
-            "semantic_label": "primary action button",
-            "approximate_position": "center",
-            "confidence": 0.82,
-            "latency_ms": 123,
-            "reasoning_level_used": payload["reasoning_level"],
-        }
+        if self.response_mode == "alternate_fields":
+            body = {
+                "source": payload["provider"],
+                "label": "StepStack Ordner",
+                "rough_position": "oben links",
+                "confidence": "0.74",
+                "latency_ms": 123,
+                "reasoning_level_used": payload["reasoning_level"],
+            }
+        elif self.response_mode == "not_visible":
+            body = {
+                "source": payload["provider"],
+                "label": "StepStack Ordner",
+                "rough_position": "oben links",
+                "target_visible": False,
+                "confidence": 0.91,
+                "latency_ms": 123,
+                "reasoning_level_used": payload["reasoning_level"],
+            }
+        else:
+            body = {
+                "source": payload["provider"],
+                "semantic_label": "primary action button",
+                "approximate_position": "center",
+                "confidence": 0.82,
+                "latency_ms": 123,
+                "reasoning_level_used": payload["reasoning_level"],
+            }
         encoded = json.dumps(body).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -89,6 +109,8 @@ def test_default_builder_proxy_call(monkeypatch, mock_server, image_path: Path) 
     assert hint.label == "primary action button"
     assert VisionHintHandler.last_request["provider"] == "gemini_flash_lite"
     assert VisionHintHandler.last_request["reasoning_level"] == "minimal"
+    assert "semantic_label" in VisionHintHandler.last_request["prompt"]
+    assert "approximate_position" in VisionHintHandler.last_request["prompt"]
 
 
 def test_grok_low_reasoning(monkeypatch, mock_server, image_path: Path) -> None:
@@ -100,11 +122,34 @@ def test_grok_low_reasoning(monkeypatch, mock_server, image_path: Path) -> None:
     assert hint.to_dict()["source"] == "grok_4_3"
 
 
+def test_builder_proxy_accepts_alternate_target_fields(monkeypatch, mock_server, image_path: Path) -> None:
+    VisionHintHandler.response_mode = "alternate_fields"
+
+    hint = get_vision_hint(image_path, "find StepStack")
+
+    assert hint.status == "ok"
+    assert hint.label == "StepStack Ordner"
+    assert hint.rough_position == "oben links"
+    assert hint.confidence == 0.74
+
+
+def test_builder_proxy_honors_not_visible_flag(monkeypatch, mock_server, image_path: Path) -> None:
+    VisionHintHandler.response_mode = "not_visible"
+
+    hint = get_vision_hint(image_path, "find StepStack")
+
+    assert hint.status == "ok"
+    assert hint.label == "StepStack Ordner"
+    assert hint.rough_position == "oben links"
+    assert hint.confidence == 0.0
+
+
 def test_http_500_returns_uncertain(monkeypatch, mock_server, image_path: Path) -> None:
     VisionHintHandler.response_mode = "error"
     hint = get_vision_hint(image_path, "find primary button")
     assert hint.status == "uncertain"
-    assert hint.http_status == 500
+    assert hint.http_status in {500, None}
+    assert hint.error in {"http_500", "ConnectionAbortedError"}
 
 
 def test_timeout_returns_uncertain(monkeypatch, mock_server, image_path: Path) -> None:

@@ -191,7 +191,7 @@ def _builder_proxy_hint(image_path: Path, prompt: str, config: VisionHintConfig)
 
     body = {
         "screenshot_base64": base64.b64encode(image_path.read_bytes()).decode("ascii"),
-        "prompt": prompt,
+        "prompt": _builder_vision_prompt(prompt),
         "provider": config.provider.value,
         "reasoning_level": config.reasoning_level.value,
         "max_tokens": 300,
@@ -227,11 +227,19 @@ def _builder_proxy_hint(image_path: Path, prompt: str, config: VisionHintConfig)
             started=started,
         )
 
+    label = _first_text(payload, "semantic_label", "label", "target_label", "target")
+    rough_position = _first_text(payload, "approximate_position", "rough_position", "position", "where")
+    confidence = _coerce_confidence(payload.get("confidence"))
+    if _payload_marks_target_invisible(payload):
+        label = label or "uncertain"
+        rough_position = rough_position or "unknown"
+        confidence = 0.0
+
     return VisionHint(
         provider=str(payload.get("source") or config.provider.value),
-        label=str(payload.get("semantic_label") or ""),
-        rough_position=str(payload.get("approximate_position") or ""),
-        confidence=float(payload.get("confidence") or 0.0),
+        label=label,
+        rough_position=rough_position,
+        confidence=confidence,
         time_ms=float(payload.get("latency_ms") or round((time.perf_counter() - started) * 1000, 2)),
         reasoning_level=str(payload.get("reasoning_level_used") or config.reasoning_level.value),
         http_status=http_status,
@@ -342,6 +350,41 @@ def _uncertain_hint(
             "authority": "semantic_hint_only",
             "fallback": "uncertain_hint",
         },
+    )
+
+
+def _first_text(payload: dict[str, Any], *keys: str) -> str:
+    for key in keys:
+        value = payload.get(key)
+        if value is not None:
+            text = str(value).strip()
+            if text:
+                return text
+    return ""
+
+
+def _coerce_confidence(value: Any) -> float:
+    try:
+        confidence = float(value or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+    return max(0.0, min(1.0, confidence))
+
+
+def _payload_marks_target_invisible(payload: dict[str, Any]) -> bool:
+    for key in ("target_visible", "visible", "found", "available"):
+        if payload.get(key) is False:
+            return True
+    return False
+
+
+def _builder_vision_prompt(prompt: str) -> str:
+    return (
+        f"{prompt.strip()}\n"
+        "Return semantic target fields for GOAT Desktop: semantic_label, approximate_position, confidence. "
+        "semantic_label names the visible target or `uncertain`. "
+        "approximate_position is one of: oben links, oben, oben rechts, links, mitte, rechts, unten links, unten, unten rechts, unknown. "
+        "confidence is 0.0 if not visible or uncertain, otherwise 0.35 to 1.0. Do not return pixel coordinates."
     )
 
 

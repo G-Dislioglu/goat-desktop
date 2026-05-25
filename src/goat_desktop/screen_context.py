@@ -90,7 +90,11 @@ def build_screen_context_prompt(message: str) -> str:
     return (
         f"{VISION_CONTEXT_PROMPT} "
         f"User-Frage: {clean_message}. "
-        "Erkenne besonders, ob das gesuchte Ziel sichtbar ist und wo es grob liegt."
+        "Erkenne besonders, ob das gesuchte Ziel sichtbar ist und wo es grob liegt. "
+        "Antworte fuer GOAT maschinenlesbar mit: semantic_label, approximate_position, confidence. "
+        "semantic_label soll das sichtbare Ziel konkret benennen oder `uncertain` sein. "
+        "approximate_position soll eine grobe Lage sein: oben links, oben, oben rechts, links, mitte, rechts, unten links, unten, unten rechts oder unknown. "
+        "confidence: 0.0 wenn nicht sichtbar/unsicher, sonst 0.35 bis 1.0. Keine Pixelkoordinaten."
     )
 
 
