@@ -32,6 +32,7 @@ from goat_desktop.screen_context import (
     build_screen_context_prompt,
     build_screen_context_summary,
     is_unavailable_chat_response,
+    should_answer_screen_question_locally,
     should_use_screen_context,
 )
 from goat_desktop.stt_hint import load_stt_config
@@ -380,29 +381,43 @@ class GoatTrayApp:
     def _chat_message_worker(self, text: str, target: str, provider: str, reasoning: str) -> None:
         screen_context = self._last_screen_context
         screen_marker = None
-        if should_use_screen_context(text):
+        is_screen_question = should_use_screen_context(text)
+        if is_screen_question:
             screen_context_result = self._resolve_screen_context_for_message(text, provider, reasoning)
             if screen_context_result.get("status") == "ok":
                 screen_context = str(screen_context_result.get("summary") or "")
                 screen_marker = screen_context_result.get("marker") if isinstance(screen_context_result.get("marker"), dict) else None
             elif not screen_context:
                 screen_context = f"Bildschirm-Kontext nicht verfuegbar: {screen_context_result.get('error') or 'Vision fehlgeschlagen'}"
-        result = request_chat_response(
-            text,
-            context=build_chat_context(screen_context, target),
-        )
-        response_text = result.response_text
-        if should_use_screen_context(text) and is_unavailable_chat_response(response_text):
+        if should_answer_screen_question_locally(text, screen_context):
             response_text = build_screen_context_fallback_response(screen_context)
+            chat_payload = {
+                "status": "ok",
+                "provider": "goat_local_screen_context",
+                "reasoning_level": "none",
+                "confidence": 1.0,
+                "raw_evidence": {"source": "screen_context_direct"},
+            }
+            chat_status = "ok"
+        else:
+            result = request_chat_response(
+                text,
+                context=build_chat_context(screen_context, target),
+            )
+            response_text = result.response_text
+            if is_screen_question and is_unavailable_chat_response(response_text):
+                response_text = build_screen_context_fallback_response(screen_context)
+            chat_payload = result.to_dict()
+            chat_status = result.status
         self.popup.chat_finished.emit(
             {
-                "status": result.status,
+                "status": chat_status,
                 "message": text,
                 "response_text": response_text,
-                "is_screen_question": should_use_screen_context(text),
+                "is_screen_question": is_screen_question,
                 "screen_context": screen_context,
                 "marker": screen_marker,
-                "chat": result.to_dict(),
+                "chat": chat_payload,
             }
         )
 

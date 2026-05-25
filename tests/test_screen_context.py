@@ -8,7 +8,9 @@ from goat_desktop.screen_context import (
     build_screen_context_fallback_response,
     build_screen_context_prompt,
     build_screen_context_summary,
+    is_clear_screen_context,
     is_unavailable_chat_response,
+    should_answer_screen_question_locally,
     should_use_screen_context,
 )
 
@@ -71,6 +73,12 @@ def test_screen_context_fallback_response_handles_uncertain_context() -> None:
     assert response == "Nicht sicher gesehen: Ziel ist nicht klar erkennbar."
 
 
+def test_screen_context_fallback_response_handles_unavailable_context() -> None:
+    response = build_screen_context_fallback_response("Bildschirm-Kontext nicht verfuegbar: vision failed")
+
+    assert response == "Nicht sicher gesehen: Bildschirm konnte nicht gelesen werden."
+
+
 def test_screen_context_fallback_response_uses_context_when_clear() -> None:
     response = build_screen_context_fallback_response("Desktop: StepStack Ordner links oben sichtbar.")
 
@@ -95,6 +103,21 @@ def test_screen_context_display_status_is_compact() -> None:
     assert build_screen_context_display_status("Codex: uncertain bei unknown. Vertrauen 0.00.") == "Bildschirm: Ziel nicht sicher gesehen"
     assert build_screen_context_display_status("Explorer: StepStack sichtbar. Vertrauen 0.82.") == "Bildschirm: Vision gesehen"
     assert build_screen_context_display_status("Lokales UIA: StepStack (ListItem) sichtbar. Vertrauen 0.95 via uia.") == "Bildschirm: UIA gesehen"
+
+
+def test_clear_screen_context_excludes_uncertain_and_unavailable() -> None:
+    assert is_clear_screen_context("Lokales UIA: StepStack (ListItem) sichtbar. Vertrauen 0.95 via uia.") is True
+    assert is_clear_screen_context("Codex: uncertain bei unknown. Vertrauen 0.00.") is False
+    assert is_clear_screen_context("Bildschirm-Kontext nicht verfuegbar: vision failed") is False
+    assert is_clear_screen_context("-") is False
+
+
+def test_screen_question_can_be_answered_locally_when_context_is_clear() -> None:
+    context = "Lokales UIA: StepStack (ListItem) sichtbar. Vertrauen 0.95 via uia."
+
+    assert should_answer_screen_question_locally("Siehst du den StepStack Ordner?", context) is True
+    assert should_answer_screen_question_locally("Fasse den Plan zusammen.", context) is False
+    assert should_answer_screen_question_locally("Siehst du StepStack?", "Codex: uncertain bei unknown. Vertrauen 0.00.") is False
 
 
 def test_unavailable_chat_response_detection() -> None:

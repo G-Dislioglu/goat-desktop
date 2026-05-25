@@ -100,7 +100,7 @@ def build_screen_context_prompt(message: str) -> str:
 
 def build_screen_context_fallback_response(screen_context: str) -> str:
     context = screen_context.strip()
-    if not context or context == "-":
+    if is_unavailable_screen_context(context):
         return "Nicht sicher gesehen: Bildschirm konnte nicht gelesen werden."
     if is_uncertain_screen_context(context):
         return "Nicht sicher gesehen: Ziel ist nicht klar erkennbar."
@@ -120,9 +120,31 @@ def build_screen_context_display_status(screen_context: str) -> str:
     return "Bildschirm: Vision gesehen"
 
 
+def is_clear_screen_context(screen_context: str) -> bool:
+    context = screen_context.strip()
+    return bool(context) and context != "-" and not is_uncertain_screen_context(context) and not is_unavailable_screen_context(context)
+
+
+def should_answer_screen_question_locally(message: str, screen_context: str) -> bool:
+    return should_use_screen_context(message) and is_clear_screen_context(screen_context)
+
+
 def is_uncertain_screen_context(screen_context: str) -> bool:
     normalized = screen_context.strip().lower()
     return "uncertain" in normalized or "kein klarer" in normalized or "vertrauen 0.00" in normalized
+
+
+def is_unavailable_screen_context(screen_context: str) -> bool:
+    normalized = screen_context.strip().lower()
+    return (
+        not normalized
+        or normalized == "-"
+        or "bildschirm-kontext nicht verfuegbar" in normalized
+        or "bildschirm-kontext fehlgeschlagen" in normalized
+        or "bildschirm konnte nicht gelesen werden" in normalized
+        or "screen capture failed" in normalized
+        or "vision failed" in normalized
+    )
 
 
 def _clean_seen_context(screen_context: str) -> str:

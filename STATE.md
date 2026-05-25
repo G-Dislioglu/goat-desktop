@@ -221,6 +221,9 @@ popup_minimize_recovery_2026_05_17:
 local_uia_search_status_source_2026_05_25:
 "Lokaler UIA-Screen-Kontext verbreitert: GOAT liest sichtbare Fenster plus Desktop/Shell-Roots read-only aus, dedupliziert UIA-Elemente und normalisiert deutsche Umlaut-/ASCII-Schreibweisen fuer Treffer wie Schaltflaeche. Textchat-Screenfragen zeigen jetzt klarer die Quelle: `Bildschirm: UIA gesehen`, `Bildschirm: Vision gesehen`, `Bildschirm: Ziel nicht sicher gesehen` oder `Bildschirm: nicht gelesen`. Fallback-Antworten benennen UIA explizit als lokale Sichtquelle."
 
+screen_question_local_direct_answer_2026_05_25:
+"Textchat-Screenfragen werden direkt lokal beantwortet, wenn GOAT einen klaren UIA- oder Vision-Kontext hat. Dadurch wartet GOAT bei Fragen wie `Siehst du StepStack?` nicht mehr auf den Builder-Chat, sondern nutzt den bereits geprueften Screen-Kontext. Bei unsicherem oder nicht verfuegbarem Screen-Kontext bleibt der normale Builder-Chat/Fallback-Pfad erhalten."
+
 popup_product_simplification_2026_05_17:
 "Popup-UI produktnaeher verschlankt. Entfernt aus sichtbarer Haupt-UI: statische Tabellenbeschriftungen, Dev-Button 'Cue testen' und manuelle Ball-Pfeiltasten. Ballsteuerung bleibt im Tray-Menue fuer Debug/Recovery, aber normaler Produktpfad ist GOAT setzt den Ball auf erkannte Ziele/Felder/Buttons. Status wird als kompakte Chips angezeigt; Screen-Kontext, Maya-Antwort und Zielmarkierung sind groessere Ausgabefelder. Bevorzugte Popup-Groesse bleibt kompakt."
 
