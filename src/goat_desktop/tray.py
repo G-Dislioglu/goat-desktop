@@ -435,6 +435,7 @@ class GoatTrayApp:
         }
 
     def handle_bridge_screen_question(self, payload: dict) -> dict:
+        started = perf_counter()
         text = str(payload.get("message") or "").strip()
         if not text:
             return {"ok": False, "status": "error", "error": "message is required", "effects": _no_action_effects()}
@@ -442,7 +443,18 @@ class GoatTrayApp:
         reasoning = str(payload.get("reasoning") or self._screen_context_reasoning)
         result = self._build_chat_message_payload(text, self.popup.target_value.text(), provider, reasoning)
         self.popup.chat_finished.emit(result)
-        return {"ok": result.get("status") == "ok", "payload": result, "effects": _no_action_effects()}
+        elapsed_ms = round((perf_counter() - started) * 1000, 2)
+        return {
+            "ok": result.get("status") == "ok",
+            "time_ms": elapsed_ms,
+            "payload": result,
+            "evidence": {
+                "screen_context": result.get("screen_context"),
+                "marker_source": (result.get("marker") or {}).get("source") if isinstance(result.get("marker"), dict) else None,
+                "chat_provider": (result.get("chat") or {}).get("provider") if isinstance(result.get("chat"), dict) else None,
+            },
+            "effects": _no_action_effects(),
+        }
 
     def _resolve_screen_context_for_message(self, text: str, provider: str, reasoning: str) -> dict:
         uia_context = find_uia_match_for_message(text)

@@ -128,7 +128,7 @@ def find_uia_match_for_message(
 
 def build_uia_screen_context(match: dict[str, Any]) -> str:
     element = match.get("element") if isinstance(match.get("element"), dict) else {}
-    name = str(element.get("name") or "Ziel").strip() or "Ziel"
+    name = _display_name(str(element.get("name") or "Ziel"))
     control_type = str(element.get("control_type") or "UI-Element").strip() or "UI-Element"
     source = str(element.get("source") or "uia").strip() or "uia"
     prefix = "Lokales UIA" if source == "uia" else "Lokaler Screen"
@@ -153,7 +153,7 @@ def build_uia_marker(match: dict[str, Any]) -> dict[str, Any] | None:
     source = str(element.get("source") or "uia").strip() or "uia"
     return {
         "available": True,
-        "label": str(element.get("name") or "UIA-Ziel"),
+        "label": _display_name(str(element.get("name") or "UIA-Ziel")),
         "region": {
             "x": round(left, 2),
             "y": round(top, 2),
@@ -259,6 +259,20 @@ def _find_desktop_icon_match_win32(target_terms: list[str], min_score: float, ea
     if best is None or best[0] < min_score:
         return None, scanned
     return _build_match(best, target_terms), scanned
+
+
+def _display_name(name: str) -> str:
+    clean = name.strip()
+    if not clean:
+        return "Ziel"
+    known_names = {
+        "stepstack": "StepStack",
+    }
+    if clean.lower() in known_names:
+        return known_names[clean.lower()]
+    if clean.islower() and any(char.isalpha() for char in clean):
+        return clean[:1].upper() + clean[1:]
+    return clean
 
 
 def _build_match(best: tuple[float, dict[str, Any]], target_terms: list[str]) -> dict[str, Any]:

@@ -133,6 +133,7 @@ def test_build_uia_marker_preserves_element_source() -> None:
     marker = build_uia_marker(match)
 
     assert marker is not None
+    assert marker["label"] == "StepStack"
     assert marker["source"] == "win32_desktop"
 
 
@@ -157,6 +158,22 @@ def test_build_uia_screen_context_names_desktop_source() -> None:
             "score": 1.0,
             "element": {
                 "name": "StepStack",
+                "control_type": "ListItem",
+                "source": "win32_desktop",
+                "rect": {"left": 200, "top": 100, "right": 340, "bottom": 150},
+            },
+        }
+    )
+
+    assert context == "Lokaler Screen: StepStack (ListItem) sichtbar. Vertrauen 1.00 via win32_desktop."
+
+
+def test_build_uia_screen_context_capitalizes_lowercase_icon_name() -> None:
+    context = build_uia_screen_context(
+        {
+            "score": 1.0,
+            "element": {
+                "name": "stepstack",
                 "control_type": "ListItem",
                 "source": "win32_desktop",
                 "rect": {"left": 200, "top": 100, "right": 340, "bottom": 150},
