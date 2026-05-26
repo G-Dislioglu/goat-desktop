@@ -138,7 +138,7 @@ def test_tray_screen_question_local_miss_does_not_call_vision(monkeypatch) -> No
     )
 
     assert result["response_text"] == (
-        "Nicht sicher gesehen: Ziel ist im aktuellen Bildschirmbild nicht klar erkennbar. Grund: kein verlaesslicher Treffer."
+        "Nicht gefunden: Ich habe lokal geprueft, aber keinen passenden Treffer gesehen. Quelle: Desktop."
     )
     assert result["chat"]["provider"] == "goat_local_screen_context"
     assert result["screen_resolution"]["source_path"] == "uia_scan"

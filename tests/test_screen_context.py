@@ -10,6 +10,7 @@ from goat_desktop.screen_context import (
     build_screen_context_prompt,
     build_screen_context_summary,
     is_clear_screen_context,
+    is_local_screen_miss_context,
     is_unavailable_chat_response,
     should_answer_screen_question_locally,
     should_use_screen_context,
@@ -111,6 +112,14 @@ def test_screen_context_fallback_response_handles_uncertain_context() -> None:
     assert response == "Nicht sicher gesehen: Ziel ist im aktuellen Bildschirmbild nicht klar erkennbar. Grund: Position unklar."
 
 
+def test_screen_context_fallback_response_handles_local_miss_as_not_found() -> None:
+    response = build_screen_context_fallback_response(
+        "Lokaler Screen: Ziel fuer 'stepstack' nicht sicher gesehen, 12 Elemente gelesen. Vertrauen 0.00 via win32_desktop_miss."
+    )
+
+    assert response == "Nicht gefunden: Ich habe lokal geprueft, aber keinen passenden Treffer gesehen. Quelle: Desktop."
+
+
 def test_screen_context_fallback_response_handles_unavailable_context() -> None:
     response = build_screen_context_fallback_response("Bildschirm-Kontext nicht verfuegbar: vision failed")
 
@@ -168,6 +177,12 @@ def test_screen_context_fallback_response_names_window_and_taskbar_sources() -> 
 
 def test_screen_context_display_status_is_compact() -> None:
     assert build_screen_context_display_status("Codex: uncertain bei unknown. Vertrauen 0.00.") == "Bildschirm: Ziel nicht sicher gesehen"
+    assert (
+        build_screen_context_display_status(
+            "Lokaler Screen: Ziel fuer 'stepstack' nicht sicher gesehen, 12 Elemente gelesen. Vertrauen 0.00 via win32_desktop_miss."
+        )
+        == "Bildschirm: lokal geprueft, kein Treffer (Desktop)"
+    )
     assert build_screen_context_display_status("Explorer: StepStack sichtbar. Vertrauen 0.82.") == "Bildschirm: Vision gesehen"
     assert build_screen_context_display_status("Lokales UIA: StepStack (ListItem) sichtbar. Vertrauen 0.95 via uia.") == "Bildschirm: UIA gesehen"
     assert (
@@ -191,6 +206,13 @@ def test_clear_screen_context_excludes_uncertain_and_unavailable() -> None:
     assert is_clear_screen_context("Codex: uncertain bei unknown. Vertrauen 0.00.") is False
     assert is_clear_screen_context("Bildschirm-Kontext nicht verfuegbar: vision failed") is False
     assert is_clear_screen_context("-") is False
+
+
+def test_local_screen_miss_context_is_detected_before_generic_uncertain() -> None:
+    context = "Lokaler Screen: Ziel fuer 'stepstack' nicht sicher gesehen. Vertrauen 0.00 via uia_taskbar_miss."
+
+    assert is_local_screen_miss_context(context) is True
+    assert build_screen_context_display_status(context) == "Bildschirm: lokal geprueft, kein Treffer (Taskleiste)"
 
 
 def test_screen_question_can_be_answered_locally_when_context_is_clear() -> None:

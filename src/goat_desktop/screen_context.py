@@ -132,6 +132,10 @@ def build_screen_context_fallback_response(screen_context: str) -> str:
         reason = _unavailable_reason_for_context(context)
         reason_suffix = f" Grund: {reason}." if reason else ""
         return f"Nicht sicher gesehen: Bildschirm konnte nicht gelesen werden.{reason_suffix}"
+    if is_local_screen_miss_context(context):
+        source_label = _source_label_for_context(context)
+        source_suffix = f" Quelle: {source_label}." if source_label else ""
+        return f"Nicht gefunden: Ich habe lokal geprueft, aber keinen passenden Treffer gesehen.{source_suffix}"
     if is_uncertain_screen_context(context):
         reason = _uncertain_reason_for_context(context)
         reason_suffix = f" Grund: {reason}." if reason else ""
@@ -145,6 +149,9 @@ def build_screen_context_display_status(screen_context: str) -> str:
     context = screen_context.strip()
     if not context or context == "-":
         return "Bildschirm: nicht gelesen"
+    if is_local_screen_miss_context(context):
+        source_label = _source_label_for_context(context)
+        return f"Bildschirm: lokal geprueft, kein Treffer ({source_label})" if source_label else "Bildschirm: lokal geprueft, kein Treffer"
     if is_uncertain_screen_context(context):
         return "Bildschirm: Ziel nicht sicher gesehen"
     if _is_win32_window_context(context):
@@ -170,6 +177,24 @@ def should_answer_screen_question_locally(message: str, screen_context: str) -> 
 def is_uncertain_screen_context(screen_context: str) -> bool:
     normalized = screen_context.strip().lower()
     return "uncertain" in normalized or "kein klarer" in normalized or "vertrauen 0.00" in normalized
+
+
+def is_local_screen_miss_context(screen_context: str) -> bool:
+    normalized = screen_context.strip().lower()
+    return (
+        normalized.startswith("lokaler screen:")
+        and "nicht sicher gesehen" in normalized
+        and any(
+            marker in normalized
+            for marker in (
+                "via win32_desktop_miss",
+                "via win32_window_miss",
+                "via uia_taskbar_miss",
+                "via uia_scan",
+                "via local_screen",
+            )
+        )
+    )
 
 
 def is_unavailable_screen_context(screen_context: str) -> bool:
@@ -204,6 +229,12 @@ def _clean_seen_context(screen_context: str) -> str:
 
 
 def _source_label_for_context(screen_context: str) -> str:
+    if "via win32_desktop_miss" in screen_context:
+        return "Desktop"
+    if "via win32_window_miss" in screen_context:
+        return "Fensterliste"
+    if "via uia_taskbar_miss" in screen_context:
+        return "Taskleiste"
     if _is_win32_window_context(screen_context):
         return "Fensterliste"
     if _is_uia_taskbar_context(screen_context):
