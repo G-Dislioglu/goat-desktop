@@ -36,7 +36,7 @@ class FakeTray:
             "response_text": "Gesehen per Desktop: StepStack sichtbar.",
             "screen_context": "Lokaler Screen: StepStack sichtbar. Vertrauen 1.00 via win32_desktop.",
             "marker": {"source": "win32_desktop"},
-            "screen_resolution": {"source_path": "win32_desktop", "cache_hit": False, "elements_scanned": 2},
+            "screen_resolution": {"source_path": "win32_desktop", "cache_hit": False, "cache_refreshed": False, "elements_scanned": 2},
             "chat": {"provider": "goat_local_screen_context"},
         }
 
@@ -81,6 +81,7 @@ def test_tray_bridge_screen_question_returns_timing_and_evidence() -> None:
     assert body["evidence"]["chat_provider"] == "goat_local_screen_context"
     assert body["evidence"]["source_path"] == "win32_desktop"
     assert body["evidence"]["cache_hit"] is False
+    assert body["evidence"]["cache_refreshed"] is False
     assert body["evidence"]["elements_scanned"] == 2
     assert fake.popup.chat_finished.payloads[0]["response_text"] == "Gesehen per Desktop: StepStack sichtbar."
 

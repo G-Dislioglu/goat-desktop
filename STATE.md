@@ -245,6 +245,9 @@ screen_resolver_evidence_2026_05_26:
 taskbar_cache_sliding_ttl_2026_05_26:
 "Taskleisten-Cache nutzt jetzt eine Sliding-TTL von 120s: jeder Cache-Treffer verlaengert die Frische, statt nach 15s hart kalt zu werden. Direkte Messung nach Warmup: Taskleistenfrage ca. 0.25-0.36ms auch nach kurzer Pause. Live-Smoke nach GOAT-Neustart und Warmup: erster Bridge-Treffer 0.45ms, zweiter nach 3s 0.60ms, jeweils `source_path=uia_taskbar_cache`, `cache_hit=true`, keine Provider-/Desktop-/Maus-/Keyboard-Aktionen."
 
+taskbar_cache_miss_refresh_2026_05_26:
+"Taskleisten-Cache-Miss fuehrt jetzt einmalig zu einem Live-Scan und aktualisiert den Cache, statt beim alten Cache stehenzubleiben. Bridge-Evidence enthaelt `cache_refreshed`, sodass Scan/Cache/Refresh unterscheidbar sind. Unit-Test deckt warmen Cache ohne Ziel -> Live-Scan -> Cache-Ersetzung ab. Live-Smoke gegen laufenden GOAT-Prozess: erster Taskleistenrequest `source_path=uia_taskbar_scan`, `cache_hit=false`, `cache_refreshed=false`, 900.62ms Resolverzeit; zweiter Request `source_path=uia_taskbar_cache`, `cache_hit=true`, 0.62ms Resolverzeit. Keine Provider-/Desktop-/Maus-/Keyboard-Aktionen."
+
 popup_product_simplification_2026_05_17:
 "Popup-UI produktnaeher verschlankt. Entfernt aus sichtbarer Haupt-UI: statische Tabellenbeschriftungen, Dev-Button 'Cue testen' und manuelle Ball-Pfeiltasten. Ballsteuerung bleibt im Tray-Menue fuer Debug/Recovery, aber normaler Produktpfad ist GOAT setzt den Ball auf erkannte Ziele/Felder/Buttons. Status wird als kompakte Chips angezeigt; Screen-Kontext, Maya-Antwort und Zielmarkierung sind groessere Ausgabefelder. Bevorzugte Popup-Groesse bleibt kompakt."
 

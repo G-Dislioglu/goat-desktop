@@ -462,6 +462,9 @@ class GoatTrayApp:
                 "cache_hit": (result.get("screen_resolution") or {}).get("cache_hit")
                 if isinstance(result.get("screen_resolution"), dict)
                 else None,
+                "cache_refreshed": (result.get("screen_resolution") or {}).get("cache_refreshed")
+                if isinstance(result.get("screen_resolution"), dict)
+                else None,
                 "elements_scanned": (result.get("screen_resolution") or {}).get("elements_scanned")
                 if isinstance(result.get("screen_resolution"), dict)
                 else None,
@@ -485,6 +488,7 @@ class GoatTrayApp:
                         "source": uia_context.get("source"),
                         "source_path": uia_context.get("source_path"),
                         "cache_hit": uia_context.get("cache_hit"),
+                        "cache_refreshed": uia_context.get("cache_refreshed"),
                         "match": match,
                     },
                 }

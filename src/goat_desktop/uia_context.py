@@ -95,7 +95,7 @@ def find_uia_match_for_message(
                 "effects": _no_action_effects(),
             }
         if _message_mentions_taskbar(message):
-            taskbar_match, taskbar_scanned, taskbar_cache_hit = _find_taskbar_match_uia(
+            taskbar_match, taskbar_scanned, taskbar_cache_hit, taskbar_cache_refreshed = _find_taskbar_match_uia(
                 target_terms, min_score=min_score, early_score=early_score
             )
             if taskbar_match is not None:
@@ -107,6 +107,7 @@ def find_uia_match_for_message(
                     "source": "uia_taskbar",
                     "source_path": "uia_taskbar_cache" if taskbar_cache_hit else "uia_taskbar_scan",
                     "cache_hit": taskbar_cache_hit,
+                    "cache_refreshed": taskbar_cache_refreshed,
                     "effects": _no_action_effects(),
                 }
         if _message_mentions_window(message):
@@ -364,21 +365,21 @@ def _find_window_match_win32(target_terms: list[str], min_score: float, early_sc
     return _build_match(best, target_terms), scanned
 
 
-def _find_taskbar_match_uia(target_terms: list[str], min_score: float, early_score: float) -> tuple[dict[str, Any] | None, int, bool]:
+def _find_taskbar_match_uia(target_terms: list[str], min_score: float, early_score: float) -> tuple[dict[str, Any] | None, int, bool, bool]:
     cached_elements = _get_taskbar_cache()
     if cached_elements:
         match = _find_best_match_for_terms(cached_elements, target_terms, min_score=min_score)
         if match is not None:
             _mark_match_source(match, "uia_taskbar")
-            return match, len(cached_elements), True
+            return match, len(cached_elements), True, False
 
     elements, scanned = _collect_taskbar_elements_uia()
     _set_taskbar_cache(elements)
     match = _find_best_match_for_terms(elements, target_terms, min_score=min_score)
     if match is None:
-        return None, scanned, False
+        return None, scanned, False, bool(cached_elements)
     _mark_match_source(match, "uia_taskbar")
-    return match, scanned, False
+    return match, scanned, False, bool(cached_elements)
 
 
 def _collect_taskbar_elements_uia() -> tuple[list[dict[str, Any]], int]:

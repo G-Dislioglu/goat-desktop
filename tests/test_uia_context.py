@@ -234,8 +234,45 @@ def test_taskbar_match_uses_warmed_cache(monkeypatch) -> None:
     assert result["source"] == "uia_taskbar"
     assert result["source_path"] == "uia_taskbar_cache"
     assert result["cache_hit"] is True
+    assert result["cache_refreshed"] is False
     assert result["elements_scanned"] == 1
     assert result["match"]["element"]["name"] == "Codex - 1 aktives Fenster angeheftet"
+
+
+def test_taskbar_cache_miss_refreshes_from_live_scan(monkeypatch) -> None:
+    _set_taskbar_cache(
+        [
+            {
+                "name": "Other App",
+                "control_type": "Button",
+                "source": "uia_taskbar",
+                "rect": {"left": 10, "top": 20, "right": 110, "bottom": 70},
+            }
+        ]
+    )
+    monkeypatch.setattr(
+        uia_context,
+        "_collect_taskbar_elements_uia",
+        lambda: (
+            [
+                {
+                    "name": "Codex - 1 aktives Fenster angeheftet",
+                    "control_type": "Button",
+                    "source": "uia_taskbar",
+                    "rect": {"left": 20, "top": 30, "right": 120, "bottom": 80},
+                }
+            ],
+            1,
+        ),
+    )
+
+    result = find_uia_match_for_message("Siehst du Codex in der Taskleiste?")
+
+    assert result["source_path"] == "uia_taskbar_scan"
+    assert result["cache_hit"] is False
+    assert result["cache_refreshed"] is True
+    assert result["match"]["element"]["name"] == "Codex - 1 aktives Fenster angeheftet"
+    assert _get_taskbar_cache()[0]["name"] == "Codex - 1 aktives Fenster angeheftet"
 
 
 def test_taskbar_cache_can_expire(monkeypatch) -> None:
