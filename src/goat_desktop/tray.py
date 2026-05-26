@@ -39,7 +39,14 @@ from goat_desktop.screen_context import (
 )
 from goat_desktop.stt_hint import load_stt_config
 from goat_desktop.tts_hint import load_tts_config
-from goat_desktop.uia_context import build_uia_marker, build_uia_screen_context, find_uia_match_for_message, warm_taskbar_cache, warm_window_cache
+from goat_desktop.uia_context import (
+    build_uia_marker,
+    build_uia_screen_context,
+    find_uia_match_for_message,
+    get_resolver_cache_status,
+    warm_taskbar_cache,
+    warm_window_cache,
+)
 from goat_desktop.vision_config import load_vision_config, save_vision_config
 from goat_desktop.vision_hint import (
     ReasoningLevel,
@@ -464,6 +471,7 @@ class GoatTrayApp:
         self.popup.chat_finished.emit(result)
         elapsed_ms = round((perf_counter() - started) * 1000, 2)
         resolver = _build_resolver_evidence(result.get("screen_resolution"))
+        resolver_caches = get_resolver_cache_status()
         return {
             "ok": result.get("status") == "ok",
             "diagnostic": True,
@@ -475,6 +483,7 @@ class GoatTrayApp:
                 "marker_source": (result.get("marker") or {}).get("source") if isinstance(result.get("marker"), dict) else None,
                 "chat_provider": (result.get("chat") or {}).get("provider") if isinstance(result.get("chat"), dict) else None,
                 "resolver": resolver,
+                "resolver_caches": resolver_caches,
                 "source_path": resolver.get("source_path"),
                 "cache_hit": resolver.get("cache_hit"),
                 "cache_refreshed": resolver.get("cache_refreshed"),

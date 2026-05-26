@@ -14,6 +14,7 @@ from goat_desktop.uia_context import (
     build_uia_screen_context,
     find_best_uia_match,
     find_uia_match_for_message,
+    get_resolver_cache_status,
 )
 
 
@@ -39,6 +40,57 @@ class FakeWrapper:
 
     def children(self) -> list["FakeWrapper"]:
         return self._children
+
+
+def test_resolver_cache_status_reports_empty_caches(monkeypatch) -> None:
+    monkeypatch.setattr(uia_context, "perf_counter", lambda: 100.0)
+    _TASKBAR_CACHE["elements"] = []
+    _TASKBAR_CACHE["time"] = 0.0
+    _WINDOW_CACHE["elements"] = []
+    _WINDOW_CACHE["time"] = 0.0
+
+    status = get_resolver_cache_status()
+
+    assert status["taskbar"] == {
+        "warm": False,
+        "stale": True,
+        "elements": 0,
+        "age_ms": None,
+        "ttl_ms": 120000.0,
+    }
+    assert status["windows"] == {
+        "warm": False,
+        "stale": True,
+        "elements": 0,
+        "age_ms": None,
+        "ttl_ms": 120000.0,
+    }
+
+
+def test_resolver_cache_status_reports_warm_and_stale_caches(monkeypatch) -> None:
+    monkeypatch.setattr(uia_context, "perf_counter", lambda: 100.0)
+    monkeypatch.setattr(uia_context, "_TASKBAR_CACHE_TTL_SECONDS", 120.0)
+    monkeypatch.setattr(uia_context, "_WINDOW_CACHE_TTL_SECONDS", 10.0)
+    _set_taskbar_cache([{"name": "Codex"}])
+    _set_window_cache([{"name": "Old Window"}])
+
+    monkeypatch.setattr(uia_context, "perf_counter", lambda: 111.5)
+    status = get_resolver_cache_status()
+
+    assert status["taskbar"] == {
+        "warm": True,
+        "stale": False,
+        "elements": 1,
+        "age_ms": 11500.0,
+        "ttl_ms": 120000.0,
+    }
+    assert status["windows"] == {
+        "warm": False,
+        "stale": True,
+        "elements": 1,
+        "age_ms": 11500.0,
+        "ttl_ms": 10000.0,
+    }
 
 
 def test_find_best_uia_match_finds_named_target() -> None:

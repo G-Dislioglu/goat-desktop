@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from goat_desktop import bridge
 from goat_desktop import tray
 from goat_desktop.bridge import create_app
 from goat_desktop.tray import GoatTrayApp
@@ -75,6 +76,25 @@ def test_bridge_screen_question_uses_attached_handler() -> None:
     assert body["effects"]["desktopActionsExecuted"] is False
 
 
+def test_bridge_healthz_reports_resolver_cache_status(monkeypatch) -> None:
+    monkeypatch.setattr(
+        bridge,
+        "get_resolver_cache_status",
+        lambda: {
+            "taskbar": {"warm": True, "stale": False, "elements": 3, "age_ms": 10.0, "ttl_ms": 120000.0},
+            "windows": {"warm": False, "stale": True, "elements": 0, "age_ms": None, "ttl_ms": 120000.0},
+        },
+    )
+    endpoint = _endpoint_for(create_app(), "/healthz")
+
+    body = endpoint()
+
+    assert body["ok"] is True
+    assert body["resolverCaches"]["taskbar"]["warm"] is True
+    assert body["resolverCaches"]["taskbar"]["elements"] == 3
+    assert body["resolverCaches"]["windows"]["stale"] is True
+
+
 def test_bridge_screen_question_fails_closed_without_handler() -> None:
     endpoint = _endpoint_for(create_app(), "/chat/screen-question")
     body = endpoint({"message": "Siehst du StepStack?"})
@@ -101,6 +121,8 @@ def test_tray_bridge_screen_question_returns_timing_and_evidence() -> None:
     assert body["evidence"]["cache_hit"] is False
     assert body["evidence"]["cache_refreshed"] is False
     assert body["evidence"]["elements_scanned"] == 2
+    assert body["evidence"]["resolver_caches"]["taskbar"]["ttl_ms"] == 120000.0
+    assert body["evidence"]["resolver_caches"]["windows"]["ttl_ms"] == 120000.0
     assert body["evidence"]["resolver"] == {
         "source": "win32_desktop",
         "source_path": "win32_desktop",

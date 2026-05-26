@@ -263,6 +263,13 @@ def warm_window_cache() -> dict[str, Any]:
         }
 
 
+def get_resolver_cache_status() -> dict[str, Any]:
+    return {
+        "taskbar": _cache_status(_TASKBAR_CACHE, _TASKBAR_CACHE_LOCK, _TASKBAR_CACHE_TTL_SECONDS),
+        "windows": _cache_status(_WINDOW_CACHE, _WINDOW_CACHE_LOCK, _WINDOW_CACHE_TTL_SECONDS),
+    }
+
+
 def build_uia_screen_context(match: dict[str, Any]) -> str:
     element = match.get("element") if isinstance(match.get("element"), dict) else {}
     name = _display_name(str(element.get("name") or "Ziel"))
@@ -543,6 +550,22 @@ def _set_window_cache(elements: list[dict[str, Any]]) -> None:
     with _WINDOW_CACHE_LOCK:
         _WINDOW_CACHE["elements"] = list(elements)
         _WINDOW_CACHE["time"] = perf_counter()
+
+
+def _cache_status(cache: dict[str, Any], lock: Lock, ttl_seconds: float) -> dict[str, Any]:
+    with lock:
+        elements = list(cache.get("elements") or [])
+        cache_time = float(cache.get("time") or 0.0)
+    age_ms = round((perf_counter() - cache_time) * 1000, 2) if cache_time > 0 else None
+    ttl_ms = round(ttl_seconds * 1000, 2)
+    stale = age_ms is None or age_ms > ttl_ms
+    return {
+        "warm": bool(elements) and not stale,
+        "stale": stale,
+        "elements": len(elements),
+        "age_ms": age_ms,
+        "ttl_ms": ttl_ms,
+    }
 
 
 def _display_name(name: str) -> str:

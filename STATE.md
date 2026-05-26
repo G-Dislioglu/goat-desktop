@@ -363,3 +363,6 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 - Run F final live microphone acceptance with Builder STT+TTS is pending; latest full-path attempt recognized only "So".
 - Stage 3 real OS-level action execution does not exist yet.
 - Stage 4 remains a technical lock.
+
+resolver_cache_health_2026_05_26:
+"Lokale Bridge-Health und Screen-Smoke zeigen jetzt den read-only Resolver-Cache-Status fuer Taskleiste und Fensterliste: warm/stale, Elementzahl, age_ms und ttl_ms. Der Status waermt keine Caches an und startet keine UIA-/Win32-Scans. Live-Smoke nach Neustart: /healthz ok mit taskbar warm=true, elements=26 und windows warm=true, elements=6; /chat/screen-question 'Siehst du GOAT Desktop auf dem Bildschirm?' -> source_path=win32_window_cache, cache_hit=true, resolver time_ms=0.36, Antwort 'Gesehen: GOAT Desktop sichtbar. Quelle: Fensterliste.', providerCallsMade=false, desktopActionsExecuted=false. Tests gruen: 171 passed; compileall gruen."

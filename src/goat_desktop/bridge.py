@@ -14,6 +14,7 @@ from goat_desktop.screen import capture_active_window, get_active_window
 from goat_desktop.stage1_executor import Stage1ExecutionRequest, execute_stage1_action
 from goat_desktop.stage2_executor import Stage2ExecutionRequest, execute_stage2_text_input
 from goat_desktop.stage3_approval import Stage3ApprovalRequest, review_stage3_action
+from goat_desktop.uia_context import get_resolver_cache_status
 from goat_desktop.vision_hint import load_vision_hint_config, get_vision_hint
 
 
@@ -34,6 +35,7 @@ def create_app(
             "service": "goat-desktop-local-bridge",
             "scope": "local-only",
             "host": "127.0.0.1",
+            "resolverCaches": get_resolver_cache_status(),
         }
 
     @app.get("/active-window")
