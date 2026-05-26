@@ -17,6 +17,26 @@ def test_stage_1_navigation_dry_run(monkeypatch, tmp_path: Path) -> None:
     assert decision.allowed_to_execute is False
 
 
+def test_stage_1_hover_to_consequential_label_stays_navigation(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
+
+    decision = evaluate_action_gate(ActionRequest("hover", "Senden Button", ACCEPTED))
+
+    assert decision.stage == 1
+    assert decision.status == "dry_run_ready"
+    assert decision.allowed_to_execute is False
+
+
+def test_stage_1_navigation_to_sensitive_label_stays_locked(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
+
+    decision = evaluate_action_gate(ActionRequest("hover", "Passwortfeld", ACCEPTED))
+
+    assert decision.stage == 4
+    assert decision.status == "locked"
+    assert decision.allowed_to_execute is False
+
+
 def test_stage_2_requires_preview_approval(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
     decision = evaluate_action_gate(ActionRequest("type", "enter text in search field", ACCEPTED))

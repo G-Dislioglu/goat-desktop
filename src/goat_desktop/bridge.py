@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from goat_desktop.broker import build_candidate, verify_candidate
+from goat_desktop.action_preview import build_action_preview
 from goat_desktop.screen import capture_active_window, get_active_window
 from goat_desktop.stage1_executor import Stage1ExecutionRequest, execute_stage1_action
 from goat_desktop.stage2_executor import Stage2ExecutionRequest, execute_stage2_text_input
@@ -102,6 +103,18 @@ def create_app(
             region = decision["marker"]["region"]
             dispatch_cue(int(region["x"] + region["width"] / 2), int(region["y"] + region["height"] / 2))
         return decision
+
+    @app.post("/action/preview")
+    def action_preview(payload: dict[str, Any]) -> dict[str, Any]:
+        return build_action_preview(
+            str(payload.get("action_type") or ""),
+            str(payload.get("label") or ""),
+            dict(payload.get("broker_decision") or {}),
+            text=str(payload.get("text") or ""),
+            user_approved=bool(payload.get("user_approved") or False),
+            dry_run=bool(payload.get("dry_run") if "dry_run" in payload else True),
+            context=dict(payload.get("context") or {}),
+        )
 
     @app.post("/chat/screen-question")
     def chat_screen_question(payload: dict[str, Any]) -> dict[str, Any]:

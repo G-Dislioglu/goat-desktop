@@ -173,9 +173,25 @@ def classify_action_with_reason(
     label: str,
     context: dict[str, Any] | None = None,
 ) -> ActionClassification:
+    action_text = _normalize_text(action_type)
     text = _normalize_text(" ".join([action_type, label, _context_text(context or {})]))
+    technical_term = _first_matching_term(text, STAGE_4_TERMS)
+    if technical_term is not None:
+        return ActionClassification(
+            stage_enum=ActionStage.TECHNICAL_LOCK,
+            matched_term=technical_term,
+            reason="sensitive-field or secret-like term matched",
+            normalized_text=text,
+        )
+    nav_term = _first_matching_term(action_text, STAGE_1_TERMS)
+    if nav_term is not None:
+        return ActionClassification(
+            stage_enum=ActionStage.FREE_NAVIGATION,
+            matched_term=nav_term,
+            reason="free-navigation action type matched",
+            normalized_text=text,
+        )
     for stage, terms, reason in [
-        (ActionStage.TECHNICAL_LOCK, STAGE_4_TERMS, "sensitive-field or secret-like term matched"),
         (ActionStage.HARD_APPROVAL, STAGE_3_TERMS, "consequential-action term matched"),
         (ActionStage.LIGHT_APPROVAL, STAGE_2_TERMS, "light-input or selection term matched"),
         (ActionStage.FREE_NAVIGATION, STAGE_1_TERMS, "free-navigation term matched"),
