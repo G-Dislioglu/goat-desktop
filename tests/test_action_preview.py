@@ -70,6 +70,40 @@ def test_bridge_action_preview_endpoint_is_read_only() -> None:
     assert body["effects"]["keyboardActionsExecuted"] is False
 
 
+def test_bridge_stage1_requires_user_approval_for_real_navigation() -> None:
+    endpoint = _endpoint_for(create_app(), "/action/stage1")
+
+    body = endpoint(
+        {
+            "action_type": "hover",
+            "label": "Senden Button",
+            "broker_decision": ACCEPTED,
+            "dry_run": False,
+            "user_approved": False,
+        }
+    )
+
+    assert body["status"] == "preview_required"
+    assert body["executed"] is False
+    assert body["reason"] == "Bitte erst in GOAT freigeben."
+    assert body["preview"]["title"] == "GOAT kann dich navigieren"
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert body["effects"]["mouseActionsExecuted"] is False
+    assert body["effects"]["keyboardActionsExecuted"] is False
+
+
+def test_bridge_stage1_dry_run_remains_read_only() -> None:
+    endpoint = _endpoint_for(create_app(), "/action/stage1")
+
+    body = endpoint({"action_type": "scroll", "label": "scroll page", "broker_decision": ACCEPTED})
+
+    assert body["status"] == "blocked"
+    assert body["executed"] is False
+    assert "dry_run_ready" in body["reason"]
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert body["effects"]["mouseActionsExecuted"] is False
+
+
 def _endpoint_for(app, path: str):
     for route in app.routes:
         if getattr(route, "path", None) == path:

@@ -135,15 +135,35 @@ def create_app(
     @app.post("/action/stage1")
     def stage1_action(payload: dict[str, Any]) -> dict[str, Any]:
         scroll_amount = payload.get("scroll_amount")
+        requested_dry_run = bool(payload.get("dry_run") if "dry_run" in payload else True)
+        user_approved = bool(payload.get("user_approved") or False)
+        if not requested_dry_run and not user_approved:
+            preview = build_action_preview(
+                str(payload.get("action_type") or ""),
+                str(payload.get("label") or ""),
+                dict(payload.get("broker_decision") or {}),
+                dry_run=True,
+                context=dict(payload.get("context") or {}),
+            )
+            return {
+                "status": "preview_required",
+                "executed": False,
+                "stage": preview.get("stage"),
+                "reason": "Bitte erst in GOAT freigeben.",
+                "preview": preview,
+                "effects": _no_action_effects(),
+            }
         request = Stage1ExecutionRequest(
             action_type=str(payload.get("action_type") or ""),
             label=str(payload.get("label") or ""),
             broker_decision=dict(payload.get("broker_decision") or {}),
-            user_approved=bool(payload.get("user_approved") or False),
-            dry_run=bool(payload.get("dry_run") if "dry_run" in payload else True),
+            user_approved=user_approved,
+            dry_run=requested_dry_run,
             scroll_amount=int(scroll_amount) if scroll_amount is not None else -360,
         )
-        return execute_stage1_action(request).to_dict()
+        result = execute_stage1_action(request).to_dict()
+        result["effects"] = _stage1_effects(result)
+        return result
 
     @app.post("/action/stage2/text")
     def stage2_text_action(payload: dict[str, Any]) -> dict[str, Any]:
@@ -249,6 +269,16 @@ def _no_action_effects() -> dict[str, Any]:
         "tradingActionsExecuted": False,
         "mayExecuteRealAction": False,
     }
+
+
+def _stage1_effects(result: dict[str, Any]) -> dict[str, Any]:
+    effects = _no_action_effects()
+    executed = bool(result.get("executed"))
+    action_type = str(result.get("action_type") or "")
+    effects["desktopActionsExecuted"] = executed
+    effects["mouseActionsExecuted"] = executed and action_type in {"hover", "scroll"}
+    effects["mayExecuteRealAction"] = executed
+    return effects
 
 
 class LocalBridge:
