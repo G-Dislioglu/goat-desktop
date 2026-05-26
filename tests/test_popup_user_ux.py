@@ -20,8 +20,8 @@ def test_popup_uses_assistant_first_labels() -> None:
     assert popup.screen_context_value.text() == "Noch keine Frage"
     assert popup.maya_value.text() == "Bereit. Frag mich, was ich fuer dich finden soll."
     assert popup.talk_button.text() == "Mit Maya sprechen"
-    assert popup.cue_approve.text() == "Ziel verwenden"
-    assert popup.cue_reject.text() == "Nein, anderes Ziel"
+    assert popup.cue_approve.text() == "Pruefen"
+    assert popup.cue_reject.text() == "Abbrechen"
     assert popup.vision_panel.isHidden() is True
 
 

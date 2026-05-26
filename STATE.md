@@ -405,3 +405,6 @@ action_post_execution_verification_2026_05_26:
 
 action_result_plain_next_step_2026_05_26:
 "Popup-Ergebnisanzeige nach lokalen Aktionen ist normalnutzerfreundlicher. Nach Stage-1 Hover/Move sagt GOAT konkret `Ich habe den Mauszeiger zum Ziel bewegt...`; nach Scroll nennt GOAT die Richtung und fordert den naechsten Schritt an. Nach Stage-2 Texteingabe nennt GOAT das Eingabefeld und bittet um kurze Sichtpruefung. Fehler-/Nicht-erledigt-Texte bleiben unveraendert sicher. Keine neue Aktionserlaubnis, keine Provider-Calls. Tests gruen: 212 passed; compileall gruen."
+
+plain_approval_buttons_2026_05_26:
+"Sichtbarer Freigabepfad nutzt jetzt einfache Buttontexte: `Pruefen`, `Ausfuehren`, `Abbrechen`. Alte Hauptpfad-Begriffe wie `Ziel verwenden`, `Ziel pruefen` und `Nein, anderes Ziel` sind aus Popup/Tray entfernt. Abbruchstatus heisst `Abgebrochen`. Action-Logik und Sicherheitsgates unveraendert; keine neue Aktionserlaubnis. Tests gruen: 212 passed; compileall gruen."
