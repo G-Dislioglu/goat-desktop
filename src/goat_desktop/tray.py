@@ -154,6 +154,22 @@ def _friendly_action_failure_message(response: dict, *, stage: str) -> str:
     return reason or "Bitte pruefe das Ziel erneut."
 
 
+def _friendly_stage1_success_message(response: dict) -> str:
+    action_type = str(response.get("action_type") or "").strip().lower()
+    target = response.get("target") if isinstance(response.get("target"), dict) else {}
+    if action_type == "scroll":
+        amount = int(target.get("scroll_amount") or 0)
+        direction = "nach unten" if amount < 0 else "nach oben"
+        return f"Ich habe die Seite {direction} gescrollt. Sag mir einfach, was als Naechstes dran ist."
+    return "Ich habe den Mauszeiger zum Ziel bewegt. Du kannst jetzt weitermachen oder mir den naechsten Schritt sagen."
+
+
+def _friendly_stage2_success_message(response: dict) -> str:
+    preview = response.get("preview") if isinstance(response.get("preview"), dict) else {}
+    label = str(preview.get("label") or "das Eingabefeld").strip() or "das Eingabefeld"
+    return f"Ich habe den Text in {label} eingetragen. Bitte pruefe kurz, ob er stimmt."
+
+
 def _build_resolver_evidence(screen_resolution: object) -> dict[str, object]:
     resolution = screen_resolution if isinstance(screen_resolution, dict) else {}
     return {
@@ -976,10 +992,10 @@ class GoatTrayApp:
             if response.get("executed"):
                 if payload.get("status") == "stage2_done":
                     self.popup.screen_context_value.setText("Eingabe ausgefuehrt")
-                    self.popup.maya_value.setText("Ich habe den Text eingetragen.")
+                    self.popup.maya_value.setText(_friendly_stage2_success_message(response))
                 else:
                     self.popup.screen_context_value.setText("Navigation ausgefuehrt")
-                    self.popup.maya_value.setText("Ich habe dich zum Ziel gefuehrt.")
+                    self.popup.maya_value.setText(_friendly_stage1_success_message(response))
                 self.pending_builder_cue = None
                 self.pending_stage1_action = None
                 self.pending_stage2_action = None

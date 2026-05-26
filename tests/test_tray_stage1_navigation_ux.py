@@ -122,15 +122,33 @@ def test_stage1_done_resets_pending_navigation() -> None:
     fake.pending_builder_cue = {"label": "Senden Button"}
     fake.pending_stage1_action = {"action_type": "hover", "label": "Senden Button"}
 
-    GoatTrayApp._finish_builder_cue(fake, {"status": "stage1_done", "response": {"executed": True}})
+    GoatTrayApp._finish_builder_cue(fake, {"status": "stage1_done", "response": {"executed": True, "action_type": "hover"}})
 
     assert fake.pending_builder_cue is None
     assert fake.pending_stage1_action is None
     assert fake.popup.screen_context_value.text() == "Navigation ausgefuehrt"
-    assert fake.popup.maya_value.text() == "Ich habe dich zum Ziel gefuehrt."
+    assert fake.popup.maya_value.text() == (
+        "Ich habe den Mauszeiger zum Ziel bewegt. Du kannst jetzt weitermachen oder mir den naechsten Schritt sagen."
+    )
     assert fake.popup.cue_approve.text() == "Ziel verwenden"
     assert fake.popup.cue_approve.enabled is False
     assert fake.popup.cue_reject.enabled is False
+
+
+def test_stage1_scroll_done_names_next_step() -> None:
+    fake = FakeTray()
+    fake.pending_builder_cue = {"label": "Seite"}
+    fake.pending_stage1_action = {"action_type": "scroll", "label": "Seite"}
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {"status": "stage1_done", "response": {"executed": True, "action_type": "scroll", "target": {"scroll_amount": -360}}},
+    )
+
+    assert fake.popup.screen_context_value.text() == "Navigation ausgefuehrt"
+    assert fake.popup.maya_value.text() == (
+        "Ich habe die Seite nach unten gescrollt. Sag mir einfach, was als Naechstes dran ist."
+    )
 
 
 def test_builder_stage2_cue_shows_input_check_before_execution() -> None:
@@ -301,13 +319,16 @@ def test_stage2_done_resets_pending_input() -> None:
     fake.pending_builder_cue = {"label": "Suchfeld"}
     fake.pending_stage2_action = {"action_type": "type", "label": "Suchfeld", "text": "StepStack"}
 
-    GoatTrayApp._finish_builder_cue(fake, {"status": "stage2_done", "response": {"executed": True}})
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {"status": "stage2_done", "response": {"executed": True, "preview": {"label": "Suchfeld"}}},
+    )
 
     assert fake.pending_builder_cue is None
     assert fake.pending_stage1_action is None
     assert fake.pending_stage2_action is None
     assert fake.popup.screen_context_value.text() == "Eingabe ausgefuehrt"
-    assert fake.popup.maya_value.text() == "Ich habe den Text eingetragen."
+    assert fake.popup.maya_value.text() == "Ich habe den Text in Suchfeld eingetragen. Bitte pruefe kurz, ob er stimmt."
 
 
 def test_reject_pending_cue_resets_navigation_state() -> None:

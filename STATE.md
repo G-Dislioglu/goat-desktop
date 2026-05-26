@@ -402,3 +402,6 @@ action_execution_failure_guard_2026_05_26:
 
 action_post_execution_verification_2026_05_26:
 "Stage-1 Hover/Move und Stage-2 Texteingabe haben jetzt eine leichte Nachpruefung. Stage-1 prueft nach Mausbewegung, wenn das Backend es kann, ob der Cursor am Zielzentrum angekommen ist; Fehlschlag wird als `failed` mit `executed=false` auditiert. Stage-2 unterstuetzt einen optionalen `typed_text_matches`-Verifier; wenn die Verifikation fehlschlaegt, meldet GOAT nicht erledigt. Popup uebersetzt Verifikationsfehler in normale Sprache: `Ich bin nicht sicher, ob ... angekommen ist. Ich melde sie nicht als erledigt.` Keine Provider-Calls, keine Vision-Runde, keine neue Aktionserlaubnis. Tests gruen: 211 passed; compileall gruen."
+
+action_result_plain_next_step_2026_05_26:
+"Popup-Ergebnisanzeige nach lokalen Aktionen ist normalnutzerfreundlicher. Nach Stage-1 Hover/Move sagt GOAT konkret `Ich habe den Mauszeiger zum Ziel bewegt...`; nach Scroll nennt GOAT die Richtung und fordert den naechsten Schritt an. Nach Stage-2 Texteingabe nennt GOAT das Eingabefeld und bittet um kurze Sichtpruefung. Fehler-/Nicht-erledigt-Texte bleiben unveraendert sicher. Keine neue Aktionserlaubnis, keine Provider-Calls. Tests gruen: 212 passed; compileall gruen."
