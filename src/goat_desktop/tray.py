@@ -14,6 +14,7 @@ from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QAction, QIcon, QPainter, QPixmap
 from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
+from goat_desktop.action_preview import build_action_preview
 from goat_desktop.builder_bridge import BuilderBridgeClient
 from goat_desktop.bridge import CueDispatcher, LocalBridge
 from goat_desktop.chat_hint import request_chat_response
@@ -86,6 +87,11 @@ def _start_resolver_cache_warmup_once() -> None:
     Thread(target=warm_window_cache, name="goat-window-cache-warmup", daemon=True).start()
 
 
+def _is_stage1_navigation_action(action_type: str) -> bool:
+    normalized = action_type.strip().lower()
+    return any(token in normalized for token in ("hover", "move", "scroll"))
+
+
 def _build_resolver_evidence(screen_resolution: object) -> dict[str, object]:
     resolution = screen_resolution if isinstance(screen_resolution, dict) else {}
     return {
@@ -110,6 +116,7 @@ class GoatTrayApp:
         self.last_test_cue_response: dict | None = None
         self.last_test_cue_error: str | None = None
         self.pending_builder_cue: dict | None = None
+        self.pending_stage1_action: dict | None = None
         self.last_builder_cue_response: dict | None = None
         self.builder_bridge: BuilderBridgeClient | None = None
         self._read_aloud_text = ""
@@ -225,6 +232,7 @@ class GoatTrayApp:
         self.popup.read_aloud.clicked.connect(self.read_livetalk_response_aloud)
         self.popup.read_aloud_finished.connect(self._finish_read_livetalk_response_aloud)
         self.popup.push_to_talk_finished.connect(self._finish_push_to_talk_payload)
+        self.popup.builder_cue_finished.connect(self._finish_builder_cue)
         self.popup.chat_finished.connect(self._finish_chat_message)
         self.popup.video_frames_toggle.toggled.connect(self._set_video_frames_enabled)
         self.popup.screen_context_button.clicked.connect(self.request_screen_context)
@@ -824,29 +832,46 @@ class GoatTrayApp:
         self.popup.connection_chip.setText(f"Verbindung: {text}")
 
     def receive_builder_cue(self, message: dict) -> None:
+        action_type = str(message.get("action_type") or "").strip()
         self.pending_builder_cue = {
             "source": message.get("source", "active_window"),
             "label": message.get("label", "Builder test cue"),
             "bbox": message.get("bbox"),
             "confidence": message.get("confidence", 0.9),
         }
+        self.pending_stage1_action = None
+        if _is_stage1_navigation_action(action_type):
+            self.pending_stage1_action = {
+                "action_type": action_type,
+                "label": str(message.get("label") or "Ziel"),
+                "scroll_amount": int(message.get("scroll_amount") or -360),
+            }
         if self.pending_builder_cue["bbox"] is None:
             self.pending_builder_cue.pop("bbox")
         label = str(self.pending_builder_cue.get("label") or "Builder-Cue")
         self.popup.target_value.setText(f"Zielvorschlag: {label}")
         self.popup.screen_context_value.setText("Bitte pruefe das markierte Ziel")
-        self.popup.maya_value.setText("Nur mit deiner Freigabe geht es weiter.")
+        self.popup.maya_value.setText(
+            "Danach kannst du GOAT navigieren lassen." if self.pending_stage1_action else "Nur mit deiner Freigabe geht es weiter."
+        )
+        self.popup.cue_approve.setText("Ziel pruefen" if self.pending_stage1_action else "Ziel verwenden")
         self.popup.cue_approve.setEnabled(True)
         self.popup.cue_reject.setEnabled(True)
         self.show_popup()
 
     def approve_pending_cue(self) -> None:
+        if self.pending_stage1_action and self.pending_stage1_action.get("broker_decision"):
+            payload = dict(self.pending_stage1_action)
+            self.popup.cue_approve.setEnabled(False)
+            self.popup.cue_reject.setEnabled(False)
+            self.popup.screen_context_value.setText("Navigation wird ausgefuehrt")
+            QTimer.singleShot(10, lambda: self._execute_pending_stage1_action(payload))
+            return
         if self.pending_builder_cue is None:
             return
         payload = dict(self.pending_builder_cue)
         self.popup.cue_approve.setEnabled(False)
         self.popup.cue_reject.setEnabled(False)
-        self.popup.hide()
         QTimer.singleShot(250, lambda: self._approve_pending_cue(payload))
 
     def _approve_pending_cue(self, payload: dict) -> None:
@@ -862,14 +887,91 @@ class GoatTrayApp:
         try:
             with urllib.request.urlopen(request, timeout=5) as response:
                 self.last_builder_cue_response = json.loads(response.read().decode("utf-8"))
+                self.popup.builder_cue_finished.emit({"status": "ok", "response": self.last_builder_cue_response})
         except Exception as exc:
             self.last_builder_cue_response = {"safety_state": "stop", "error": repr(exc)}
+            self.popup.builder_cue_finished.emit({"status": "error", "error": repr(exc)})
+
+    def _finish_builder_cue(self, payload: dict) -> None:
+        if payload.get("status") == "stage1_done":
+            response = dict(payload.get("response") or {})
+            if response.get("executed"):
+                self.popup.screen_context_value.setText("Navigation ausgefuehrt")
+                self.popup.maya_value.setText("Ich habe dich zum Ziel gefuehrt.")
+                self.pending_builder_cue = None
+                self.pending_stage1_action = None
+            else:
+                self.popup.screen_context_value.setText("Navigation nicht ausgefuehrt")
+                self.popup.maya_value.setText(str(response.get("reason") or "Bitte pruefe das Ziel erneut."))
+            self.popup.cue_approve.setText("Ziel verwenden")
+            self.popup.cue_approve.setEnabled(False)
+            self.popup.cue_reject.setEnabled(False)
+            return
+        if payload.get("status") != "ok":
+            self.popup.screen_context_value.setText("Ziel konnte nicht geprueft werden")
+            self.popup.maya_value.setText(str(payload.get("error") or "Bitte versuch es erneut."))
+            self.popup.cue_approve.setEnabled(False)
+            self.popup.cue_reject.setEnabled(True)
+            return
+        response = dict(payload.get("response") or {})
+        if response.get("safety_state") != "accept":
+            self.popup.screen_context_value.setText("Ziel nicht sicher")
+            self.popup.maya_value.setText("Bitte markiere das Ziel neu.")
+            self.popup.cue_approve.setEnabled(False)
+            self.popup.cue_reject.setEnabled(True)
+            return
+        if self.pending_stage1_action is None:
+            self.popup.screen_context_value.setText("Ziel ist markiert")
+            self.popup.maya_value.setText("Sag mir, was du damit tun moechtest.")
+            self.popup.cue_approve.setEnabled(False)
+            self.popup.cue_reject.setEnabled(True)
+            return
+        broker_decision = response.get("broker_decision") if isinstance(response.get("broker_decision"), dict) else response
+        self.pending_stage1_action["broker_decision"] = broker_decision
+        preview = build_action_preview(
+            str(self.pending_stage1_action.get("action_type") or ""),
+            str(self.pending_stage1_action.get("label") or ""),
+            broker_decision,
+            dry_run=True,
+        )
+        self.popup.screen_context_value.setText(str(preview.get("title") or "Freigabe erforderlich"))
+        self.popup.maya_value.setText(str(preview.get("message") or "Bitte pruefe die Aktion."))
+        self.popup.cue_approve.setText(str(preview.get("primaryButton") or "Navigieren"))
+        self.popup.cue_approve.setEnabled(bool(preview.get("ok")))
+        self.popup.cue_reject.setEnabled(True)
+
+    def _execute_pending_stage1_action(self, payload: dict) -> None:
+        Thread(target=self._execute_pending_stage1_action_worker, args=(payload,), name="goat-stage1-navigation", daemon=True).start()
+
+    def _execute_pending_stage1_action_worker(self, payload: dict) -> None:
+        request_payload = {
+            "action_type": str(payload.get("action_type") or ""),
+            "label": str(payload.get("label") or ""),
+            "broker_decision": dict(payload.get("broker_decision") or {}),
+            "scroll_amount": int(payload.get("scroll_amount") or -360),
+            "dry_run": False,
+            "user_approved": True,
+        }
+        request = urllib.request.Request(
+            "http://127.0.0.1:8765/action/stage1",
+            data=json.dumps(request_payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=5) as response:
+                result = json.loads(response.read().decode("utf-8"))
+            self.popup.builder_cue_finished.emit({"status": "stage1_done", "response": result})
+        except Exception as exc:
+            self.popup.builder_cue_finished.emit({"status": "error", "error": repr(exc)})
 
     def reject_pending_cue(self) -> None:
         self.pending_builder_cue = None
+        self.pending_stage1_action = None
         self.popup.target_value.setText("Kein Ziel markiert")
         self.popup.screen_context_value.setText("Ziel abgelehnt")
         self.popup.maya_value.setText("Bereit. Sag mir, welches Ziel du meinst.")
+        self.popup.cue_approve.setText("Ziel verwenden")
         self.popup.cue_approve.setEnabled(False)
         self.popup.cue_reject.setEnabled(False)
 
