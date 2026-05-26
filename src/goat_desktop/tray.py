@@ -60,6 +60,18 @@ def _no_action_effects() -> dict[str, bool]:
     }
 
 
+def _build_resolver_evidence(screen_resolution: object) -> dict[str, object]:
+    resolution = screen_resolution if isinstance(screen_resolution, dict) else {}
+    return {
+        "source": resolution.get("source"),
+        "source_path": resolution.get("source_path"),
+        "cache_hit": resolution.get("cache_hit"),
+        "cache_refreshed": resolution.get("cache_refreshed"),
+        "time_ms": resolution.get("time_ms"),
+        "elements_scanned": resolution.get("elements_scanned"),
+    }
+
+
 class GoatTrayApp:
     def __init__(self, app: QApplication) -> None:
         if not QSystemTrayIcon.isSystemTrayAvailable():
@@ -448,6 +460,7 @@ class GoatTrayApp:
         result = self._build_chat_message_payload(text, self.popup.target_value.text(), provider, reasoning)
         self.popup.chat_finished.emit(result)
         elapsed_ms = round((perf_counter() - started) * 1000, 2)
+        resolver = _build_resolver_evidence(result.get("screen_resolution"))
         return {
             "ok": result.get("status") == "ok",
             "time_ms": elapsed_ms,
@@ -456,18 +469,11 @@ class GoatTrayApp:
                 "screen_context": result.get("screen_context"),
                 "marker_source": (result.get("marker") or {}).get("source") if isinstance(result.get("marker"), dict) else None,
                 "chat_provider": (result.get("chat") or {}).get("provider") if isinstance(result.get("chat"), dict) else None,
-                "source_path": (result.get("screen_resolution") or {}).get("source_path")
-                if isinstance(result.get("screen_resolution"), dict)
-                else None,
-                "cache_hit": (result.get("screen_resolution") or {}).get("cache_hit")
-                if isinstance(result.get("screen_resolution"), dict)
-                else None,
-                "cache_refreshed": (result.get("screen_resolution") or {}).get("cache_refreshed")
-                if isinstance(result.get("screen_resolution"), dict)
-                else None,
-                "elements_scanned": (result.get("screen_resolution") or {}).get("elements_scanned")
-                if isinstance(result.get("screen_resolution"), dict)
-                else None,
+                "resolver": resolver,
+                "source_path": resolver.get("source_path"),
+                "cache_hit": resolver.get("cache_hit"),
+                "cache_refreshed": resolver.get("cache_refreshed"),
+                "elements_scanned": resolver.get("elements_scanned"),
             },
             "effects": _no_action_effects(),
         }
