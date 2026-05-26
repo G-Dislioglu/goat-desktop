@@ -98,10 +98,14 @@ class GoatPopup(QWidget):
 
         self.connection_value = QLabel("offline")
         self.audio_value = QLabel("-")
-        self.screen_context_value = QLabel("-")
-        self.maya_value = QLabel("bereit, pausiert")
+        self.screen_context_caption = QLabel("Deine Frage")
+        self.maya_caption = QLabel("Maya")
+        self.screen_context_value = QLabel("Noch keine Frage")
+        self.maya_value = QLabel("Bereit. Frag mich, was ich fuer dich finden soll.")
         self.target_value = QLabel("Kein Ziel markiert")
         for value_label in (
+            self.screen_context_caption,
+            self.maya_caption,
             self.connection_value,
             self.audio_value,
             self.screen_context_value,
@@ -122,12 +126,16 @@ class GoatPopup(QWidget):
         output_panel.setObjectName("panel")
         output_layout = QVBoxLayout(output_panel)
         output_layout.setContentsMargins(10, 8, 10, 8)
-        output_layout.setSpacing(8)
+        output_layout.setSpacing(6)
         self.target_value.setObjectName("target")
+        self.screen_context_caption.setObjectName("caption")
+        self.maya_caption.setObjectName("caption")
         self.screen_context_value.setObjectName("output")
         self.maya_value.setObjectName("output")
         output_layout.addWidget(self.target_value)
+        output_layout.addWidget(self.screen_context_caption)
         output_layout.addWidget(self.screen_context_value)
+        output_layout.addWidget(self.maya_caption)
         output_layout.addWidget(self.maya_value)
         root.addWidget(output_panel, 1)
 
@@ -149,11 +157,11 @@ class GoatPopup(QWidget):
         actions.setHorizontalSpacing(10)
         actions.setVerticalSpacing(8)
 
-        self.talk_button = QPushButton("LiveTalk")
+        self.talk_button = QPushButton("Mit Maya sprechen")
         self.video_frames_toggle = QCheckBox("Maya sieht Bildschirm")
         self.exit_livetalk = QPushButton("LiveTalk beenden")
-        self.cue_approve = QPushButton("Cue freigeben")
-        self.cue_reject = QPushButton("Cue ablehnen")
+        self.cue_approve = QPushButton("Ziel verwenden")
+        self.cue_reject = QPushButton("Nein, anderes Ziel")
         self.exit_livetalk.setVisible(False)
         self.video_frames_toggle.setVisible(False)
         self.cue_approve.setEnabled(False)
@@ -217,6 +225,12 @@ class GoatPopup(QWidget):
                 color: #ffd94a;
                 font-weight: 600;
                 padding: 4px 6px;
+            }
+            QLabel#caption {
+                color: #aeb7c7;
+                font-size: 11px;
+                font-weight: 600;
+                padding: 1px 6px 0 6px;
             }
             QLabel#output {
                 background: #17191f;
@@ -282,7 +296,7 @@ class GoatPopup(QWidget):
             self.read_aloud.setVisible(False)
             self.read_aloud.setEnabled(True)
             self.read_aloud.setText("Vorlesen")
-        self.talk_button.setText("Halten zum Sprechen" if active else "LiveTalk")
+        self.talk_button.setText("Halten zum Sprechen" if active else "Mit Maya sprechen")
         width, height = self._livetalk_size if active else self._preferred_size
         self.resize(width, height)
         self.ensure_visible()

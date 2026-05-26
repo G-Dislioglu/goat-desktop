@@ -198,7 +198,7 @@ class GoatTrayApp:
     def move_ball_to_cue(self, x: int, y: int) -> None:
         self._ball_visible = True
         self.overlay.move_ball_to(x - self.overlay.width() // 2, y - self.overlay.height() // 2)
-        self.popup.target_value.setText(f"Ziel markiert: x={x}, y={y}")
+        self.popup.target_value.setText(f"Ziel gefunden: x={x}, y={y}")
 
     def emergency_stop(self) -> None:
         self.hide_ball()
@@ -258,8 +258,8 @@ class GoatTrayApp:
         self.popup.talk_button.setEnabled(False)
         self._set_read_aloud_available("")
         self._refresh_audio_status()
-        self.popup.screen_context_value.setText("LiveTalk bereit")
-        self.popup.maya_value.setText("Half-Duplex")
+        self.popup.screen_context_value.setText("Bereit zum Zuhoeren")
+        self.popup.maya_value.setText("Halte den Button und sprich.")
         QApplication.processEvents()
         try:
             result = self.livetalk.run_once()
@@ -283,7 +283,7 @@ class GoatTrayApp:
                     )
                 )
         except Exception as exc:
-            self.popup.screen_context_value.setText("LiveTalk Fehler")
+            self.popup.screen_context_value.setText("Sprechen gerade nicht moeglich")
             self.popup.maya_value.setText(str(exc))
         finally:
             self.popup.talk_button.setEnabled(True)
@@ -303,7 +303,7 @@ class GoatTrayApp:
         max_seconds = float(os.environ.get("GOAT_LIVETALK_PUSH_TO_TALK_MAX_SECONDS", "30.0"))
         self._push_to_talk_started = perf_counter()
         self._push_to_talk_stop_event = threading.Event()
-        self.popup.screen_context_value.setText("Nimmt auf")
+        self.popup.screen_context_value.setText("Ich hoere zu")
         self.popup.maya_value.setText("Loslassen zum Senden")
         self.popup.talk_button.setText("Loslassen zum Senden")
         QApplication.processEvents()
@@ -329,8 +329,8 @@ class GoatTrayApp:
             stop_event.set()
         self.popup.talk_button.setEnabled(False)
         self.popup.talk_button.setText("Sende...")
-        self.popup.screen_context_value.setText("Verarbeite Sprache")
-        self.popup.maya_value.setText("Gemini Live laeuft")
+        self.popup.screen_context_value.setText("Ich denke nach")
+        self.popup.maya_value.setText("Maya antwortet gleich")
         QApplication.processEvents()
         if recorder is not None:
             Thread(
@@ -392,7 +392,7 @@ class GoatTrayApp:
         if payload.get("status") == "audio_done":
             return
         if payload.get("status") != "ok":
-            self.popup.screen_context_value.setText("LiveTalk Fehler")
+            self.popup.screen_context_value.setText("Sprechen gerade nicht moeglich")
             self.popup.maya_value.setText(str(payload.get("error") or "Push-to-talk fehlgeschlagen"))
         else:
             result = dict(payload.get("result") or {})
@@ -411,8 +411,8 @@ class GoatTrayApp:
     def exit_livetalk_mode(self) -> None:
         self.popup.set_livetalk_mode(False)
         self._set_read_aloud_available("")
-        self.popup.screen_context_value.setText("-")
-        self.popup.maya_value.setText("bereit, pausiert")
+        self.popup.screen_context_value.setText("Noch keine Frage")
+        self.popup.maya_value.setText("Bereit. Frag mich, was ich fuer dich finden soll.")
 
     def send_chat_message(self) -> None:
         text = self.popup.chat_input.text().strip()
@@ -420,7 +420,7 @@ class GoatTrayApp:
             return
         self.popup.chat_input.clear()
         self.popup.screen_context_value.setText(text)
-        self.popup.maya_value.setText("Bildschirm wird gelesen..." if should_use_screen_context(text) else "Maya wird angefragt...")
+        self.popup.maya_value.setText("Ich schaue nach..." if should_use_screen_context(text) else "Ich frage Maya...")
         self.popup.chat_send.setEnabled(False)
         QApplication.processEvents()
         provider = str(self.popup.vision_provider.currentData())
@@ -622,14 +622,14 @@ class GoatTrayApp:
             x = int(float(region["x"]) + float(region["width"]) / 2)
             y = int(float(region["y"]) + float(region["height"]) / 2)
             self.move_ball_to_cue(x, y)
-            self.popup.target_value.setText(f"Ziel markiert: {marker.get('label') or 'Vision-Ziel'}")
+            self.popup.target_value.setText(f"Ziel gefunden: {marker.get('label') or 'markiertes Ziel'}")
         self._set_read_aloud_available(response_text)
 
     def request_screen_context(self) -> None:
         self.popup.screen_context_button.setEnabled(False)
         self.popup.screen_context_button.setText("Pruefe...")
-        self.popup.screen_context_value.setText("Bildschirm wird geprueft...")
-        self.popup.maya_value.setText("Vision Builder laeuft")
+        self.popup.screen_context_value.setText("Ich schaue auf den Bildschirm...")
+        self.popup.maya_value.setText("Einen Moment")
         self._screen_context_provider = str(self.popup.vision_provider.currentData())
         self._screen_context_reasoning = str(self.popup.vision_reasoning.currentData())
         self.popup.hide()
@@ -676,13 +676,13 @@ class GoatTrayApp:
         self.popup.screen_context_button.setEnabled(True)
         self.popup.screen_context_button.setText("Bildschirm pruefen")
         if payload.get("status") != "ok":
-            self.popup.screen_context_value.setText("Bildschirm-Kontext fehlgeschlagen")
-            self.popup.maya_value.setText(str(payload.get("error") or "Vision fehlgeschlagen"))
+            self.popup.screen_context_value.setText("Bildschirm konnte nicht gelesen werden")
+            self.popup.maya_value.setText(str(payload.get("error") or "Bitte versuch es erneut."))
             return
         summary = str(payload.get("summary") or "")
         self._last_screen_context = summary
         self.popup.screen_context_value.setText(summary)
-        self.popup.maya_value.setText("Kontext bereit fuer Maya")
+        self.popup.maya_value.setText("Bildschirm verstanden")
 
     def _set_read_aloud_available(self, text: str) -> None:
         self._read_aloud_request_id += 1
@@ -761,20 +761,20 @@ class GoatTrayApp:
         if self.livetalk.provider == "gemini_live":
             labels = {
                 "prepare": ("Gleich sprechen", "Nach dem Ton sprechen"),
-                "listening": ("Nimmt auf", "Jetzt sprechen"),
-                "thinking": ("Gemini Live", "Antwort wird erzeugt"),
-                "speaking": ("Maya-Antwort steht", "Audio wird abgespielt"),
-                "idle": ("bereit", "bereit, pausiert"),
+                "listening": ("Ich hoere zu", "Jetzt sprechen"),
+                "thinking": ("Ich denke nach", "Maya antwortet gleich"),
+                "speaking": ("Maya antwortet", "Audio wird abgespielt"),
+                "idle": ("Bereit", "Bereit. Frag mich, was ich fuer dich finden soll."),
             }
         else:
             labels = {
                 "prepare": ("Gleich sprechen", "Nach dem Ton sprechen"),
-                "listening": ("Nimmt auf", "Jetzt sprechen"),
-                "thinking": ("Verarbeite Sprache", "Builder-STT laeuft"),
-                "speaking": ("Maya-Antwort steht", "Audio wird geladen"),
-                "idle": ("bereit", "bereit, pausiert"),
+                "listening": ("Ich hoere zu", "Jetzt sprechen"),
+                "thinking": ("Ich denke nach", "Maya antwortet gleich"),
+                "speaking": ("Maya antwortet", "Audio wird geladen"),
+                "idle": ("Bereit", "Bereit. Frag mich, was ich fuer dich finden soll."),
             }
-        screen_text, maya_text = labels.get(state, (state, "Half-Duplex"))
+        screen_text, maya_text = labels.get(state, (state, "Bereit."))
         self.popup.screen_context_value.setText(screen_text)
         self.popup.maya_value.setText(maya_text)
         QApplication.processEvents()
@@ -834,8 +834,8 @@ class GoatTrayApp:
             self.pending_builder_cue.pop("bbox")
         label = str(self.pending_builder_cue.get("label") or "Builder-Cue")
         self.popup.target_value.setText(f"Zielvorschlag: {label}")
-        self.popup.screen_context_value.setText("Builder-Cue wartet")
-        self.popup.maya_value.setText("Freigabe erforderlich")
+        self.popup.screen_context_value.setText("Bitte pruefe das markierte Ziel")
+        self.popup.maya_value.setText("Nur mit deiner Freigabe geht es weiter.")
         self.popup.cue_approve.setEnabled(True)
         self.popup.cue_reject.setEnabled(True)
         self.show_popup()
@@ -868,8 +868,8 @@ class GoatTrayApp:
     def reject_pending_cue(self) -> None:
         self.pending_builder_cue = None
         self.popup.target_value.setText("Kein Ziel markiert")
-        self.popup.screen_context_value.setText("Builder-Cue abgelehnt")
-        self.popup.maya_value.setText("bereit, pausiert")
+        self.popup.screen_context_value.setText("Ziel abgelehnt")
+        self.popup.maya_value.setText("Bereit. Sag mir, welches Ziel du meinst.")
         self.popup.cue_approve.setEnabled(False)
         self.popup.cue_reject.setEnabled(False)
 
