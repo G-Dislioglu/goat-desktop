@@ -366,3 +366,6 @@ Repo initialized from GOAT Desktop Vision v1.1. Run A native tray shell is compl
 
 resolver_cache_health_2026_05_26:
 "Lokale Bridge-Health und Screen-Smoke zeigen jetzt den read-only Resolver-Cache-Status fuer Taskleiste und Fensterliste: warm/stale, Elementzahl, age_ms und ttl_ms. Der Status waermt keine Caches an und startet keine UIA-/Win32-Scans. Live-Smoke nach Neustart: /healthz ok mit taskbar warm=true, elements=26 und windows warm=true, elements=6; /chat/screen-question 'Siehst du GOAT Desktop auf dem Bildschirm?' -> source_path=win32_window_cache, cache_hit=true, resolver time_ms=0.36, Antwort 'Gesehen: GOAT Desktop sichtbar. Quelle: Fensterliste.', providerCallsMade=false, desktopActionsExecuted=false. Tests gruen: 171 passed; compileall gruen."
+
+resolver_cache_periodic_refresh_2026_05_26:
+"GOAT waermt Taskleisten- und Fensterlisten-Resolver-Caches jetzt nicht nur beim Start, sondern periodisch read-only nach. Standardintervall: 60s, testbar/steuerbar ueber GOAT_RESOLVER_CACHE_REFRESH_MS mit 10s Untergrenze. Live-Smoke mit GOAT_RESOLVER_CACHE_REFRESH_MS=10000 nach Neustart und >12s Wartezeit: /healthz zeigte taskbar warm=true, elements=26, age_ms=6684.1 und windows warm=true, elements=7, age_ms=7235.86. Damit fallen lokale Screenfragen nach Leerlauf nicht direkt wieder in kalte UIA-/Win32-Scans. Tests gruen: 173 passed; compileall gruen."

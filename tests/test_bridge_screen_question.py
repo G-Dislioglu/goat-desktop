@@ -134,6 +134,44 @@ def test_tray_bridge_screen_question_returns_timing_and_evidence() -> None:
     assert fake.popup.chat_finished.payloads[0]["response_text"] == "Gesehen per Desktop: StepStack sichtbar."
 
 
+def test_resolver_cache_refresh_interval_is_configurable(monkeypatch) -> None:
+    monkeypatch.delenv("GOAT_RESOLVER_CACHE_REFRESH_MS", raising=False)
+    assert tray._resolver_cache_refresh_interval_ms() == 60000
+
+    monkeypatch.setenv("GOAT_RESOLVER_CACHE_REFRESH_MS", "25000")
+    assert tray._resolver_cache_refresh_interval_ms() == 25000
+
+    monkeypatch.setenv("GOAT_RESOLVER_CACHE_REFRESH_MS", "500")
+    assert tray._resolver_cache_refresh_interval_ms() == 10000
+
+    monkeypatch.setenv("GOAT_RESOLVER_CACHE_REFRESH_MS", "nope")
+    assert tray._resolver_cache_refresh_interval_ms() == 60000
+
+
+def test_start_resolver_cache_warmup_once_starts_both_warmers(monkeypatch) -> None:
+    started: list[tuple[str, object, bool]] = []
+
+    class FakeThread:
+        def __init__(self, target, name: str, daemon: bool) -> None:
+            self.target = target
+            self.name = name
+            self.daemon = daemon
+
+        def start(self) -> None:
+            started.append((self.name, self.target, self.daemon))
+
+    monkeypatch.setattr(tray, "Thread", FakeThread)
+    monkeypatch.setattr(tray, "warm_taskbar_cache", lambda: None)
+    monkeypatch.setattr(tray, "warm_window_cache", lambda: None)
+
+    tray._start_resolver_cache_warmup_once()
+
+    assert started == [
+        ("goat-taskbar-cache-warmup", tray.warm_taskbar_cache, True),
+        ("goat-window-cache-warmup", tray.warm_window_cache, True),
+    ]
+
+
 def test_tray_screen_question_local_miss_does_not_call_vision(monkeypatch) -> None:
     fake = FakeTray()
     monkeypatch.setattr(

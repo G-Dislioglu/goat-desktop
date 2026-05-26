@@ -57,6 +57,8 @@ from goat_desktop.vision_hint import (
     load_vision_hint_config,
 )
 
+_RESOLVER_CACHE_REFRESH_INTERVAL_MS = 60_000
+
 
 def _no_action_effects() -> dict[str, bool]:
     return {
@@ -67,6 +69,21 @@ def _no_action_effects() -> dict[str, bool]:
         "tradingActionsExecuted": False,
         "mayExecuteRealAction": False,
     }
+
+
+def _resolver_cache_refresh_interval_ms() -> int:
+    raw = os.getenv("GOAT_RESOLVER_CACHE_REFRESH_MS", "").strip()
+    if not raw:
+        return _RESOLVER_CACHE_REFRESH_INTERVAL_MS
+    try:
+        return max(10_000, int(raw))
+    except ValueError:
+        return _RESOLVER_CACHE_REFRESH_INTERVAL_MS
+
+
+def _start_resolver_cache_warmup_once() -> None:
+    Thread(target=warm_taskbar_cache, name="goat-taskbar-cache-warmup", daemon=True).start()
+    Thread(target=warm_window_cache, name="goat-window-cache-warmup", daemon=True).start()
 
 
 def _build_resolver_evidence(screen_resolution: object) -> dict[str, object]:
@@ -126,8 +143,11 @@ class GoatTrayApp:
         self.tray.setContextMenu(self._build_menu())
         self.tray.show()
         self.bridge.start()
-        Thread(target=warm_taskbar_cache, name="goat-taskbar-cache-warmup", daemon=True).start()
-        Thread(target=warm_window_cache, name="goat-window-cache-warmup", daemon=True).start()
+        _start_resolver_cache_warmup_once()
+        self._resolver_cache_timer = QTimer()
+        self._resolver_cache_timer.setInterval(_resolver_cache_refresh_interval_ms())
+        self._resolver_cache_timer.timeout.connect(_start_resolver_cache_warmup_once)
+        self._resolver_cache_timer.start()
         self._start_builder_bridge_if_configured()
         self._load_vision_config()
         self.popup.video_frames_toggle.setChecked(_video_frames_enabled())
