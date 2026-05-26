@@ -101,9 +101,13 @@ def build_screen_context_prompt(message: str) -> str:
 def build_screen_context_fallback_response(screen_context: str) -> str:
     context = screen_context.strip()
     if is_unavailable_screen_context(context):
-        return "Nicht sicher gesehen: Bildschirm konnte nicht gelesen werden."
+        reason = _unavailable_reason_for_context(context)
+        reason_suffix = f" Grund: {reason}." if reason else ""
+        return f"Nicht sicher gesehen: Bildschirm konnte nicht gelesen werden.{reason_suffix}"
     if is_uncertain_screen_context(context):
-        return "Nicht sicher gesehen: Ziel ist nicht klar erkennbar."
+        reason = _uncertain_reason_for_context(context)
+        reason_suffix = f" Grund: {reason}." if reason else ""
+        return f"Nicht sicher gesehen: Ziel ist im aktuellen Bildschirmbild nicht klar erkennbar.{reason_suffix}"
     source_label = _source_label_for_context(context)
     source_suffix = f" Quelle: {source_label}." if source_label else ""
     return f"Gesehen: {_clean_seen_context(context)}{source_suffix}"
@@ -132,7 +136,7 @@ def is_clear_screen_context(screen_context: str) -> bool:
 
 
 def should_answer_screen_question_locally(message: str, screen_context: str) -> bool:
-    return should_use_screen_context(message) and is_clear_screen_context(screen_context)
+    return should_use_screen_context(message) and _has_screen_context_result(screen_context)
 
 
 def is_uncertain_screen_context(screen_context: str) -> bool:
@@ -180,6 +184,39 @@ def _source_label_for_context(screen_context: str) -> str:
         return "Desktop"
     if _is_uia_context(screen_context):
         return "Lokale UI"
+    return ""
+
+
+def _has_screen_context_result(screen_context: str) -> bool:
+    context = screen_context.strip()
+    return bool(context) and context != "-"
+
+
+def _unavailable_reason_for_context(screen_context: str) -> str:
+    normalized = screen_context.strip().lower()
+    if "goat_builder_url and goat_builder_token are required" in normalized:
+        return "Vision-Builder ist nicht konfiguriert"
+    if "screen capture failed" in normalized or "capture failed" in normalized:
+        return "Screenshot-Erfassung fehlgeschlagen"
+    if "missing dependency" in normalized:
+        return "lokale Bildschirm-Erfassung ist unvollstaendig"
+    if "timeout" in normalized:
+        return "Vision-Builder antwortet zu langsam"
+    if "http_401" in normalized or "unauthorized" in normalized:
+        return "Vision-Builder hat die Anfrage abgelehnt"
+    if "vision failed" in normalized or "vision fehlgeschlagen" in normalized:
+        return "Vision-Auswertung fehlgeschlagen"
+    return ""
+
+
+def _uncertain_reason_for_context(screen_context: str) -> str:
+    normalized = screen_context.strip().lower()
+    if "unknown" in normalized:
+        return "Position unklar"
+    if "vertrauen 0.00" in normalized:
+        return "kein verlaesslicher Treffer"
+    if "kein klarer" in normalized:
+        return "kein klarer Treffer"
     return ""
 
 

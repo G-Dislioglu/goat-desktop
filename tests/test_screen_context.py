@@ -70,13 +70,21 @@ def test_build_screen_context_prompt_includes_user_question() -> None:
 def test_screen_context_fallback_response_handles_uncertain_context() -> None:
     response = build_screen_context_fallback_response("Codex (visible_desktop): uncertain bei unknown.")
 
-    assert response == "Nicht sicher gesehen: Ziel ist nicht klar erkennbar."
+    assert response == "Nicht sicher gesehen: Ziel ist im aktuellen Bildschirmbild nicht klar erkennbar. Grund: Position unklar."
 
 
 def test_screen_context_fallback_response_handles_unavailable_context() -> None:
     response = build_screen_context_fallback_response("Bildschirm-Kontext nicht verfuegbar: vision failed")
 
-    assert response == "Nicht sicher gesehen: Bildschirm konnte nicht gelesen werden."
+    assert response == "Nicht sicher gesehen: Bildschirm konnte nicht gelesen werden. Grund: Vision-Auswertung fehlgeschlagen."
+
+
+def test_screen_context_fallback_response_explains_builder_config_missing() -> None:
+    response = build_screen_context_fallback_response(
+        "Bildschirm-Kontext nicht verfuegbar: GOAT_BUILDER_URL and GOAT_BUILDER_TOKEN are required"
+    )
+
+    assert response == "Nicht sicher gesehen: Bildschirm konnte nicht gelesen werden. Grund: Vision-Builder ist nicht konfiguriert."
 
 
 def test_screen_context_fallback_response_uses_context_when_clear() -> None:
@@ -152,7 +160,9 @@ def test_screen_question_can_be_answered_locally_when_context_is_clear() -> None
 
     assert should_answer_screen_question_locally("Siehst du den StepStack Ordner?", context) is True
     assert should_answer_screen_question_locally("Fasse den Plan zusammen.", context) is False
-    assert should_answer_screen_question_locally("Siehst du StepStack?", "Codex: uncertain bei unknown. Vertrauen 0.00.") is False
+    assert should_answer_screen_question_locally("Siehst du StepStack?", "Codex: uncertain bei unknown. Vertrauen 0.00.") is True
+    assert should_answer_screen_question_locally("Siehst du StepStack?", "Bildschirm-Kontext nicht verfuegbar: vision failed") is True
+    assert should_answer_screen_question_locally("Siehst du StepStack?", "-") is False
 
 
 def test_unavailable_chat_response_detection() -> None:
