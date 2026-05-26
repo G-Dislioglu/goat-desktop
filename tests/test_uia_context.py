@@ -114,6 +114,36 @@ def test_find_best_uia_match_ignores_weak_match() -> None:
     assert match is None
 
 
+def test_find_best_uia_match_does_not_match_short_prefix_noise() -> None:
+    match = find_best_uia_match(
+        [
+            {
+                "name": "Ihr Geraet muss zur Installation wichtiger Updates neu gestartet werden.",
+                "control_type": "Button",
+                "rect": {"left": 0, "top": 0, "right": 1, "bottom": 1},
+            }
+        ],
+        "Siehst du DiesesZielGibtEsNicht in der Taskleiste?",
+    )
+
+    assert match is None
+
+
+def test_find_best_uia_match_does_not_match_partial_common_word_prefix() -> None:
+    match = find_best_uia_match(
+        [
+            {
+                "name": "Ihr Geraet muss zur Installation wichtiger Updates neu gestartet werden. Dieses Symbol zeigt mehr Informationen.",
+                "control_type": "Button",
+                "rect": {"left": 0, "top": 0, "right": 1, "bottom": 1},
+            }
+        ],
+        "Siehst du DiesesZielGibtEsNicht in der Taskleiste?",
+    )
+
+    assert match is None
+
+
 def test_build_uia_marker_uses_element_rect() -> None:
     match = {
         "score": 0.95,
@@ -258,7 +288,7 @@ def test_taskbar_match_uses_warmed_cache(monkeypatch) -> None:
     assert result["match"]["element"]["name"] == "Codex - 1 aktives Fenster angeheftet"
 
 
-def test_taskbar_cache_miss_refreshes_from_live_scan(monkeypatch) -> None:
+def test_taskbar_cache_miss_stops_without_live_refresh(monkeypatch) -> None:
     _set_taskbar_cache(
         [
             {
@@ -269,29 +299,35 @@ def test_taskbar_cache_miss_refreshes_from_live_scan(monkeypatch) -> None:
             }
         ]
     )
-    monkeypatch.setattr(
-        uia_context,
-        "_collect_taskbar_elements_uia",
-        lambda: (
-            [
-                {
-                    "name": "Codex - 1 aktives Fenster angeheftet",
-                    "control_type": "Button",
-                    "source": "uia_taskbar",
-                    "rect": {"left": 20, "top": 30, "right": 120, "bottom": 80},
-                }
-            ],
-            1,
-        ),
-    )
+    monkeypatch.setattr(uia_context, "_collect_taskbar_elements_uia", lambda: (_ for _ in ()).throw(AssertionError("cache miss should not refresh")))
 
     result = find_uia_match_for_message("Siehst du Codex in der Taskleiste?")
 
-    assert result["source_path"] == "uia_taskbar_scan"
-    assert result["cache_hit"] is False
-    assert result["cache_refreshed"] is True
-    assert result["match"]["element"]["name"] == "Codex - 1 aktives Fenster angeheftet"
-    assert _get_taskbar_cache()[0]["name"] == "Codex - 1 aktives Fenster angeheftet"
+    assert result["source_path"] == "uia_taskbar_miss"
+    assert result["cache_hit"] is True
+    assert result["cache_refreshed"] is False
+    assert result["match"] is None
+    assert _get_taskbar_cache()[0]["name"] == "Other App"
+
+
+def test_taskbar_question_stops_after_taskbar_miss(monkeypatch) -> None:
+    _set_taskbar_cache([])
+    monkeypatch.setattr(uia_context, "_collect_taskbar_elements_uia", lambda: ([], 4))
+
+    class FailingDesktop:
+        def __init__(self, backend: str) -> None:
+            if backend == "uia":
+                raise AssertionError("explicit taskbar miss should not use full UIA scan")
+
+    monkeypatch.setattr("pywinauto.Desktop", FailingDesktop)
+
+    result = find_uia_match_for_message("Siehst du DiesesZielGibtEsNicht in der Taskleiste?")
+
+    assert result["ok"] is True
+    assert result["match"] is None
+    assert result["source"] == "uia_taskbar"
+    assert result["source_path"] == "uia_taskbar_miss"
+    assert result["elements_scanned"] == 4
 
 
 def test_taskbar_cache_can_expire(monkeypatch) -> None:

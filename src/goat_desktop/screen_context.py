@@ -344,6 +344,8 @@ def _screen_question_target(message: str) -> str:
         "per vision",
         "visuell pruefen",
         "screenshot",
+        "taskleiste",
+        "taskbar",
     ):
         normalized = normalized.replace(token, " ")
     for token in (" den ", " die ", " das ", " der ", " ordner ", " button ", " schaltflaeche "):

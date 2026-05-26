@@ -110,6 +110,17 @@ def find_uia_match_for_message(
                     "cache_refreshed": taskbar_cache_refreshed,
                     "effects": _no_action_effects(),
                 }
+            return {
+                "ok": True,
+                "match": None,
+                "elements_scanned": taskbar_scanned,
+                "time_ms": round((perf_counter() - started) * 1000, 2),
+                "source": "uia_taskbar",
+                "source_path": "uia_taskbar_miss",
+                "cache_hit": taskbar_cache_hit,
+                "cache_refreshed": taskbar_cache_refreshed,
+                "effects": _no_action_effects(),
+            }
         if _message_mentions_window(message):
             window_match, window_scanned = _find_window_match_win32(target_terms, min_score=min_score, early_score=early_score)
             if window_match is not None:
@@ -383,6 +394,7 @@ def _find_taskbar_match_uia(target_terms: list[str], min_score: float, early_sco
         if match is not None:
             _mark_match_source(match, "uia_taskbar")
             return match, len(cached_elements), True, False
+        return None, len(cached_elements), True, False
 
     elements, scanned = _collect_taskbar_elements_uia()
     _set_taskbar_cache(elements)
@@ -606,7 +618,7 @@ def _match_score(target_terms: list[str], name: str) -> float:
     for term in target_terms:
         if term in normalized_name:
             hits += 1.0
-        elif any(part.startswith(term) or term.startswith(part) for part in normalized_name.split()):
+        elif any(_strong_prefix_match(term, part) for part in normalized_name.split()):
             hits += 0.6
     coverage = hits / max(1, len(target_terms))
     compact_target = "".join(target_terms)
@@ -614,6 +626,16 @@ def _match_score(target_terms: list[str], name: str) -> float:
     if compact_target and compact_target in compact_name:
         coverage = max(coverage, 0.95)
     return min(1.0, coverage)
+
+
+def _strong_prefix_match(term: str, name_part: str) -> bool:
+    if len(term) < 4 or len(name_part) < 4:
+        return False
+    if name_part.startswith(term):
+        return True
+    if term.startswith(name_part):
+        return len(name_part) / max(1, len(term)) >= 0.6
+    return False
 
 
 def _normalize(text: str) -> str:

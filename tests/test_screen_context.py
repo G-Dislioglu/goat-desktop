@@ -74,6 +74,16 @@ def test_build_local_screen_miss_summary_is_local_and_uncertain() -> None:
     assert summary == "Lokaler Screen: Ziel fuer 'stepstack' nicht sicher gesehen, 12 Elemente gelesen. Vertrauen 0.00 via uia_scan."
 
 
+def test_build_local_screen_miss_summary_removes_taskbar_context_word() -> None:
+    summary = build_local_screen_miss_summary(
+        "Siehst du DiesesZielGibtEsNicht in der Taskleiste?",
+        {"source_path": "uia_taskbar_miss", "elements_scanned": 26},
+    )
+
+    assert "taskleiste" not in summary
+    assert "dieseszielgibtesnicht" in summary
+
+
 def test_build_screen_context_prompt_includes_user_question() -> None:
     prompt = build_screen_context_prompt("Wo ist StepStack?")
 
