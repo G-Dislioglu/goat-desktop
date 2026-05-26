@@ -25,7 +25,20 @@ _SCREEN_CONTEXT_TRIGGERS = (
     "auf dem desktop",
     "auf dem bildschirm",
     "im fenster",
+    "sichtbar",
     "navigier",
+)
+
+_VISION_FALLBACK_TRIGGERS = (
+    "pruef genau",
+    "genau pruefen",
+    "genauer hinsehen",
+    "mit vision",
+    "per vision",
+    "visuell pruefen",
+    "screenshot",
+    "bildschirm pruefen",
+    "langsamer fallback",
 )
 
 
@@ -79,8 +92,23 @@ def build_screen_marker_from_hint(capture: dict[str, Any], hint: Any, min_confid
 
 
 def should_use_screen_context(message: str) -> bool:
-    normalized = " ".join(message.strip().lower().split())
+    normalized = _normalized_message(message)
     return any(trigger in normalized for trigger in _SCREEN_CONTEXT_TRIGGERS)
+
+
+def should_use_vision_fallback(message: str) -> bool:
+    normalized = _normalized_message(message)
+    return _looks_like_screen_request(normalized) and any(trigger in normalized for trigger in _VISION_FALLBACK_TRIGGERS)
+
+
+def build_local_screen_miss_summary(message: str, resolution: dict[str, Any] | None = None) -> str:
+    data = resolution if isinstance(resolution, dict) else {}
+    source_path = str(data.get("source_path") or "local_screen").strip() or "local_screen"
+    scanned = data.get("elements_scanned")
+    scan_note = f", {int(scanned)} Elemente gelesen" if isinstance(scanned, int) and scanned > 0 else ""
+    target = _screen_question_target(message)
+    target_note = f" fuer '{target}'" if target else ""
+    return f"Lokaler Screen: Ziel{target_note} nicht sicher gesehen{scan_note}. Vertrauen 0.00 via {source_path}."
 
 
 def build_screen_context_prompt(message: str) -> str:
@@ -279,6 +307,49 @@ def is_unavailable_chat_response(response_text: str) -> bool:
         or "maya-ki ist noch nicht live angebunden" in normalized
         or "goat_builder_url and goat_builder_token are required" in normalized
     )
+
+
+def _normalized_message(message: str) -> str:
+    return (
+        " ".join(message.strip().lower().split())
+        .replace("\u00e4", "ae")
+        .replace("\u00f6", "oe")
+        .replace("\u00fc", "ue")
+        .replace("\u00df", "ss")
+    )
+
+
+def _looks_like_screen_request(normalized_message: str) -> bool:
+    return should_use_screen_context(normalized_message) or any(
+        token in normalized_message for token in ("desktop", "bildschirm", "screen", "vision", "screenshot")
+    )
+
+
+def _screen_question_target(message: str) -> str:
+    normalized = _normalized_message(message)
+    for token in (
+        "siehst du",
+        "wo ist",
+        "wo finde",
+        "finde",
+        "zeig mir",
+        "auf meinem desktop",
+        "auf dem desktop",
+        "auf dem bildschirm",
+        "im fenster",
+        "bitte",
+        "pruef genau",
+        "genau pruefen",
+        "mit vision",
+        "per vision",
+        "visuell pruefen",
+        "screenshot",
+    ):
+        normalized = normalized.replace(token, " ")
+    for token in (" den ", " die ", " das ", " der ", " ordner ", " button ", " schaltflaeche "):
+        normalized = normalized.replace(token, " ")
+    target = " ".join(part for part in normalized.replace("?", " ").replace("!", " ").split() if len(part) >= 3)
+    return target[:80]
 
 
 def build_chat_context(screen_context: str, target: str) -> dict[str, str]:

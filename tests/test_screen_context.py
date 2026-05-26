@@ -3,6 +3,7 @@ from __future__ import annotations
 from goat_desktop.screen_context import (
     VISION_CONTEXT_PROMPT,
     build_chat_context,
+    build_local_screen_miss_summary,
     build_screen_marker_from_hint,
     build_screen_context_display_status,
     build_screen_context_fallback_response,
@@ -12,6 +13,7 @@ from goat_desktop.screen_context import (
     is_unavailable_chat_response,
     should_answer_screen_question_locally,
     should_use_screen_context,
+    should_use_vision_fallback,
 )
 
 
@@ -54,6 +56,22 @@ def test_should_use_screen_context_for_visible_target_questions() -> None:
 def test_should_not_use_screen_context_for_plain_chat() -> None:
     assert should_use_screen_context("Fasse mir den Plan kurz zusammen.") is False
     assert should_use_screen_context("Was haben wir zuletzt committed?") is False
+
+
+def test_should_use_vision_fallback_only_when_explicit() -> None:
+    assert should_use_vision_fallback("Siehst du den StepStack Ordner auf meinem Desktop?") is False
+    assert should_use_vision_fallback("Pruef genau per Vision, ob StepStack sichtbar ist.") is True
+    assert should_use_vision_fallback("Mach bitte einen Screenshot und pruef den Desktop.") is True
+    assert should_use_vision_fallback("Fasse mir den Plan kurz zusammen.") is False
+
+
+def test_build_local_screen_miss_summary_is_local_and_uncertain() -> None:
+    summary = build_local_screen_miss_summary(
+        "Siehst du den StepStack Ordner auf meinem Desktop?",
+        {"source_path": "uia_scan", "elements_scanned": 12},
+    )
+
+    assert summary == "Lokaler Screen: Ziel fuer 'stepstack' nicht sicher gesehen, 12 Elemente gelesen. Vertrauen 0.00 via uia_scan."
 
 
 def test_build_screen_context_prompt_includes_user_question() -> None:

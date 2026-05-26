@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from goat_desktop import tray
 from goat_desktop.bridge import create_app
 from goat_desktop.tray import GoatTrayApp
 
@@ -25,6 +26,7 @@ class FakePopup:
 
 class FakeTray:
     def __init__(self) -> None:
+        self._last_screen_context = ""
         self._screen_context_provider = "gemini_flash_lite"
         self._screen_context_reasoning = "minimal"
         self.popup = FakePopup()
@@ -46,6 +48,9 @@ class FakeTray:
             },
             "chat": {"provider": "goat_local_screen_context"},
         }
+
+    def _resolve_screen_context_for_message(self, text: str, provider: str, reasoning: str) -> dict:
+        return GoatTrayApp._resolve_screen_context_for_message(self, text, provider, reasoning)
 
 
 def test_bridge_screen_question_uses_attached_handler() -> None:
@@ -105,6 +110,75 @@ def test_tray_bridge_screen_question_returns_timing_and_evidence() -> None:
         "elements_scanned": 2,
     }
     assert fake.popup.chat_finished.payloads[0]["response_text"] == "Gesehen per Desktop: StepStack sichtbar."
+
+
+def test_tray_screen_question_local_miss_does_not_call_vision(monkeypatch) -> None:
+    fake = FakeTray()
+    monkeypatch.setattr(
+        tray,
+        "find_uia_match_for_message",
+        lambda _text: {
+            "ok": True,
+            "match": None,
+            "source_path": "uia_scan",
+            "elements_scanned": 7,
+            "time_ms": 3.5,
+        },
+    )
+    fake._capture_screen_context_for_message = lambda *_args, **_kwargs: (_ for _ in ()).throw(  # type: ignore[attr-defined]
+        AssertionError("vision fallback should stay off")
+    )
+
+    result = GoatTrayApp._build_chat_message_payload(
+        fake,
+        "Siehst du StepStack auf dem Desktop?",
+        "Kein Ziel markiert",
+        "gemini_flash_lite",
+        "minimal",
+    )
+
+    assert result["response_text"] == (
+        "Nicht sicher gesehen: Ziel ist im aktuellen Bildschirmbild nicht klar erkennbar. Grund: kein verlaesslicher Treffer."
+    )
+    assert result["chat"]["provider"] == "goat_local_screen_context"
+    assert result["screen_resolution"]["source_path"] == "uia_scan"
+
+
+def test_tray_screen_question_explicit_vision_fallback_can_call_vision(monkeypatch) -> None:
+    fake = FakeTray()
+    calls = {"vision": 0}
+    monkeypatch.setattr(
+        tray,
+        "find_uia_match_for_message",
+        lambda _text: {
+            "ok": True,
+            "match": None,
+            "source_path": "uia_scan",
+            "elements_scanned": 7,
+            "time_ms": 3.5,
+        },
+    )
+
+    def fake_vision(_text, _provider, _reasoning):
+        calls["vision"] += 1
+        return {
+            "status": "ok",
+            "summary": "Explorer (visible_desktop): StepStack sichtbar. Vertrauen 0.82, 300ms via gemini_flash_lite.",
+            "marker": None,
+        }
+
+    fake._capture_screen_context_for_message = fake_vision  # type: ignore[attr-defined]
+
+    result = GoatTrayApp._build_chat_message_payload(
+        fake,
+        "Pruef genau per Vision, ob StepStack sichtbar ist.",
+        "Kein Ziel markiert",
+        "gemini_flash_lite",
+        "minimal",
+    )
+
+    assert calls["vision"] == 1
+    assert result["response_text"] == "Gesehen: StepStack sichtbar."
 
 
 def _endpoint_for(app, path: str):

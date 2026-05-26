@@ -26,6 +26,7 @@ from goat_desktop.screen import capture_visible_desktop
 from goat_desktop.screen_context import (
     VISION_CONTEXT_PROMPT,
     build_chat_context,
+    build_local_screen_miss_summary,
     build_screen_marker_from_hint,
     build_screen_context_display_status,
     build_screen_context_fallback_response,
@@ -34,6 +35,7 @@ from goat_desktop.screen_context import (
     is_unavailable_chat_response,
     should_answer_screen_question_locally,
     should_use_screen_context,
+    should_use_vision_fallback,
 )
 from goat_desktop.stt_hint import load_stt_config
 from goat_desktop.tts_hint import load_tts_config
@@ -500,6 +502,35 @@ class GoatTrayApp:
                         "match": match,
                     },
                 }
+            if not should_use_vision_fallback(text):
+                return {
+                    "status": "ok",
+                    "summary": build_local_screen_miss_summary(text, uia_context),
+                    "marker": None,
+                    "source": "local_screen_miss",
+                    "uia": {
+                        "status": "miss",
+                        "time_ms": uia_context.get("time_ms"),
+                        "elements_scanned": uia_context.get("elements_scanned"),
+                        "source": uia_context.get("source"),
+                        "source_path": uia_context.get("source_path"),
+                        "cache_hit": uia_context.get("cache_hit"),
+                        "cache_refreshed": uia_context.get("cache_refreshed"),
+                    },
+                }
+        elif not should_use_vision_fallback(text):
+            return {
+                "status": "ok",
+                "summary": build_local_screen_miss_summary(text, uia_context),
+                "marker": None,
+                "source": "local_screen_unavailable",
+                "uia": {
+                    "status": "error",
+                    "time_ms": uia_context.get("time_ms"),
+                    "elements_scanned": uia_context.get("elements_scanned"),
+                    "error": uia_context.get("error"),
+                },
+            }
         vision_context = self._capture_screen_context_for_message(text, provider, reasoning)
         if isinstance(vision_context, dict):
             vision_context.setdefault(
