@@ -13,12 +13,17 @@ class RecordingMouseBackend:
     def __init__(self) -> None:
         self.moves: list[tuple[int, int]] = []
         self.scrolls: list[int] = []
+        self.position: tuple[int, int] | None = None
 
     def move_to(self, x: int, y: int) -> None:
         self.moves.append((x, y))
+        self.position = (x, y)
 
     def scroll(self, amount: int) -> None:
         self.scrolls.append(amount)
+
+    def current_position(self) -> tuple[int, int]:
+        return self.position or (0, 0)
 
 
 class FailingMouseBackend(RecordingMouseBackend):
@@ -66,6 +71,26 @@ def test_stage1_hover_moves_to_broker_bbox_center(monkeypatch, tmp_path: Path) -
     assert result.target == {"x": 120, "y": 220}
     assert backend.moves == [(120, 220)]
     assert backend.scrolls == []
+
+
+def test_stage1_hover_verifies_pointer_position_after_move(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
+
+    class WrongPositionBackend(RecordingMouseBackend):
+        def current_position(self) -> tuple[int, int]:
+            return (1, 1)
+
+    backend = WrongPositionBackend()
+
+    result = execute_stage1_action(
+        Stage1ExecutionRequest("hover", "hover tooltip", ACCEPTED, dry_run=False),
+        backend=backend,
+    )
+
+    assert result.status == "failed"
+    assert result.executed is False
+    assert result.target == {"x": 120, "y": 220}
+    assert "pointer verification failed" in result.reason
 
 
 def test_stage1_scroll_backend_failure_is_not_reported_as_executed(monkeypatch, tmp_path: Path) -> None:

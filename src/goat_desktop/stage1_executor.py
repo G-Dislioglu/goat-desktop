@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from ctypes import Structure, byref, c_long, windll
 from typing import Protocol
 
 from goat_desktop.action_gate import ActionRequest, ActionStage, evaluate_action_gate
@@ -15,15 +16,20 @@ class MouseBackend(Protocol):
 
 class Win32MouseBackend:
     def move_to(self, x: int, y: int) -> None:
-        from ctypes import windll
-
         windll.user32.SetCursorPos(int(x), int(y))
 
     def scroll(self, amount: int) -> None:
-        from ctypes import windll
-
         mouseeventf_wheel = 0x0800
         windll.user32.mouse_event(mouseeventf_wheel, 0, 0, int(amount), 0)
+
+    def current_position(self) -> tuple[int, int]:
+        class Point(Structure):
+            _fields_ = [("x", c_long), ("y", c_long)]
+
+        point = Point()
+        if not windll.user32.GetCursorPos(byref(point)):
+            raise OSError("GetCursorPos failed")
+        return int(point.x), int(point.y)
 
 
 @dataclass(frozen=True)
@@ -149,6 +155,19 @@ def execute_stage1_action(
                     target=target,
                 ),
             )
+        if not _pointer_is_at_target(selected_backend, target):
+            return _audit_execution(
+                request,
+                Stage1ExecutionResult(
+                    status="failed",
+                    executed=False,
+                    action_type="hover",
+                    stage=gate_decision.stage,
+                    reason="pointer verification failed after move",
+                    gate_decision=gate_decision.to_dict(),
+                    target=target,
+                ),
+            )
         return _audit_execution(
             request,
             Stage1ExecutionResult(
@@ -185,6 +204,17 @@ def _target_center(broker_decision: dict) -> dict[str, int] | None:
     if right <= left or bottom <= top:
         return None
     return {"x": int(round((left + right) / 2)), "y": int(round((top + bottom) / 2))}
+
+
+def _pointer_is_at_target(backend: MouseBackend, target: dict[str, int]) -> bool:
+    current_position = getattr(backend, "current_position", None)
+    if not callable(current_position):
+        return True
+    try:
+        x, y = current_position()
+    except Exception:
+        return False
+    return abs(int(x) - int(target["x"])) <= 2 and abs(int(y) - int(target["y"])) <= 2
 
 
 def _audit_execution(

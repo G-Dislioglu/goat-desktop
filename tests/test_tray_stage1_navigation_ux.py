@@ -251,6 +251,21 @@ def test_stage2_backend_failure_uses_plain_user_message() -> None:
     assert fake.popup.maya_value.text() == "Die Eingabe hat nicht geklappt. Ich melde sie nicht als erledigt."
 
 
+def test_stage2_verification_failure_uses_plain_user_message() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "stage2_done",
+            "response": {"executed": False, "reason": "text input verification failed after typing"},
+        },
+    )
+
+    assert fake.popup.screen_context_value.text() == "Eingabe nicht ausgefuehrt"
+    assert fake.popup.maya_value.text() == "Ich bin nicht sicher, ob die Eingabe angekommen ist. Ich melde sie nicht als erledigt."
+
+
 def test_stage1_backend_failure_uses_plain_user_message() -> None:
     fake = FakeTray()
 
@@ -264,6 +279,21 @@ def test_stage1_backend_failure_uses_plain_user_message() -> None:
 
     assert fake.popup.screen_context_value.text() == "Navigation nicht ausgefuehrt"
     assert fake.popup.maya_value.text() == "Die Navigation hat nicht geklappt. Ich melde sie nicht als erledigt."
+
+
+def test_stage1_verification_failure_uses_plain_user_message() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "stage1_done",
+            "response": {"executed": False, "reason": "pointer verification failed after move"},
+        },
+    )
+
+    assert fake.popup.screen_context_value.text() == "Navigation nicht ausgefuehrt"
+    assert fake.popup.maya_value.text() == "Ich bin nicht sicher, ob die Navigation angekommen ist. Ich melde sie nicht als erledigt."
 
 
 def test_stage2_done_resets_pending_input() -> None:

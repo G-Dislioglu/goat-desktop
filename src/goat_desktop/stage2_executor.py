@@ -212,6 +212,19 @@ def execute_stage2_text_input(
                 target=target,
             ),
         )
+    if not _text_input_is_verified(selected_backend, request.text):
+        return _audit_execution(
+            request,
+            Stage2ExecutionResult(
+                status="failed",
+                executed=False,
+                stage=gate_decision.stage,
+                reason="text input verification failed after typing",
+                preview=preview,
+                gate_decision=gate_decision.to_dict(),
+                target=target,
+            ),
+        )
 
     return _audit_execution(
         request,
@@ -257,6 +270,16 @@ def _target_center(broker_decision: dict) -> dict[str, int] | None:
     if right <= left or bottom <= top:
         return None
     return {"x": int(round((left + right) / 2)), "y": int(round((top + bottom) / 2))}
+
+
+def _text_input_is_verified(backend: TextInputBackend, text: str) -> bool:
+    verifier = getattr(backend, "typed_text_matches", None)
+    if not callable(verifier):
+        return True
+    try:
+        return bool(verifier(text))
+    except Exception:
+        return False
 
 
 def _audit_execution(

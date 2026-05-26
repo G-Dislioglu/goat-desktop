@@ -24,6 +24,9 @@ class RecordingTextBackend:
     def type_text(self, text: str) -> None:
         self.typed.append(text)
 
+    def typed_text_matches(self, text: str) -> bool:
+        return bool(self.typed) and self.typed[-1] == text
+
 
 class FailingTextBackend(RecordingTextBackend):
     def __init__(self, *, fail_on: str) -> None:
@@ -139,6 +142,35 @@ def test_stage2_backend_failure_is_not_reported_as_executed(monkeypatch, tmp_pat
     assert backend.moves == [(140, 220)]
     assert backend.clicks == 1
     assert backend.typed == []
+
+
+def test_stage2_failed_verification_is_not_reported_as_executed(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
+
+    class MismatchTextBackend(RecordingTextBackend):
+        def typed_text_matches(self, text: str) -> bool:
+            return False
+
+    backend = MismatchTextBackend()
+
+    result = execute_stage2_text_input(
+        Stage2ExecutionRequest(
+            "type",
+            "enter text in safe test field",
+            ACCEPTED,
+            "GOAT safe input",
+            user_approved=True,
+            dry_run=False,
+            safe_text_context=True,
+        ),
+        backend=backend,
+    )
+
+    assert result.status == "failed"
+    assert result.executed is False
+    assert result.target == {"x": 140, "y": 220}
+    assert "text input verification failed" in result.reason
+    assert backend.typed == ["GOAT safe input"]
 
 
 def test_stage2_dry_run_blocks_execution(monkeypatch, tmp_path: Path) -> None:

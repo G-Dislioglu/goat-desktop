@@ -130,6 +130,8 @@ def _friendly_action_failure_message(response: dict, *, stage: str) -> str:
     if stage == "stage2_done":
         if "backend failed" in lowered:
             return "Die Eingabe hat nicht geklappt. Ich melde sie nicht als erledigt."
+        if "verification failed" in lowered:
+            return "Ich bin nicht sicher, ob die Eingabe angekommen ist. Ich melde sie nicht als erledigt."
         if "safe_text_context" in lowered:
             return "Ich tippe hier nicht. Ich habe das Eingabefeld nicht sicher genug erkannt."
         if "empty" in lowered:
@@ -145,6 +147,8 @@ def _friendly_action_failure_message(response: dict, *, stage: str) -> str:
         return "Ich habe nichts eingetippt. Bitte pruefe Feld und Text erneut."
     if "backend failed" in lowered:
         return "Die Navigation hat nicht geklappt. Ich melde sie nicht als erledigt."
+    if "verification failed" in lowered:
+        return "Ich bin nicht sicher, ob die Navigation angekommen ist. Ich melde sie nicht als erledigt."
     if "approval" in lowered or "preview" in lowered or "dry_run" in lowered:
         return "Bitte gib die Navigation erst im GOAT-Fenster frei."
     return reason or "Bitte pruefe das Ziel erneut."
