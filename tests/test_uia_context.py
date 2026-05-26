@@ -106,6 +106,7 @@ def test_find_best_uia_match_normalizes_german_umlauts() -> None:
 def test_target_terms_drop_taskbar_and_window_context_words() -> None:
     assert _target_terms("Siehst du Codex in der Taskleiste?") == ["codex"]
     assert _target_terms("Siehst du GOAT Desktop Fenster?") == ["goat", "desktop"]
+    assert _target_terms("Siehst du GOAT Desktop auf dem Bildschirm?") == ["goat", "desktop"]
 
 
 def test_find_best_uia_match_ignores_weak_match() -> None:
@@ -266,6 +267,28 @@ def test_window_match_uses_warmed_cache(monkeypatch) -> None:
     monkeypatch.setattr(uia_context, "_collect_window_elements_win32", lambda: (_ for _ in ()).throw(AssertionError("cache missed")))
 
     result = find_uia_match_for_message("Siehst du GOAT Desktop Fenster?")
+
+    assert result["source"] == "win32_window"
+    assert result["source_path"] == "win32_window_cache"
+    assert result["cache_hit"] is True
+    assert result["elements_scanned"] == 1
+    assert result["match"]["element"]["name"] == "GOAT Desktop"
+
+
+def test_broad_screen_question_can_find_visible_window_after_desktop_miss(monkeypatch) -> None:
+    monkeypatch.setattr(uia_context, "_find_desktop_icon_match_win32", lambda *_args, **_kwargs: (None, 4))
+    _set_window_cache(
+        [
+            {
+                "name": "GOAT Desktop",
+                "control_type": "Window",
+                "source": "win32_window",
+                "rect": {"left": 10, "top": 20, "right": 210, "bottom": 170},
+            }
+        ]
+    )
+
+    result = find_uia_match_for_message("Siehst du GOAT Desktop auf dem Bildschirm?")
 
     assert result["source"] == "win32_window"
     assert result["source_path"] == "win32_window_cache"

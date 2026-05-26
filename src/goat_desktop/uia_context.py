@@ -150,6 +150,21 @@ def find_uia_match_for_message(
                 "effects": _no_action_effects(),
             }
         if not _message_mentions_taskbar(message) and not _message_mentions_window(message):
+            if _message_mentions_screen(message):
+                window_match, window_scanned, window_cache_hit = _find_window_match_win32(
+                    target_terms, min_score=min_score, early_score=early_score
+                )
+                if window_match is not None:
+                    return {
+                        "ok": True,
+                        "match": window_match,
+                        "elements_scanned": window_scanned,
+                        "time_ms": round((perf_counter() - started) * 1000, 2),
+                        "source": "win32_window",
+                        "source_path": "win32_window_cache" if window_cache_hit else "win32_window_scan",
+                        "cache_hit": window_cache_hit,
+                        "effects": _no_action_effects(),
+                    }
             fast_match, fast_scanned = _find_desktop_icon_match_win32(target_terms, min_score=min_score, early_score=early_score)
             if fast_match is not None:
                 return {
@@ -626,6 +641,7 @@ def _target_terms(message: str) -> list[str]:
         "die",
         "das",
         "der",
+        "dem",
         "wo",
         "ist",
         "finde",
@@ -674,7 +690,13 @@ def _message_mentions_window(message: str) -> bool:
 def _message_mentions_desktop(message: str) -> bool:
     normalized = _normalize(message)
     parts = normalized.split()
-    return "desktop" in parts or "bildschirm" in parts
+    return "desktop" in parts
+
+
+def _message_mentions_screen(message: str) -> bool:
+    normalized = _normalize(message)
+    parts = normalized.split()
+    return "bildschirm" in parts or "screen" in parts
 
 
 def _match_score(target_terms: list[str], name: str) -> float:
