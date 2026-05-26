@@ -167,16 +167,38 @@ def create_app(
 
     @app.post("/action/stage2/text")
     def stage2_text_action(payload: dict[str, Any]) -> dict[str, Any]:
+        requested_dry_run = bool(payload.get("dry_run") if "dry_run" in payload else True)
+        user_approved = bool(payload.get("user_approved") or False)
+        safe_text_context = bool(payload.get("safe_text_context") or False)
+        if not requested_dry_run and not user_approved:
+            preview = build_action_preview(
+                str(payload.get("action_type") or "type"),
+                str(payload.get("label") or ""),
+                dict(payload.get("broker_decision") or {}),
+                text=str(payload.get("text") or ""),
+                dry_run=True,
+                context=_action_preview_context(payload),
+            )
+            return {
+                "status": "preview_required",
+                "executed": False,
+                "stage": preview.get("stage"),
+                "reason": "Bitte pruefe die Eingabe zuerst in GOAT.",
+                "preview": preview,
+                "effects": _no_action_effects(),
+            }
         request = Stage2ExecutionRequest(
             action_type=str(payload.get("action_type") or "type"),
             label=str(payload.get("label") or ""),
             broker_decision=dict(payload.get("broker_decision") or {}),
             text=str(payload.get("text") or ""),
-            user_approved=bool(payload.get("user_approved") or False),
-            dry_run=bool(payload.get("dry_run") if "dry_run" in payload else True),
-            safe_text_context=bool(payload.get("safe_text_context") or False),
+            user_approved=user_approved,
+            dry_run=requested_dry_run,
+            safe_text_context=safe_text_context,
         )
-        return execute_stage2_text_input(request).to_dict()
+        result = execute_stage2_text_input(request).to_dict()
+        result["effects"] = _stage2_effects(result)
+        return result
 
     @app.post("/action/stage3/review")
     def stage3_review(payload: dict[str, Any]) -> dict[str, Any]:
@@ -277,6 +299,16 @@ def _stage1_effects(result: dict[str, Any]) -> dict[str, Any]:
     action_type = str(result.get("action_type") or "")
     effects["desktopActionsExecuted"] = executed
     effects["mouseActionsExecuted"] = executed and action_type in {"hover", "scroll"}
+    effects["mayExecuteRealAction"] = executed
+    return effects
+
+
+def _stage2_effects(result: dict[str, Any]) -> dict[str, Any]:
+    effects = _no_action_effects()
+    executed = bool(result.get("executed"))
+    effects["desktopActionsExecuted"] = executed
+    effects["mouseActionsExecuted"] = executed
+    effects["keyboardActionsExecuted"] = executed
     effects["mayExecuteRealAction"] = executed
     return effects
 

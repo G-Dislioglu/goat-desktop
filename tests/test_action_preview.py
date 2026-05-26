@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import goat_desktop.stage2_executor as stage2_executor
 from goat_desktop.action_preview import build_action_preview
 from goat_desktop.bridge import create_app
 
@@ -121,6 +122,88 @@ def test_bridge_stage1_dry_run_remains_read_only() -> None:
     assert "dry_run_ready" in body["reason"]
     assert body["effects"]["desktopActionsExecuted"] is False
     assert body["effects"]["mouseActionsExecuted"] is False
+
+
+def test_bridge_stage2_requires_user_approval_for_real_text_input() -> None:
+    endpoint = _endpoint_for(create_app(), "/action/stage2/text")
+
+    body = endpoint(
+        {
+            "action_type": "type",
+            "label": "Suchfeld",
+            "text": "StepStack",
+            "broker_decision": ACCEPTED,
+            "safe_text_context": True,
+            "dry_run": False,
+            "user_approved": False,
+        }
+    )
+
+    assert body["status"] == "preview_required"
+    assert body["executed"] is False
+    assert body["reason"] == "Bitte pruefe die Eingabe zuerst in GOAT."
+    assert body["preview"]["title"] == "Freigabe fuer Eingabe"
+    assert body["preview"]["primaryButton"] == "Eingabe ausfuehren"
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert body["effects"]["mouseActionsExecuted"] is False
+    assert body["effects"]["keyboardActionsExecuted"] is False
+
+
+def test_bridge_stage2_dry_run_remains_read_only() -> None:
+    endpoint = _endpoint_for(create_app(), "/action/stage2/text")
+
+    body = endpoint(
+        {
+            "action_type": "type",
+            "label": "Suchfeld",
+            "text": "StepStack",
+            "broker_decision": ACCEPTED,
+            "safe_text_context": True,
+        }
+    )
+
+    assert body["status"] == "preview"
+    assert body["executed"] is False
+    assert "preview" in body["reason"]
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert body["effects"]["mouseActionsExecuted"] is False
+    assert body["effects"]["keyboardActionsExecuted"] is False
+
+
+def test_bridge_stage2_real_text_input_reports_mouse_and_keyboard_effect(monkeypatch) -> None:
+    calls: list[tuple[str, object]] = []
+
+    class FakeTextInputBackend:
+        def move_to(self, x: int, y: int) -> None:
+            calls.append(("move_to", (x, y)))
+
+        def click_left(self) -> None:
+            calls.append(("click_left", None))
+
+        def type_text(self, text: str) -> None:
+            calls.append(("type_text", text))
+
+    monkeypatch.setattr(stage2_executor, "Win32TextInputBackend", FakeTextInputBackend)
+    endpoint = _endpoint_for(create_app(), "/action/stage2/text")
+
+    body = endpoint(
+        {
+            "action_type": "type",
+            "label": "Suchfeld",
+            "text": "StepStack",
+            "broker_decision": ACCEPTED,
+            "safe_text_context": True,
+            "dry_run": False,
+            "user_approved": True,
+        }
+    )
+
+    assert body["status"] == "executed"
+    assert body["executed"] is True
+    assert body["effects"]["desktopActionsExecuted"] is True
+    assert body["effects"]["mouseActionsExecuted"] is True
+    assert body["effects"]["keyboardActionsExecuted"] is True
+    assert calls == [("move_to", (60, 50)), ("click_left", None), ("type_text", "StepStack")]
 
 
 def _endpoint_for(app, path: str):

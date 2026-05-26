@@ -37,6 +37,7 @@ class FakeTray:
         self.popup = FakePopup()
         self.pending_builder_cue = None
         self.pending_stage1_action = None
+        self.pending_stage2_action = None
         self.shown = False
 
     def show_popup(self) -> None:
@@ -132,14 +133,109 @@ def test_stage1_done_resets_pending_navigation() -> None:
     assert fake.popup.cue_reject.enabled is False
 
 
+def test_builder_stage2_cue_shows_input_check_before_execution() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {
+            "action_type": "type",
+            "label": "Suchfeld",
+            "text": "StepStack",
+            "safe_text_context": True,
+            "bbox": [10, 20, 110, 80],
+        },
+    )
+
+    assert fake.pending_stage2_action == {
+        "action_type": "type",
+        "label": "Suchfeld",
+        "text": "StepStack",
+        "safe_text_context": True,
+    }
+    assert fake.popup.maya_value.text() == "Danach kannst du die Eingabe freigeben."
+    assert fake.popup.cue_approve.text() == "Ziel pruefen"
+
+
+def test_accepted_stage2_cue_turns_into_input_preview() -> None:
+    fake = FakeTray()
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {
+            "action_type": "type",
+            "label": "Suchfeld",
+            "text": "StepStack",
+            "safe_text_context": True,
+            "bbox": [10, 20, 110, 80],
+        },
+    )
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "ok",
+            "response": {
+                "safety_state": "accept",
+                "broker_decision": {"status": "accept", "final_bbox": [10, 20, 110, 80]},
+            },
+        },
+    )
+
+    assert fake.pending_stage2_action["broker_decision"] == {"status": "accept", "final_bbox": [10, 20, 110, 80]}
+    assert fake.popup.screen_context_value.text() == "Freigabe fuer Eingabe"
+    assert fake.popup.maya_value.text() == (
+        'GOAT will Text in Suchfeld eingeben: "StepStack". Bitte pruefe die Eingabe vor dem Ausfuehren.'
+    )
+    assert fake.popup.cue_approve.text() == "Eingabe ausfuehren"
+    assert fake.popup.cue_approve.enabled is True
+
+
+def test_stage2_preview_without_safe_context_disables_execute() -> None:
+    fake = FakeTray()
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {"action_type": "type", "label": "Suchfeld", "text": "StepStack", "safe_text_context": False, "bbox": [10, 20, 110, 80]},
+    )
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "ok",
+            "response": {
+                "safety_state": "accept",
+                "broker_decision": {"status": "accept", "final_bbox": [10, 20, 110, 80]},
+            },
+        },
+    )
+
+    assert fake.popup.cue_approve.text() == "Eingabe ausfuehren"
+    assert fake.popup.cue_approve.enabled is False
+
+
+def test_stage2_done_resets_pending_input() -> None:
+    fake = FakeTray()
+    fake.pending_builder_cue = {"label": "Suchfeld"}
+    fake.pending_stage2_action = {"action_type": "type", "label": "Suchfeld", "text": "StepStack"}
+
+    GoatTrayApp._finish_builder_cue(fake, {"status": "stage2_done", "response": {"executed": True}})
+
+    assert fake.pending_builder_cue is None
+    assert fake.pending_stage1_action is None
+    assert fake.pending_stage2_action is None
+    assert fake.popup.screen_context_value.text() == "Eingabe ausgefuehrt"
+    assert fake.popup.maya_value.text() == "Ich habe den Text eingetragen."
+
+
 def test_reject_pending_cue_resets_navigation_state() -> None:
     fake = FakeTray()
     fake.pending_builder_cue = {"label": "Senden Button"}
     fake.pending_stage1_action = {"action_type": "hover", "label": "Senden Button"}
+    fake.pending_stage2_action = {"action_type": "type", "label": "Suchfeld", "text": "StepStack"}
 
     GoatTrayApp.reject_pending_cue(fake)
 
     assert fake.pending_builder_cue is None
     assert fake.pending_stage1_action is None
+    assert fake.pending_stage2_action is None
     assert fake.popup.screen_context_value.text() == "Ziel abgelehnt"
     assert fake.popup.cue_approve.text() == "Ziel verwenden"

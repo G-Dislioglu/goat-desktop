@@ -92,6 +92,19 @@ def _is_stage1_navigation_action(action_type: str) -> bool:
     return any(token in normalized for token in ("hover", "move", "scroll"))
 
 
+def _is_stage2_text_action(action_type: str) -> bool:
+    normalized = action_type.strip().lower()
+    return any(token in normalized for token in ("type", "text", "input"))
+
+
+def _pending_action_hint(stage1_action: dict | None, stage2_action: dict | None) -> str:
+    if stage1_action:
+        return "Danach kannst du GOAT navigieren lassen."
+    if stage2_action:
+        return "Danach kannst du die Eingabe freigeben."
+    return "Nur mit deiner Freigabe geht es weiter."
+
+
 def _build_resolver_evidence(screen_resolution: object) -> dict[str, object]:
     resolution = screen_resolution if isinstance(screen_resolution, dict) else {}
     return {
@@ -117,6 +130,7 @@ class GoatTrayApp:
         self.last_test_cue_error: str | None = None
         self.pending_builder_cue: dict | None = None
         self.pending_stage1_action: dict | None = None
+        self.pending_stage2_action: dict | None = None
         self.last_builder_cue_response: dict | None = None
         self.builder_bridge: BuilderBridgeClient | None = None
         self._read_aloud_text = ""
@@ -840,11 +854,19 @@ class GoatTrayApp:
             "confidence": message.get("confidence", 0.9),
         }
         self.pending_stage1_action = None
+        self.pending_stage2_action = None
         if _is_stage1_navigation_action(action_type):
             self.pending_stage1_action = {
                 "action_type": action_type,
                 "label": str(message.get("label") or "Ziel"),
                 "scroll_amount": int(message.get("scroll_amount") or -360),
+            }
+        elif _is_stage2_text_action(action_type):
+            self.pending_stage2_action = {
+                "action_type": action_type,
+                "label": str(message.get("label") or "Eingabefeld"),
+                "text": str(message.get("text") or ""),
+                "safe_text_context": bool(message.get("safe_text_context") or False),
             }
         if self.pending_builder_cue["bbox"] is None:
             self.pending_builder_cue.pop("bbox")
@@ -852,9 +874,9 @@ class GoatTrayApp:
         self.popup.target_value.setText(f"Zielvorschlag: {label}")
         self.popup.screen_context_value.setText("Bitte pruefe das markierte Ziel")
         self.popup.maya_value.setText(
-            "Danach kannst du GOAT navigieren lassen." if self.pending_stage1_action else "Nur mit deiner Freigabe geht es weiter."
+            _pending_action_hint(self.pending_stage1_action, self.pending_stage2_action)
         )
-        self.popup.cue_approve.setText("Ziel pruefen" if self.pending_stage1_action else "Ziel verwenden")
+        self.popup.cue_approve.setText("Ziel pruefen" if (self.pending_stage1_action or self.pending_stage2_action) else "Ziel verwenden")
         self.popup.cue_approve.setEnabled(True)
         self.popup.cue_reject.setEnabled(True)
         self.show_popup()
@@ -866,6 +888,13 @@ class GoatTrayApp:
             self.popup.cue_reject.setEnabled(False)
             self.popup.screen_context_value.setText("Navigation wird ausgefuehrt")
             QTimer.singleShot(10, lambda: self._execute_pending_stage1_action(payload))
+            return
+        if self.pending_stage2_action and self.pending_stage2_action.get("broker_decision"):
+            payload = dict(self.pending_stage2_action)
+            self.popup.cue_approve.setEnabled(False)
+            self.popup.cue_reject.setEnabled(False)
+            self.popup.screen_context_value.setText("Eingabe wird ausgefuehrt")
+            QTimer.singleShot(10, lambda: self._execute_pending_stage2_action(payload))
             return
         if self.pending_builder_cue is None:
             return
@@ -893,15 +922,22 @@ class GoatTrayApp:
             self.popup.builder_cue_finished.emit({"status": "error", "error": repr(exc)})
 
     def _finish_builder_cue(self, payload: dict) -> None:
-        if payload.get("status") == "stage1_done":
+        if payload.get("status") in {"stage1_done", "stage2_done"}:
             response = dict(payload.get("response") or {})
             if response.get("executed"):
-                self.popup.screen_context_value.setText("Navigation ausgefuehrt")
-                self.popup.maya_value.setText("Ich habe dich zum Ziel gefuehrt.")
+                if payload.get("status") == "stage2_done":
+                    self.popup.screen_context_value.setText("Eingabe ausgefuehrt")
+                    self.popup.maya_value.setText("Ich habe den Text eingetragen.")
+                else:
+                    self.popup.screen_context_value.setText("Navigation ausgefuehrt")
+                    self.popup.maya_value.setText("Ich habe dich zum Ziel gefuehrt.")
                 self.pending_builder_cue = None
                 self.pending_stage1_action = None
+                self.pending_stage2_action = None
             else:
-                self.popup.screen_context_value.setText("Navigation nicht ausgefuehrt")
+                self.popup.screen_context_value.setText(
+                    "Eingabe nicht ausgefuehrt" if payload.get("status") == "stage2_done" else "Navigation nicht ausgefuehrt"
+                )
                 self.popup.maya_value.setText(str(response.get("reason") or "Bitte pruefe das Ziel erneut."))
             self.popup.cue_approve.setText("Ziel verwenden")
             self.popup.cue_approve.setEnabled(False)
@@ -920,13 +956,28 @@ class GoatTrayApp:
             self.popup.cue_approve.setEnabled(False)
             self.popup.cue_reject.setEnabled(True)
             return
-        if self.pending_stage1_action is None:
+        if self.pending_stage1_action is None and self.pending_stage2_action is None:
             self.popup.screen_context_value.setText("Ziel ist markiert")
             self.popup.maya_value.setText("Sag mir, was du damit tun moechtest.")
             self.popup.cue_approve.setEnabled(False)
             self.popup.cue_reject.setEnabled(True)
             return
         broker_decision = response.get("broker_decision") if isinstance(response.get("broker_decision"), dict) else response
+        if self.pending_stage2_action is not None:
+            self.pending_stage2_action["broker_decision"] = broker_decision
+            preview = build_action_preview(
+                str(self.pending_stage2_action.get("action_type") or ""),
+                str(self.pending_stage2_action.get("label") or ""),
+                broker_decision,
+                text=str(self.pending_stage2_action.get("text") or ""),
+                dry_run=True,
+            )
+            self.popup.screen_context_value.setText(str(preview.get("title") or "Freigabe erforderlich"))
+            self.popup.maya_value.setText(str(preview.get("message") or "Bitte pruefe die Eingabe."))
+            self.popup.cue_approve.setText(str(preview.get("primaryButton") or "Eingabe ausfuehren"))
+            self.popup.cue_approve.setEnabled(bool(preview.get("ok")) and bool(self.pending_stage2_action.get("safe_text_context")))
+            self.popup.cue_reject.setEnabled(True)
+            return
         self.pending_stage1_action["broker_decision"] = broker_decision
         preview = build_action_preview(
             str(self.pending_stage1_action.get("action_type") or ""),
@@ -966,9 +1017,36 @@ class GoatTrayApp:
         except Exception as exc:
             self.popup.builder_cue_finished.emit({"status": "error", "error": repr(exc)})
 
+    def _execute_pending_stage2_action(self, payload: dict) -> None:
+        Thread(target=self._execute_pending_stage2_action_worker, args=(payload,), name="goat-stage2-text", daemon=True).start()
+
+    def _execute_pending_stage2_action_worker(self, payload: dict) -> None:
+        request_payload = {
+            "action_type": str(payload.get("action_type") or "type"),
+            "label": str(payload.get("label") or ""),
+            "broker_decision": dict(payload.get("broker_decision") or {}),
+            "text": str(payload.get("text") or ""),
+            "dry_run": False,
+            "user_approved": True,
+            "safe_text_context": bool(payload.get("safe_text_context") or False),
+        }
+        request = urllib.request.Request(
+            "http://127.0.0.1:8765/action/stage2/text",
+            data=json.dumps(request_payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=5) as response:
+                result = json.loads(response.read().decode("utf-8"))
+            self.popup.builder_cue_finished.emit({"status": "stage2_done", "response": result})
+        except Exception as exc:
+            self.popup.builder_cue_finished.emit({"status": "error", "error": repr(exc)})
+
     def reject_pending_cue(self) -> None:
         self.pending_builder_cue = None
         self.pending_stage1_action = None
+        self.pending_stage2_action = None
         self.popup.target_value.setText("Kein Ziel markiert")
         self.popup.screen_context_value.setText("Ziel abgelehnt")
         self.popup.maya_value.setText("Bereit. Sag mir, welches Ziel du meinst.")
