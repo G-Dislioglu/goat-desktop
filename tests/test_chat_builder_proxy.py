@@ -17,16 +17,16 @@ class ChatHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:  # noqa: N802
         auth = self.headers.get("Authorization")
         if self.path != "/api/goat/chat":
-            self.send_error(404)
+            self._send_json({}, 404)
             return
         if auth != "Bearer test-token":
-            self.send_error(401)
+            self._send_json({}, 401)
             return
         if self.response_mode == "timeout":
             time.sleep(1.0)
             return
         if self.response_mode == "error":
-            self.send_error(500)
+            self._send_json({}, 500)
             return
 
         length = int(self.headers.get("Content-Length", "0"))
@@ -39,8 +39,11 @@ class ChatHandler(BaseHTTPRequestHandler):
             "latency_ms": 321,
             "reasoning_level_used": payload["reasoning_level"],
         }
+        self._send_json(body, 200)
+
+    def _send_json(self, body: dict, status: int) -> None:
         encoded = json.dumps(body).encode("utf-8")
-        self.send_response(200)
+        self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()

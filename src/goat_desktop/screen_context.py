@@ -104,6 +104,10 @@ def build_screen_context_fallback_response(screen_context: str) -> str:
         return "Nicht sicher gesehen: Bildschirm konnte nicht gelesen werden."
     if is_uncertain_screen_context(context):
         return "Nicht sicher gesehen: Ziel ist nicht klar erkennbar."
+    if _is_win32_window_context(context):
+        return f"Gesehen per Fensterliste: {_clean_seen_context(context)}"
+    if _is_uia_taskbar_context(context):
+        return f"Gesehen per Taskleiste: {_clean_seen_context(context)}"
     if _is_win32_desktop_context(context):
         return f"Gesehen per Desktop: {_clean_seen_context(context)}"
     if _is_uia_context(context):
@@ -117,6 +121,10 @@ def build_screen_context_display_status(screen_context: str) -> str:
         return "Bildschirm: nicht gelesen"
     if is_uncertain_screen_context(context):
         return "Bildschirm: Ziel nicht sicher gesehen"
+    if _is_win32_window_context(context):
+        return "Bildschirm: Fenster gesehen"
+    if _is_uia_taskbar_context(context):
+        return "Bildschirm: Taskleiste gesehen"
     if _is_win32_desktop_context(context):
         return "Bildschirm: Desktop gesehen"
     if _is_uia_context(context):
@@ -157,6 +165,10 @@ def _clean_seen_context(screen_context: str) -> str:
         context = context.removeprefix("Lokales UIA: ").strip()
     if context.startswith("Lokaler Screen: "):
         context = context.removeprefix("Lokaler Screen: ").strip()
+    if context.startswith("Lokales Fenster: "):
+        context = context.removeprefix("Lokales Fenster: ").strip()
+    if context.startswith("Lokale Taskleiste: "):
+        context = context.removeprefix("Lokale Taskleiste: ").strip()
     if "): " in context:
         context = context.split("): ", 1)[1]
     if ". Vertrauen " in context:
@@ -172,6 +184,16 @@ def _is_uia_context(screen_context: str) -> bool:
 def _is_win32_desktop_context(screen_context: str) -> bool:
     normalized = screen_context.strip().lower()
     return normalized.startswith("lokaler screen:") or " via win32_desktop" in normalized
+
+
+def _is_win32_window_context(screen_context: str) -> bool:
+    normalized = screen_context.strip().lower()
+    return normalized.startswith("lokales fenster:") or " via win32_window" in normalized
+
+
+def _is_uia_taskbar_context(screen_context: str) -> bool:
+    normalized = screen_context.strip().lower()
+    return normalized.startswith("lokale taskleiste:") or " via uia_taskbar" in normalized
 
 
 def _rough_position_to_center(position: str, left: float, top: float, width: float, height: float) -> tuple[float, float]:

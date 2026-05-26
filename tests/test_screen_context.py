@@ -107,6 +107,19 @@ def test_screen_context_fallback_response_names_desktop_source() -> None:
     assert response == "Gesehen per Desktop: StepStack (ListItem) sichtbar."
 
 
+def test_screen_context_fallback_response_names_window_and_taskbar_sources() -> None:
+    assert (
+        build_screen_context_fallback_response("Lokales Fenster: GOAT Desktop (Window) sichtbar. Vertrauen 1.00 via win32_window.")
+        == "Gesehen per Fensterliste: GOAT Desktop (Window) sichtbar."
+    )
+    assert (
+        build_screen_context_fallback_response(
+            "Lokale Taskleiste: Codex - 1 aktives Fenster angeheftet (Button) sichtbar. Vertrauen 1.00 via uia_taskbar."
+        )
+        == "Gesehen per Taskleiste: Codex - 1 aktives Fenster angeheftet (Button) sichtbar."
+    )
+
+
 def test_screen_context_display_status_is_compact() -> None:
     assert build_screen_context_display_status("Codex: uncertain bei unknown. Vertrauen 0.00.") == "Bildschirm: Ziel nicht sicher gesehen"
     assert build_screen_context_display_status("Explorer: StepStack sichtbar. Vertrauen 0.82.") == "Bildschirm: Vision gesehen"
@@ -114,6 +127,16 @@ def test_screen_context_display_status_is_compact() -> None:
     assert (
         build_screen_context_display_status("Lokaler Screen: StepStack (ListItem) sichtbar. Vertrauen 1.00 via win32_desktop.")
         == "Bildschirm: Desktop gesehen"
+    )
+    assert (
+        build_screen_context_display_status("Lokales Fenster: GOAT Desktop (Window) sichtbar. Vertrauen 1.00 via win32_window.")
+        == "Bildschirm: Fenster gesehen"
+    )
+    assert (
+        build_screen_context_display_status(
+            "Lokale Taskleiste: Codex - 1 aktives Fenster angeheftet (Button) sichtbar. Vertrauen 1.00 via uia_taskbar."
+        )
+        == "Bildschirm: Taskleiste gesehen"
     )
 
 

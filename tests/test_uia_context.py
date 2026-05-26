@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from goat_desktop.uia_context import _find_best_uia_match_in_wrappers, build_uia_marker, build_uia_screen_context, find_best_uia_match
+from goat_desktop.uia_context import _find_best_uia_match_in_wrappers, _target_terms, build_uia_marker, build_uia_screen_context, find_best_uia_match
 
 
 class FakeRect:
@@ -89,6 +89,11 @@ def test_find_best_uia_match_normalizes_german_umlauts() -> None:
     assert match["element"]["name"] == "Senden Schaltfl\u00e4che"
 
 
+def test_target_terms_drop_taskbar_and_window_context_words() -> None:
+    assert _target_terms("Siehst du Codex in der Taskleiste?") == ["codex"]
+    assert _target_terms("Siehst du GOAT Desktop Fenster?") == ["goat", "desktop"]
+
+
 def test_find_best_uia_match_ignores_weak_match() -> None:
     match = find_best_uia_match(
         [{"name": "Downloads", "control_type": "ListItem", "rect": {"left": 0, "top": 0, "right": 1, "bottom": 1}}],
@@ -166,6 +171,38 @@ def test_build_uia_screen_context_names_desktop_source() -> None:
     )
 
     assert context == "Lokaler Screen: StepStack (ListItem) sichtbar. Vertrauen 1.00 via win32_desktop."
+
+
+def test_build_uia_screen_context_names_window_source() -> None:
+    context = build_uia_screen_context(
+        {
+            "score": 1.0,
+            "element": {
+                "name": "GOAT Desktop",
+                "control_type": "Window",
+                "source": "win32_window",
+                "rect": {"left": 200, "top": 100, "right": 340, "bottom": 150},
+            },
+        }
+    )
+
+    assert context == "Lokales Fenster: GOAT Desktop (Window) sichtbar. Vertrauen 1.00 via win32_window."
+
+
+def test_build_uia_screen_context_names_taskbar_source() -> None:
+    context = build_uia_screen_context(
+        {
+            "score": 1.0,
+            "element": {
+                "name": "Codex \u2013 1 aktives Fenster angeheftet",
+                "control_type": "Button",
+                "source": "uia_taskbar",
+                "rect": {"left": 200, "top": 100, "right": 340, "bottom": 150},
+            },
+        }
+    )
+
+    assert context == "Lokale Taskleiste: Codex - 1 aktives Fenster angeheftet (Button) sichtbar. Vertrauen 1.00 via uia_taskbar."
 
 
 def test_build_uia_screen_context_capitalizes_lowercase_icon_name() -> None:

@@ -89,16 +89,39 @@ def find_uia_match_for_message(
                 "time_ms": round((perf_counter() - started) * 1000, 2),
                 "effects": _no_action_effects(),
             }
-        fast_match, fast_scanned = _find_desktop_icon_match_win32(target_terms, min_score=min_score, early_score=early_score)
-        if fast_match is not None:
-            return {
-                "ok": True,
-                "match": fast_match,
-                "elements_scanned": fast_scanned,
-                "time_ms": round((perf_counter() - started) * 1000, 2),
-                "source": "win32_desktop",
-                "effects": _no_action_effects(),
-            }
+        if _message_mentions_taskbar(message):
+            taskbar_match, taskbar_scanned = _find_taskbar_match_uia(target_terms, min_score=min_score, early_score=early_score)
+            if taskbar_match is not None:
+                return {
+                    "ok": True,
+                    "match": taskbar_match,
+                    "elements_scanned": taskbar_scanned,
+                    "time_ms": round((perf_counter() - started) * 1000, 2),
+                    "source": "uia_taskbar",
+                    "effects": _no_action_effects(),
+                }
+        if _message_mentions_window(message):
+            window_match, window_scanned = _find_window_match_win32(target_terms, min_score=min_score, early_score=early_score)
+            if window_match is not None:
+                return {
+                    "ok": True,
+                    "match": window_match,
+                    "elements_scanned": window_scanned,
+                    "time_ms": round((perf_counter() - started) * 1000, 2),
+                    "source": "win32_window",
+                    "effects": _no_action_effects(),
+                }
+        if not _message_mentions_taskbar(message) and not _message_mentions_window(message):
+            fast_match, fast_scanned = _find_desktop_icon_match_win32(target_terms, min_score=min_score, early_score=early_score)
+            if fast_match is not None:
+                return {
+                    "ok": True,
+                    "match": fast_match,
+                    "elements_scanned": fast_scanned,
+                    "time_ms": round((perf_counter() - started) * 1000, 2),
+                    "source": "win32_desktop",
+                    "effects": _no_action_effects(),
+                }
         desktop = Desktop(backend="uia")
         roots = _collect_roots(desktop)
         match, scanned = _find_best_uia_match_in_wrappers(
@@ -131,7 +154,13 @@ def build_uia_screen_context(match: dict[str, Any]) -> str:
     name = _display_name(str(element.get("name") or "Ziel"))
     control_type = str(element.get("control_type") or "UI-Element").strip() or "UI-Element"
     source = str(element.get("source") or "uia").strip() or "uia"
-    prefix = "Lokales UIA" if source == "uia" else "Lokaler Screen"
+    prefix_by_source = {
+        "uia": "Lokales UIA",
+        "win32_desktop": "Lokaler Screen",
+        "win32_window": "Lokales Fenster",
+        "uia_taskbar": "Lokale Taskleiste",
+    }
+    prefix = prefix_by_source.get(source, "Lokaler Screen")
     score = float(match.get("score") or 0.0)
     return f"{prefix}: {name} ({control_type}) sichtbar. Vertrauen {score:.2f} via {source}."
 
@@ -261,8 +290,59 @@ def _find_desktop_icon_match_win32(target_terms: list[str], min_score: float, ea
     return _build_match(best, target_terms), scanned
 
 
+def _find_window_match_win32(target_terms: list[str], min_score: float, early_score: float) -> tuple[dict[str, Any] | None, int]:
+    try:
+        from pywinauto import Desktop
+
+        windows = Desktop(backend="win32").windows(visible_only=True)
+    except Exception:
+        return None, 0
+
+    best: tuple[float, dict[str, Any]] | None = None
+    scanned = 0
+    for window in windows[:40]:
+        try:
+            name = str(window.window_text() or "").strip()
+            rect = window.rectangle()
+            control_type = "Window"
+        except Exception:
+            continue
+        if not name:
+            continue
+        scanned += 1
+        score = _match_score(target_terms, name)
+        element = UiaElementInfo(
+            name=name,
+            control_type=control_type,
+            rect={"left": float(rect.left), "top": float(rect.top), "right": float(rect.right), "bottom": float(rect.bottom)},
+            source="win32_window",
+        ).to_dict()
+        if best is None or score > best[0]:
+            best = (score, element)
+            if score >= early_score:
+                return _build_match(best, target_terms), scanned
+    if best is None or best[0] < min_score:
+        return None, scanned
+    return _build_match(best, target_terms), scanned
+
+
+def _find_taskbar_match_uia(target_terms: list[str], min_score: float, early_score: float) -> tuple[dict[str, Any] | None, int]:
+    try:
+        from pywinauto import Desktop
+
+        taskbars = Desktop(backend="uia").windows(class_name="Shell_TrayWnd", visible_only=True)
+    except Exception:
+        return None, 0
+    match, scanned = _find_best_uia_match_in_wrappers(taskbars, target_terms, min_score, early_score, scan_limit=100)
+    if match is None:
+        return None, scanned
+    element = match.get("element") if isinstance(match.get("element"), dict) else {}
+    element["source"] = "uia_taskbar"
+    return match, scanned
+
+
 def _display_name(name: str) -> str:
-    clean = name.strip()
+    clean = name.strip().replace("\u2013", "-").replace("\u2014", "-")
     if not clean:
         return "Ziel"
     known_names = {
@@ -370,6 +450,14 @@ def _target_terms(message: str) -> list[str]:
         "ordner",
         "button",
         "schaltflaeche",
+        "taskleiste",
+        "taskbar",
+        "fenster",
+        "window",
+        "app",
+        "programm",
+        "anwendung",
+        "in",
         "kannst",
         "mich",
         "zum",
@@ -377,7 +465,21 @@ def _target_terms(message: str) -> list[str]:
         "navigieren",
         "navigiere",
     }
-    return [part for part in normalized.split() if len(part) >= 3 and part not in stopwords]
+    terms = [part for part in normalized.split() if len(part) >= 3 and part not in stopwords]
+    if "goat desktop" in normalized and "desktop" not in terms:
+        terms.append("desktop")
+    return terms
+
+
+def _message_mentions_taskbar(message: str) -> bool:
+    normalized = _normalize(message)
+    return "taskleiste" in normalized.split() or "taskbar" in normalized.split()
+
+
+def _message_mentions_window(message: str) -> bool:
+    normalized = _normalize(message)
+    parts = normalized.split()
+    return "fenster" in parts or "window" in parts
 
 
 def _match_score(target_terms: list[str], name: str) -> float:

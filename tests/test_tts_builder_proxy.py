@@ -50,23 +50,23 @@ class TtsHandler(BaseHTTPRequestHandler):
             return self._handle_stt(auth)
         if self.path == "/api/goat/tts":
             return self._handle_tts(auth)
-        self.send_error(404)
+        self._send_json({}, 404)
 
     def _handle_stt(self, auth: str | None) -> None:
         if auth != "Bearer test-token":
-            self.send_error(401)
+            self._send_json({}, 401)
             return
         self._send_json({"source": "test_stt", "transcript": "zeige das suchfeld", "confidence": 0.9, "latency_ms": 111})
 
     def _handle_tts(self, auth: str | None) -> None:
         if auth != "Bearer test-token":
-            self.send_error(401)
+            self._send_json({}, 401)
             return
         if self.response_mode == "timeout":
             time.sleep(1.0)
             return
         if self.response_mode == "error":
-            self.send_error(500)
+            self._send_json({}, 500)
             return
         length = int(self.headers.get("Content-Length", "0"))
         payload = json.loads(self.rfile.read(length).decode("utf-8"))
@@ -83,9 +83,9 @@ class TtsHandler(BaseHTTPRequestHandler):
             }
         )
 
-    def _send_json(self, body: dict) -> None:
+    def _send_json(self, body: dict, status: int = 200) -> None:
         encoded = json.dumps(body).encode("utf-8")
-        self.send_response(200)
+        self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()

@@ -233,6 +233,9 @@ bridge_screen_question_smoke_2026_05_25:
 bridge_screen_question_polish_2026_05_26:
 "Bridge-Screen-Smoke gibt jetzt `time_ms` und kompakte Evidence (`screen_context`, `marker_source`, `chat_provider`) zurueck. Sichtbare Desktop-Namen werden im Antwort-/Markertext sauberer dargestellt; bekannter `stepstack`-Iconname erscheint als `StepStack`. Live-Smoke am 2026-05-26 gegen den laufenden GOAT-Prozess: `/chat/screen-question` antwortete in 314.48ms mit `Gesehen per Desktop: StepStack (ListItem) sichtbar.`, Markerquelle `win32_desktop`, keine Desktop-/Maus-/Keyboard-/Provider-Aktion."
 
+screen_target_fast_paths_2026_05_26:
+"Screenfragen nutzen jetzt zielbezogene Fast-Paths vor dem generischen UIA/Vision-Fallback: Desktop-Icons via Win32-Desktopliste, Fensterfragen via sichtbarer Win32-Fensterliste, Taskleistenfragen gezielt via Shell_TrayWnd/UIA. Kontextwoerter wie Taskleiste/Fenster werden nicht mehr als Zielbegriffe gewertet; `GOAT Desktop` bleibt als Phrase erhalten. Live-Smoke: GOAT-Desktop-Fenster 465.15ms via `win32_window`, Codex-Taskleiste kalt 3083.43ms und danach warm 223-302ms via `uia_taskbar`, Google-Chrome-Desktopicon 10.78ms via `win32_desktop`. Keine Provider-/Desktop-/Maus-/Keyboard-Aktionen."
+
 popup_product_simplification_2026_05_17:
 "Popup-UI produktnaeher verschlankt. Entfernt aus sichtbarer Haupt-UI: statische Tabellenbeschriftungen, Dev-Button 'Cue testen' und manuelle Ball-Pfeiltasten. Ballsteuerung bleibt im Tray-Menue fuer Debug/Recovery, aber normaler Produktpfad ist GOAT setzt den Ball auf erkannte Ziele/Felder/Buttons. Status wird als kompakte Chips angezeigt; Screen-Kontext, Maya-Antwort und Zielmarkierung sind groessere Ausgabefelder. Bevorzugte Popup-Groesse bleibt kompakt."
 
