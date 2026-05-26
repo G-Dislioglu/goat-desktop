@@ -297,6 +297,62 @@ def test_broad_screen_question_can_find_visible_window_after_desktop_miss(monkey
     assert result["match"]["element"]["name"] == "GOAT Desktop"
 
 
+def test_user_formulation_matrix_keeps_screen_window_taskbar_desktop_routes(monkeypatch) -> None:
+    monkeypatch.setattr(
+        uia_context,
+        "_find_desktop_icon_match_win32",
+        lambda terms, **_kwargs: (
+            {
+                "element": {
+                    "name": "StepStack",
+                    "control_type": "ListItem",
+                    "source": "win32_desktop",
+                    "rect": {"left": 10, "top": 20, "right": 110, "bottom": 70},
+                },
+                "score": 1.0,
+                "target_terms": terms,
+            },
+            1,
+        )
+        if "stepstack" in terms
+        else (None, 1),
+    )
+    _set_window_cache(
+        [
+            {
+                "name": "GOAT Desktop",
+                "control_type": "Window",
+                "source": "win32_window",
+                "rect": {"left": 20, "top": 30, "right": 220, "bottom": 180},
+            }
+        ]
+    )
+    _set_taskbar_cache(
+        [
+            {
+                "name": "Codex - 1 aktives Fenster angeheftet",
+                "control_type": "Button",
+                "source": "uia_taskbar",
+                "rect": {"left": 30, "top": 40, "right": 130, "bottom": 90},
+            }
+        ]
+    )
+
+    cases = [
+        ("Siehst du GOAT Desktop auf dem Bildschirm?", "win32_window", "win32_window_cache"),
+        ("Siehst du GOAT Desktop Fenster?", "win32_window", "win32_window_cache"),
+        ("Siehst du Codex in der Taskleiste?", "uia_taskbar", "uia_taskbar_cache"),
+        ("Siehst du StepStack auf dem Desktop?", "win32_desktop", "win32_desktop"),
+    ]
+
+    for message, source, source_path in cases:
+        result = find_uia_match_for_message(message)
+
+        assert result["source"] == source
+        assert result["source_path"] == source_path
+        assert result["match"] is not None
+
+
 def test_window_cache_miss_stops_without_live_refresh(monkeypatch) -> None:
     _set_window_cache(
         [
