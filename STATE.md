@@ -396,3 +396,6 @@ stage2_text_preview_popup_ux_2026_05_26:
 
 stage2_text_input_plain_ux_2026_05_26:
 "Stage-2 Texteingabe ist fuer normale Nutzer klarer formuliert. Popup zeigt bei Textaktionen `Eingabefeld: ...` und `Bitte pruefe das Eingabefeld` statt generischem Zieltext. Wenn safe_text_context fehlt, bleibt der Ausfuehren-Button deaktiviert und heisst `Nicht sicher`; Maya erklaert kurz: `Ich tippe hier noch nicht. Ich habe das Eingabefeld nicht sicher genug erkannt.` Interne technische Gruende wie `safe_text_context` werden beim Abschluss in nutzerverstaendliche Hinweise uebersetzt. Keine neue Aktionserlaubnis eingefuehrt. Tests gruen: 202 passed; compileall gruen."
+
+action_execution_failure_guard_2026_05_26:
+"Stage-1 Mausnavigation und Stage-2 Texteingabe melden Backend-/OS-Fehler nicht mehr als erledigt. Executor fangen Backend-Exceptions ab, auditieren `failed` mit `executed=false` und geben keine rohen Stacktraces in die Haupt-UX. Popup uebersetzt solche Fehler zu `Die Navigation hat nicht geklappt. Ich melde sie nicht als erledigt.` bzw. `Die Eingabe hat nicht geklappt. Ich melde sie nicht als erledigt.` Lokale Action-HTTP-Calls im Tray haben nun 2s Timeout statt 5s, damit die UI bei lokalen Fehlern schneller frei wird. Keine neue Aktionserlaubnis eingefuehrt. Tests gruen: 207 passed; compileall gruen."

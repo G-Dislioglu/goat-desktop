@@ -59,6 +59,7 @@ from goat_desktop.vision_hint import (
 )
 
 _RESOLVER_CACHE_REFRESH_INTERVAL_MS = 60_000
+_LOCAL_ACTION_TIMEOUT_SECONDS = 2
 
 
 def _no_action_effects() -> dict[str, bool]:
@@ -127,6 +128,8 @@ def _friendly_action_failure_message(response: dict, *, stage: str) -> str:
     reason = str(response.get("reason") or "").strip()
     lowered = reason.lower()
     if stage == "stage2_done":
+        if "backend failed" in lowered:
+            return "Die Eingabe hat nicht geklappt. Ich melde sie nicht als erledigt."
         if "safe_text_context" in lowered:
             return "Ich tippe hier nicht. Ich habe das Eingabefeld nicht sicher genug erkannt."
         if "empty" in lowered:
@@ -140,6 +143,8 @@ def _friendly_action_failure_message(response: dict, *, stage: str) -> str:
         if "approval" in lowered or "preview" in lowered or "dry_run" in lowered:
             return "Bitte pruefe die Eingabe erst im GOAT-Fenster."
         return "Ich habe nichts eingetippt. Bitte pruefe Feld und Text erneut."
+    if "backend failed" in lowered:
+        return "Die Navigation hat nicht geklappt. Ich melde sie nicht als erledigt."
     if "approval" in lowered or "preview" in lowered or "dry_run" in lowered:
         return "Bitte gib die Navigation erst im GOAT-Fenster frei."
     return reason or "Bitte pruefe das Ziel erneut."
@@ -862,7 +867,7 @@ class GoatTrayApp:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=5) as response:
+            with urllib.request.urlopen(request, timeout=_LOCAL_ACTION_TIMEOUT_SECONDS) as response:
                 self.last_test_cue_response = json.loads(response.read().decode("utf-8"))
                 self.last_test_cue_error = None
         except Exception as exc:
@@ -954,7 +959,7 @@ class GoatTrayApp:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=5) as response:
+            with urllib.request.urlopen(request, timeout=_LOCAL_ACTION_TIMEOUT_SECONDS) as response:
                 self.last_builder_cue_response = json.loads(response.read().decode("utf-8"))
                 self.popup.builder_cue_finished.emit({"status": "ok", "response": self.last_builder_cue_response})
         except Exception as exc:
@@ -1052,7 +1057,7 @@ class GoatTrayApp:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=5) as response:
+            with urllib.request.urlopen(request, timeout=_LOCAL_ACTION_TIMEOUT_SECONDS) as response:
                 result = json.loads(response.read().decode("utf-8"))
             self.popup.builder_cue_finished.emit({"status": "stage1_done", "response": result})
         except Exception as exc:
@@ -1078,7 +1083,7 @@ class GoatTrayApp:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=5) as response:
+            with urllib.request.urlopen(request, timeout=_LOCAL_ACTION_TIMEOUT_SECONDS) as response:
                 result = json.loads(response.read().decode("utf-8"))
             self.popup.builder_cue_finished.emit({"status": "stage2_done", "response": result})
         except Exception as exc:

@@ -21,6 +21,22 @@ class RecordingMouseBackend:
         self.scrolls.append(amount)
 
 
+class FailingMouseBackend(RecordingMouseBackend):
+    def __init__(self, *, fail_on: str) -> None:
+        super().__init__()
+        self.fail_on = fail_on
+
+    def move_to(self, x: int, y: int) -> None:
+        if self.fail_on == "move":
+            raise OSError("test move failure")
+        super().move_to(x, y)
+
+    def scroll(self, amount: int) -> None:
+        if self.fail_on == "scroll":
+            raise OSError("test scroll failure")
+        super().scroll(amount)
+
+
 def test_stage1_scroll_executes_when_gate_allows(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
     backend = RecordingMouseBackend()
@@ -50,6 +66,36 @@ def test_stage1_hover_moves_to_broker_bbox_center(monkeypatch, tmp_path: Path) -
     assert result.target == {"x": 120, "y": 220}
     assert backend.moves == [(120, 220)]
     assert backend.scrolls == []
+
+
+def test_stage1_scroll_backend_failure_is_not_reported_as_executed(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
+    backend = FailingMouseBackend(fail_on="scroll")
+
+    result = execute_stage1_action(
+        Stage1ExecutionRequest("scroll", "scroll page", ACCEPTED, dry_run=False, scroll_amount=-240),
+        backend=backend,
+    )
+
+    assert result.status == "failed"
+    assert result.executed is False
+    assert result.action_type == "scroll"
+    assert "mouse backend failed" in result.reason
+
+
+def test_stage1_move_backend_failure_is_not_reported_as_executed(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
+    backend = FailingMouseBackend(fail_on="move")
+
+    result = execute_stage1_action(
+        Stage1ExecutionRequest("hover", "hover tooltip", ACCEPTED, dry_run=False),
+        backend=backend,
+    )
+
+    assert result.status == "failed"
+    assert result.executed is False
+    assert result.target == {"x": 120, "y": 220}
+    assert "mouse backend failed" in result.reason
 
 
 def test_stage1_dry_run_blocks_execution(monkeypatch, tmp_path: Path) -> None:

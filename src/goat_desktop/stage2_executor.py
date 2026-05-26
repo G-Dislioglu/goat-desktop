@@ -195,9 +195,23 @@ def execute_stage2_text_input(
         )
 
     selected_backend = backend or Win32TextInputBackend()
-    selected_backend.move_to(target["x"], target["y"])
-    selected_backend.click_left()
-    selected_backend.type_text(request.text)
+    try:
+        selected_backend.move_to(target["x"], target["y"])
+        selected_backend.click_left()
+        selected_backend.type_text(request.text)
+    except Exception:
+        return _audit_execution(
+            request,
+            Stage2ExecutionResult(
+                status="failed",
+                executed=False,
+                stage=gate_decision.stage,
+                reason="text input backend failed before completion",
+                preview=preview,
+                gate_decision=gate_decision.to_dict(),
+                target=target,
+            ),
+        )
 
     return _audit_execution(
         request,

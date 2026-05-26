@@ -93,7 +93,20 @@ def execute_stage1_action(
     selected_backend = backend or Win32MouseBackend()
 
     if "scroll" in action_text:
-        selected_backend.scroll(request.scroll_amount)
+        try:
+            selected_backend.scroll(request.scroll_amount)
+        except Exception:
+            return _audit_execution(
+                request,
+                Stage1ExecutionResult(
+                    status="failed",
+                    executed=False,
+                    action_type="scroll",
+                    stage=gate_decision.stage,
+                    reason="mouse backend failed before scroll completed",
+                    gate_decision=gate_decision.to_dict(),
+                ),
+            )
         return _audit_execution(
             request,
             Stage1ExecutionResult(
@@ -121,7 +134,21 @@ def execute_stage1_action(
                     gate_decision=gate_decision.to_dict(),
                 ),
             )
-        selected_backend.move_to(target["x"], target["y"])
+        try:
+            selected_backend.move_to(target["x"], target["y"])
+        except Exception:
+            return _audit_execution(
+                request,
+                Stage1ExecutionResult(
+                    status="failed",
+                    executed=False,
+                    action_type="hover",
+                    stage=gate_decision.stage,
+                    reason="mouse backend failed before pointer move completed",
+                    gate_decision=gate_decision.to_dict(),
+                    target=target,
+                ),
+            )
         return _audit_execution(
             request,
             Stage1ExecutionResult(

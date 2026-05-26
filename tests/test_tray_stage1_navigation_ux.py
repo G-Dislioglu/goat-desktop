@@ -236,6 +236,36 @@ def test_stage2_failed_execution_uses_plain_user_message() -> None:
     assert fake.popup.cue_approve.enabled is False
 
 
+def test_stage2_backend_failure_uses_plain_user_message() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "stage2_done",
+            "response": {"executed": False, "reason": "text input backend failed before completion"},
+        },
+    )
+
+    assert fake.popup.screen_context_value.text() == "Eingabe nicht ausgefuehrt"
+    assert fake.popup.maya_value.text() == "Die Eingabe hat nicht geklappt. Ich melde sie nicht als erledigt."
+
+
+def test_stage1_backend_failure_uses_plain_user_message() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "stage1_done",
+            "response": {"executed": False, "reason": "mouse backend failed before pointer move completed"},
+        },
+    )
+
+    assert fake.popup.screen_context_value.text() == "Navigation nicht ausgefuehrt"
+    assert fake.popup.maya_value.text() == "Die Navigation hat nicht geklappt. Ich melde sie nicht als erledigt."
+
+
 def test_stage2_done_resets_pending_input() -> None:
     fake = FakeTray()
     fake.pending_builder_cue = {"label": "Suchfeld"}
