@@ -153,6 +153,8 @@ def test_builder_stage2_cue_shows_input_check_before_execution() -> None:
         "text": "StepStack",
         "safe_text_context": True,
     }
+    assert fake.popup.target_value.text() == "Eingabefeld: Suchfeld"
+    assert fake.popup.screen_context_value.text() == "Bitte pruefe das Eingabefeld"
     assert fake.popup.maya_value.text() == "Danach kannst du die Eingabe freigeben."
     assert fake.popup.cue_approve.text() == "Ziel pruefen"
 
@@ -208,7 +210,29 @@ def test_stage2_preview_without_safe_context_disables_execute() -> None:
         },
     )
 
-    assert fake.popup.cue_approve.text() == "Eingabe ausfuehren"
+    assert fake.popup.maya_value.text() == "Ich tippe hier noch nicht. Ich habe das Eingabefeld nicht sicher genug erkannt."
+    assert fake.popup.cue_approve.text() == "Nicht sicher"
+    assert fake.popup.cue_approve.enabled is False
+
+
+def test_stage2_failed_execution_uses_plain_user_message() -> None:
+    fake = FakeTray()
+    fake.pending_builder_cue = {"label": "Suchfeld"}
+    fake.pending_stage2_action = {"action_type": "type", "label": "Suchfeld", "text": "StepStack"}
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "stage2_done",
+            "response": {
+                "executed": False,
+                "reason": "safe_text_context must be true before stage 2 text input can execute",
+            },
+        },
+    )
+
+    assert fake.popup.screen_context_value.text() == "Eingabe nicht ausgefuehrt"
+    assert fake.popup.maya_value.text() == "Ich tippe hier nicht. Ich habe das Eingabefeld nicht sicher genug erkannt."
     assert fake.popup.cue_approve.enabled is False
 
 

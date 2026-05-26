@@ -105,6 +105,46 @@ def _pending_action_hint(stage1_action: dict | None, stage2_action: dict | None)
     return "Nur mit deiner Freigabe geht es weiter."
 
 
+def _pending_target_text(label: str, stage2_action: dict | None) -> str:
+    if stage2_action:
+        return f"Eingabefeld: {label}"
+    return f"Zielvorschlag: {label}"
+
+
+def _pending_check_text(stage2_action: dict | None) -> str:
+    if stage2_action:
+        return "Bitte pruefe das Eingabefeld"
+    return "Bitte pruefe das markierte Ziel"
+
+
+def _stage2_preview_message(stage2_action: dict, preview: dict) -> str:
+    if not stage2_action.get("safe_text_context"):
+        return "Ich tippe hier noch nicht. Ich habe das Eingabefeld nicht sicher genug erkannt."
+    return str(preview.get("message") or "Bitte pruefe die Eingabe.")
+
+
+def _friendly_action_failure_message(response: dict, *, stage: str) -> str:
+    reason = str(response.get("reason") or "").strip()
+    lowered = reason.lower()
+    if stage == "stage2_done":
+        if "safe_text_context" in lowered:
+            return "Ich tippe hier nicht. Ich habe das Eingabefeld nicht sicher genug erkannt."
+        if "empty" in lowered:
+            return "Ich tippe keinen leeren Text ein."
+        if "multi-line" in lowered:
+            return "Mehrzeilige Texte tippe ich noch nicht automatisch."
+        if "exceeds" in lowered:
+            return "Der Text ist zu lang. Bitte kuerzer formulieren."
+        if "final_bbox" in lowered:
+            return "Ich kenne die genaue Position des Eingabefelds nicht sicher genug."
+        if "approval" in lowered or "preview" in lowered or "dry_run" in lowered:
+            return "Bitte pruefe die Eingabe erst im GOAT-Fenster."
+        return "Ich habe nichts eingetippt. Bitte pruefe Feld und Text erneut."
+    if "approval" in lowered or "preview" in lowered or "dry_run" in lowered:
+        return "Bitte gib die Navigation erst im GOAT-Fenster frei."
+    return reason or "Bitte pruefe das Ziel erneut."
+
+
 def _build_resolver_evidence(screen_resolution: object) -> dict[str, object]:
     resolution = screen_resolution if isinstance(screen_resolution, dict) else {}
     return {
@@ -871,8 +911,8 @@ class GoatTrayApp:
         if self.pending_builder_cue["bbox"] is None:
             self.pending_builder_cue.pop("bbox")
         label = str(self.pending_builder_cue.get("label") or "Builder-Cue")
-        self.popup.target_value.setText(f"Zielvorschlag: {label}")
-        self.popup.screen_context_value.setText("Bitte pruefe das markierte Ziel")
+        self.popup.target_value.setText(_pending_target_text(label, self.pending_stage2_action))
+        self.popup.screen_context_value.setText(_pending_check_text(self.pending_stage2_action))
         self.popup.maya_value.setText(
             _pending_action_hint(self.pending_stage1_action, self.pending_stage2_action)
         )
@@ -938,7 +978,7 @@ class GoatTrayApp:
                 self.popup.screen_context_value.setText(
                     "Eingabe nicht ausgefuehrt" if payload.get("status") == "stage2_done" else "Navigation nicht ausgefuehrt"
                 )
-                self.popup.maya_value.setText(str(response.get("reason") or "Bitte pruefe das Ziel erneut."))
+                self.popup.maya_value.setText(_friendly_action_failure_message(response, stage=str(payload.get("status") or "")))
             self.popup.cue_approve.setText("Ziel verwenden")
             self.popup.cue_approve.setEnabled(False)
             self.popup.cue_reject.setEnabled(False)
@@ -973,9 +1013,10 @@ class GoatTrayApp:
                 dry_run=True,
             )
             self.popup.screen_context_value.setText(str(preview.get("title") or "Freigabe erforderlich"))
-            self.popup.maya_value.setText(str(preview.get("message") or "Bitte pruefe die Eingabe."))
-            self.popup.cue_approve.setText(str(preview.get("primaryButton") or "Eingabe ausfuehren"))
-            self.popup.cue_approve.setEnabled(bool(preview.get("ok")) and bool(self.pending_stage2_action.get("safe_text_context")))
+            self.popup.maya_value.setText(_stage2_preview_message(self.pending_stage2_action, preview))
+            safe_text_context = bool(self.pending_stage2_action.get("safe_text_context"))
+            self.popup.cue_approve.setText(str(preview.get("primaryButton") or "Eingabe ausfuehren") if safe_text_context else "Nicht sicher")
+            self.popup.cue_approve.setEnabled(bool(preview.get("ok")) and safe_text_context)
             self.popup.cue_reject.setEnabled(True)
             return
         self.pending_stage1_action["broker_decision"] = broker_decision
