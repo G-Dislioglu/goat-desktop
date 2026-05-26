@@ -1,6 +1,16 @@
 from __future__ import annotations
 
-from goat_desktop.uia_context import _find_best_uia_match_in_wrappers, _target_terms, build_uia_marker, build_uia_screen_context, find_best_uia_match
+from goat_desktop import uia_context
+from goat_desktop.uia_context import (
+    _find_best_uia_match_in_wrappers,
+    _get_taskbar_cache,
+    _set_taskbar_cache,
+    _target_terms,
+    build_uia_marker,
+    build_uia_screen_context,
+    find_best_uia_match,
+    find_uia_match_for_message,
+)
 
 
 class FakeRect:
@@ -203,6 +213,42 @@ def test_build_uia_screen_context_names_taskbar_source() -> None:
     )
 
     assert context == "Lokale Taskleiste: Codex - 1 aktives Fenster angeheftet (Button) sichtbar. Vertrauen 1.00 via uia_taskbar."
+
+
+def test_taskbar_match_uses_warmed_cache(monkeypatch) -> None:
+    _set_taskbar_cache(
+        [
+            {
+                "name": "Codex - 1 aktives Fenster angeheftet",
+                "control_type": "Button",
+                "source": "uia_taskbar",
+                "rect": {"left": 10, "top": 20, "right": 110, "bottom": 70},
+            }
+        ]
+    )
+    monkeypatch.setattr(uia_context, "_collect_taskbar_elements_uia", lambda: (_ for _ in ()).throw(AssertionError("cache missed")))
+
+    result = find_uia_match_for_message("Siehst du Codex in der Taskleiste?")
+
+    assert result["source"] == "uia_taskbar"
+    assert result["elements_scanned"] == 1
+    assert result["match"]["element"]["name"] == "Codex - 1 aktives Fenster angeheftet"
+
+
+def test_taskbar_cache_can_expire(monkeypatch) -> None:
+    _set_taskbar_cache(
+        [
+            {
+                "name": "Codex",
+                "control_type": "Button",
+                "source": "uia_taskbar",
+                "rect": {"left": 10, "top": 20, "right": 110, "bottom": 70},
+            }
+        ]
+    )
+    monkeypatch.setattr(uia_context, "_TASKBAR_CACHE_TTL_SECONDS", -1.0)
+
+    assert _get_taskbar_cache() == []
 
 
 def test_build_uia_screen_context_capitalizes_lowercase_icon_name() -> None:

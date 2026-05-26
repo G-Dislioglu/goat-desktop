@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from threading import Lock
 from time import perf_counter
 from typing import Any
+
+_TASKBAR_CACHE_TTL_SECONDS = 15.0
+_TASKBAR_CACHE_LOCK = Lock()
+_TASKBAR_CACHE: dict[str, Any] = {"elements": [], "time": 0.0}
 
 
 @dataclass(frozen=True)
@@ -143,6 +148,29 @@ def find_uia_match_for_message(
             "ok": False,
             "match": None,
             "error": type(exc).__name__,
+            "elements_scanned": 0,
+            "time_ms": round((perf_counter() - started) * 1000, 2),
+            "effects": _no_action_effects(),
+        }
+
+
+def warm_taskbar_cache() -> dict[str, Any]:
+    started = perf_counter()
+    try:
+        elements, scanned = _collect_taskbar_elements_uia()
+        _set_taskbar_cache(elements)
+        return {
+            "ok": True,
+            "elements": len(elements),
+            "elements_scanned": scanned,
+            "time_ms": round((perf_counter() - started) * 1000, 2),
+            "effects": _no_action_effects(),
+        }
+    except Exception as exc:  # noqa: BLE001 - cache warmup is optional
+        return {
+            "ok": False,
+            "error": type(exc).__name__,
+            "elements": 0,
             "elements_scanned": 0,
             "time_ms": round((perf_counter() - started) * 1000, 2),
             "effects": _no_action_effects(),
@@ -327,18 +355,75 @@ def _find_window_match_win32(target_terms: list[str], min_score: float, early_sc
 
 
 def _find_taskbar_match_uia(target_terms: list[str], min_score: float, early_score: float) -> tuple[dict[str, Any] | None, int]:
+    cached_elements = _get_taskbar_cache()
+    if cached_elements:
+        match = _find_best_match_for_terms(cached_elements, target_terms, min_score=min_score)
+        if match is not None:
+            _mark_match_source(match, "uia_taskbar")
+            return match, len(cached_elements)
+
+    elements, scanned = _collect_taskbar_elements_uia()
+    _set_taskbar_cache(elements)
+    match = _find_best_match_for_terms(elements, target_terms, min_score=min_score)
+    if match is None:
+        return None, scanned
+    _mark_match_source(match, "uia_taskbar")
+    return match, scanned
+
+
+def _collect_taskbar_elements_uia() -> tuple[list[dict[str, Any]], int]:
     try:
         from pywinauto import Desktop
 
         taskbars = Desktop(backend="uia").windows(class_name="Shell_TrayWnd", visible_only=True)
     except Exception:
-        return None, 0
-    match, scanned = _find_best_uia_match_in_wrappers(taskbars, target_terms, min_score, early_score, scan_limit=100)
-    if match is None:
-        return None, scanned
+        return [], 0
+    elements: list[dict[str, Any]] = []
+    seen: set[tuple[str, int, int, int, int]] = set()
+    scanned = 0
+    for taskbar in taskbars:
+        for wrapper in _iter_wrapper_with_children(taskbar, max_count=100, max_depth=4):
+            element = _read_element(wrapper, seen)
+            if element is None:
+                continue
+            scanned += 1
+            element_dict = element.to_dict()
+            element_dict["source"] = "uia_taskbar"
+            elements.append(element_dict)
+    return elements, scanned
+
+
+def _find_best_match_for_terms(elements: list[dict[str, Any]], target_terms: list[str], min_score: float) -> dict[str, Any] | None:
+    best: tuple[float, dict[str, Any]] | None = None
+    for element in elements:
+        name = str(element.get("name") or "").strip()
+        if not name:
+            continue
+        score = _match_score(target_terms, name)
+        if best is None or score > best[0]:
+            best = (score, element)
+    if best is None or best[0] < min_score:
+        return None
+    return _build_match(best, target_terms)
+
+
+def _mark_match_source(match: dict[str, Any], source: str) -> None:
     element = match.get("element") if isinstance(match.get("element"), dict) else {}
-    element["source"] = "uia_taskbar"
-    return match, scanned
+    element["source"] = source
+
+
+def _get_taskbar_cache() -> list[dict[str, Any]]:
+    with _TASKBAR_CACHE_LOCK:
+        cache_age = perf_counter() - float(_TASKBAR_CACHE.get("time") or 0.0)
+        if cache_age > _TASKBAR_CACHE_TTL_SECONDS:
+            return []
+        return list(_TASKBAR_CACHE.get("elements") or [])
+
+
+def _set_taskbar_cache(elements: list[dict[str, Any]]) -> None:
+    with _TASKBAR_CACHE_LOCK:
+        _TASKBAR_CACHE["elements"] = list(elements)
+        _TASKBAR_CACHE["time"] = perf_counter()
 
 
 def _display_name(name: str) -> str:

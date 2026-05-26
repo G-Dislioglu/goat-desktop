@@ -25,6 +25,7 @@ class SttHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         auth = self.headers.get("Authorization")
+        raw_body = self.rfile.read(int(self.headers.get("Content-Length", "0")))
         if self.path != "/api/goat/stt":
             self._send_json({}, 404)
             return
@@ -38,8 +39,7 @@ class SttHandler(BaseHTTPRequestHandler):
             self._send_json({}, 500)
             return
 
-        length = int(self.headers.get("Content-Length", "0"))
-        payload = json.loads(self.rfile.read(length).decode("utf-8"))
+        payload = json.loads(raw_body.decode("utf-8"))
         SttHandler.last_request = payload
         transcript = "" if self.response_mode == "empty" else "zeige das suchfeld"
         body = {

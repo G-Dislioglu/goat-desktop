@@ -236,6 +236,9 @@ bridge_screen_question_polish_2026_05_26:
 screen_target_fast_paths_2026_05_26:
 "Screenfragen nutzen jetzt zielbezogene Fast-Paths vor dem generischen UIA/Vision-Fallback: Desktop-Icons via Win32-Desktopliste, Fensterfragen via sichtbarer Win32-Fensterliste, Taskleistenfragen gezielt via Shell_TrayWnd/UIA. Kontextwoerter wie Taskleiste/Fenster werden nicht mehr als Zielbegriffe gewertet; `GOAT Desktop` bleibt als Phrase erhalten. Live-Smoke: GOAT-Desktop-Fenster 465.15ms via `win32_window`, Codex-Taskleiste kalt 3083.43ms und danach warm 223-302ms via `uia_taskbar`, Google-Chrome-Desktopicon 10.78ms via `win32_desktop`. Keine Provider-/Desktop-/Maus-/Keyboard-Aktionen."
 
+taskbar_cache_warmup_2026_05_26:
+"Taskleisten-UIA wird beim GOAT-Start read-only im Hintergrund vorgeladen und fuer 15s gecacht. Direkte Messung: Warmup selbst ca. 2446ms, danach Taskleistenfrage `Codex in der Taskleiste` ca. 0.9-2.4ms im selben Prozess. Live-Smoke nach GOAT-Neustart mit 5s Warmup: erste Bridge-Frage 1.43ms, danach 0.84/0.83/0.93ms, Quelle `uia_taskbar`, keine Provider-/Desktop-/Maus-/Keyboard-Aktionen. Chat/STT/TTS-Mockserver wurden ebenfalls stabilisiert, indem Request-Bodies vor Test-HTTP-Fehlerantworten gelesen werden."
+
 popup_product_simplification_2026_05_17:
 "Popup-UI produktnaeher verschlankt. Entfernt aus sichtbarer Haupt-UI: statische Tabellenbeschriftungen, Dev-Button 'Cue testen' und manuelle Ball-Pfeiltasten. Ballsteuerung bleibt im Tray-Menue fuer Debug/Recovery, aber normaler Produktpfad ist GOAT setzt den Ball auf erkannte Ziele/Felder/Buttons. Status wird als kompakte Chips angezeigt; Screen-Kontext, Maya-Antwort und Zielmarkierung sind groessere Ausgabefelder. Bevorzugte Popup-Groesse bleibt kompakt."
 

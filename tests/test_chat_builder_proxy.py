@@ -16,6 +16,7 @@ class ChatHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         auth = self.headers.get("Authorization")
+        raw_body = self.rfile.read(int(self.headers.get("Content-Length", "0")))
         if self.path != "/api/goat/chat":
             self._send_json({}, 404)
             return
@@ -29,8 +30,7 @@ class ChatHandler(BaseHTTPRequestHandler):
             self._send_json({}, 500)
             return
 
-        length = int(self.headers.get("Content-Length", "0"))
-        payload = json.loads(self.rfile.read(length).decode("utf-8"))
+        payload = json.loads(raw_body.decode("utf-8"))
         ChatHandler.last_request = payload
         body = {
             "source": payload["provider"],

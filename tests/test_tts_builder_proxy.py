@@ -46,10 +46,11 @@ class TtsHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         auth = self.headers.get("Authorization")
+        raw_body = self.rfile.read(int(self.headers.get("Content-Length", "0")))
         if self.path == "/api/goat/stt":
             return self._handle_stt(auth)
         if self.path == "/api/goat/tts":
-            return self._handle_tts(auth)
+            return self._handle_tts(auth, raw_body)
         self._send_json({}, 404)
 
     def _handle_stt(self, auth: str | None) -> None:
@@ -58,7 +59,7 @@ class TtsHandler(BaseHTTPRequestHandler):
             return
         self._send_json({"source": "test_stt", "transcript": "zeige das suchfeld", "confidence": 0.9, "latency_ms": 111})
 
-    def _handle_tts(self, auth: str | None) -> None:
+    def _handle_tts(self, auth: str | None, raw_body: bytes) -> None:
         if auth != "Bearer test-token":
             self._send_json({}, 401)
             return
@@ -68,8 +69,7 @@ class TtsHandler(BaseHTTPRequestHandler):
         if self.response_mode == "error":
             self._send_json({}, 500)
             return
-        length = int(self.headers.get("Content-Length", "0"))
-        payload = json.loads(self.rfile.read(length).decode("utf-8"))
+        payload = json.loads(raw_body.decode("utf-8"))
         TtsHandler.last_request = payload
         audio_base64 = "" if self.response_mode == "empty" else base64.b64encode(WAV_BYTES).decode("ascii")
         self._send_json(
