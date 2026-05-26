@@ -89,6 +89,33 @@ def test_accepted_stage1_cue_turns_into_navigation_preview() -> None:
     assert fake.popup.cue_approve.enabled is True
 
 
+def test_accepted_scroll_cue_turns_into_scroll_preview() -> None:
+    fake = FakeTray()
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {"action_type": "scroll", "label": "Seite", "bbox": [10, 20, 110, 80], "scroll_amount": 360},
+    )
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "ok",
+            "response": {
+                "safety_state": "accept",
+                "broker_decision": {"status": "accept", "final_bbox": [10, 20, 110, 80]},
+            },
+        },
+    )
+
+    assert fake.pending_stage1_action["scroll_amount"] == 360
+    assert fake.popup.screen_context_value.text() == "GOAT kann dich navigieren"
+    assert fake.popup.maya_value.text() == (
+        "GOAT will auf der Seite nach oben scrollen. Dabei wird nichts geklickt und nichts getippt."
+    )
+    assert fake.popup.cue_approve.text() == "Scrollen"
+    assert fake.popup.cue_approve.enabled is True
+
+
 def test_stage1_done_resets_pending_navigation() -> None:
     fake = FakeTray()
     fake.pending_builder_cue = {"label": "Senden Button"}

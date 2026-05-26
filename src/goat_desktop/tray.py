@@ -933,6 +933,7 @@ class GoatTrayApp:
             str(self.pending_stage1_action.get("label") or ""),
             broker_decision,
             dry_run=True,
+            context={"scroll_amount": int(self.pending_stage1_action.get("scroll_amount") or -360)},
         )
         self.popup.screen_context_value.setText(str(preview.get("title") or "Freigabe erforderlich"))
         self.popup.maya_value.setText(str(preview.get("message") or "Bitte pruefe die Aktion."))

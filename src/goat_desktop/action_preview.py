@@ -15,6 +15,7 @@ def build_action_preview(
     dry_run: bool = True,
     context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    preview_context = context or {}
     gate_action_type = _gate_action_type_for_preview(action_type)
     gate = evaluate_action_gate(
         ActionRequest(
@@ -23,11 +24,12 @@ def build_action_preview(
             broker_decision=broker_decision,
             user_approved=user_approved,
             dry_run=dry_run,
-            context=context or {},
+            context=preview_context,
         )
     )
     target = _target_name(label)
-    action_text = _plain_action(action_type, target, text)
+    action_kind = _action_kind(action_type)
+    action_text = _plain_action(action_type, target, text, preview_context)
     return {
         "ok": gate.status not in {"stop", "locked"},
         "status": gate.status,
@@ -35,7 +37,7 @@ def build_action_preview(
         "title": _title_for_gate(gate.stage, gate.status),
         "message": _message_for_gate(gate.stage, gate.status, action_text),
         "actionText": action_text,
-        "primaryButton": _primary_button_for_gate(gate.stage, gate.status),
+        "primaryButton": _primary_button_for_gate(gate.stage, gate.status, action_kind),
         "secondaryButton": "Abbrechen",
         "requiresUserApproval": gate.requires_user_approval,
         "mayExecute": gate.allowed_to_execute,
@@ -53,10 +55,22 @@ def _gate_action_type_for_preview(action_type: str) -> str:
     return action_type
 
 
-def _plain_action(action_type: str, target: str, text: str) -> str:
+def _action_kind(action_type: str) -> str:
+    normalized = action_type.strip().lower()
+    if "scroll" in normalized:
+        return "scroll"
+    if "hover" in normalized or "move" in normalized or "tooltip" in normalized:
+        return "move"
+    if "type" in normalized or "text" in normalized or "input" in normalized:
+        return "type"
+    return "other"
+
+
+def _plain_action(action_type: str, target: str, text: str, context: dict[str, Any]) -> str:
     normalized = f"{action_type} {target}".strip().lower()
     if "scroll" in normalized:
-        return "auf der Seite scrollen"
+        direction = _scroll_direction(context.get("scroll_amount"))
+        return f"auf der Seite {direction} scrollen"
     if "hover" in normalized or "move" in normalized or "tooltip" in normalized:
         return f"den Mauszeiger auf {target} bewegen"
     if "type" in normalized or "text" in normalized or "input" in normalized:
@@ -92,10 +106,12 @@ def _message_for_gate(stage: int, status: str, action_text: str) -> str:
     return f"GOAT will {action_text}. Das kann Folgen haben und braucht deine klare Freigabe."
 
 
-def _primary_button_for_gate(stage: int, status: str) -> str:
+def _primary_button_for_gate(stage: int, status: str, action_kind: str = "other") -> str:
     if status in {"locked", "stop"}:
         return "Verstanden"
     if stage == 1:
+        if action_kind == "scroll":
+            return "Scrollen"
         return "Navigieren"
     if stage == 2:
         return "Eingabe ausfuehren"
@@ -117,6 +133,14 @@ def _reason_for_gate(status: str) -> str:
 def _target_name(label: str) -> str:
     clean = " ".join(str(label or "Ziel").split())
     return clean or "Ziel"
+
+
+def _scroll_direction(scroll_amount: Any) -> str:
+    try:
+        amount = int(scroll_amount)
+    except (TypeError, ValueError):
+        amount = -360
+    return "nach unten" if amount < 0 else "nach oben"
 
 
 def _no_action_effects() -> dict[str, bool]:

@@ -113,7 +113,7 @@ def create_app(
             text=str(payload.get("text") or ""),
             user_approved=bool(payload.get("user_approved") or False),
             dry_run=bool(payload.get("dry_run") if "dry_run" in payload else True),
-            context=dict(payload.get("context") or {}),
+            context=_action_preview_context(payload),
         )
 
     @app.post("/chat/screen-question")
@@ -143,7 +143,7 @@ def create_app(
                 str(payload.get("label") or ""),
                 dict(payload.get("broker_decision") or {}),
                 dry_run=True,
-                context=dict(payload.get("context") or {}),
+                context=_action_preview_context(payload),
             )
             return {
                 "status": "preview_required",
@@ -279,6 +279,16 @@ def _stage1_effects(result: dict[str, Any]) -> dict[str, Any]:
     effects["mouseActionsExecuted"] = executed and action_type in {"hover", "scroll"}
     effects["mayExecuteRealAction"] = executed
     return effects
+
+
+def _action_preview_context(payload: dict[str, Any]) -> dict[str, Any]:
+    context = dict(payload.get("context") or {})
+    if "scroll_amount" in payload:
+        try:
+            context["scroll_amount"] = int(payload.get("scroll_amount"))
+        except (TypeError, ValueError):
+            context["scroll_amount"] = -360
+    return context
 
 
 class LocalBridge:

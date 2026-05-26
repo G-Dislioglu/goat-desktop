@@ -22,6 +22,16 @@ def test_stage1_preview_is_plain_navigation_copy() -> None:
     assert preview["effects"]["keyboardActionsExecuted"] is False
 
 
+def test_stage1_scroll_preview_names_direction_and_button() -> None:
+    down = build_action_preview("scroll", "Seite", ACCEPTED, dry_run=True, context={"scroll_amount": -360})
+    up = build_action_preview("scroll", "Seite", ACCEPTED, dry_run=True, context={"scroll_amount": 360})
+
+    assert down["message"] == "GOAT will auf der Seite nach unten scrollen. Dabei wird nichts geklickt und nichts getippt."
+    assert down["primaryButton"] == "Scrollen"
+    assert up["message"] == "GOAT will auf der Seite nach oben scrollen. Dabei wird nichts geklickt und nichts getippt."
+    assert up["primaryButton"] == "Scrollen"
+
+
 def test_stage2_preview_names_text_before_execution() -> None:
     preview = build_action_preview("type", "Suchfeld", ACCEPTED, text="StepStack", dry_run=True)
 
@@ -68,6 +78,15 @@ def test_bridge_action_preview_endpoint_is_read_only() -> None:
     assert body["effects"]["desktopActionsExecuted"] is False
     assert body["effects"]["mouseActionsExecuted"] is False
     assert body["effects"]["keyboardActionsExecuted"] is False
+
+
+def test_bridge_action_preview_uses_scroll_amount_for_plain_copy() -> None:
+    endpoint = _endpoint_for(create_app(), "/action/preview")
+
+    body = endpoint({"action_type": "scroll", "label": "Seite", "broker_decision": ACCEPTED, "scroll_amount": 360})
+
+    assert body["primaryButton"] == "Scrollen"
+    assert body["message"] == "GOAT will auf der Seite nach oben scrollen. Dabei wird nichts geklickt und nichts getippt."
 
 
 def test_bridge_stage1_requires_user_approval_for_real_navigation() -> None:
