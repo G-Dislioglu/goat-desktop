@@ -463,6 +463,8 @@ class GoatTrayApp:
         resolver = _build_resolver_evidence(result.get("screen_resolution"))
         return {
             "ok": result.get("status") == "ok",
+            "diagnostic": True,
+            "scope": "local_screen_question_smoke",
             "time_ms": elapsed_ms,
             "payload": result,
             "evidence": {

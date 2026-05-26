@@ -105,10 +105,15 @@ def create_app(
             return {
                 "ok": False,
                 "status": "unavailable",
+                "diagnostic": True,
+                "scope": "local_screen_question_smoke",
                 "error": "screen question handler is not attached",
                 "effects": _no_action_effects(),
             }
-        return screen_question_handler(payload)
+        result = screen_question_handler(payload)
+        result.setdefault("diagnostic", True)
+        result.setdefault("scope", "local_screen_question_smoke")
+        return result
 
     @app.post("/action/stage1")
     def stage1_action(payload: dict[str, Any]) -> dict[str, Any]:

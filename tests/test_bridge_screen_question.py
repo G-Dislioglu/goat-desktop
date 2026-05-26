@@ -64,6 +64,8 @@ def test_bridge_screen_question_uses_attached_handler() -> None:
     body = endpoint({"message": "Siehst du StepStack?"})
 
     assert body["ok"] is True
+    assert body["diagnostic"] is True
+    assert body["scope"] == "local_screen_question_smoke"
     assert body["payload"]["chat"]["provider"] == "goat_local_screen_context"
     assert body["effects"]["desktopActionsExecuted"] is False
 
@@ -74,6 +76,8 @@ def test_bridge_screen_question_fails_closed_without_handler() -> None:
 
     assert body["ok"] is False
     assert body["status"] == "unavailable"
+    assert body["diagnostic"] is True
+    assert body["scope"] == "local_screen_question_smoke"
     assert body["effects"]["desktopActionsExecuted"] is False
 
 
@@ -83,6 +87,8 @@ def test_tray_bridge_screen_question_returns_timing_and_evidence() -> None:
     body = GoatTrayApp.handle_bridge_screen_question(fake, {"message": "Siehst du StepStack?"})
 
     assert body["ok"] is True
+    assert body["diagnostic"] is True
+    assert body["scope"] == "local_screen_question_smoke"
     assert body["time_ms"] >= 0
     assert body["evidence"]["marker_source"] == "win32_desktop"
     assert body["evidence"]["chat_provider"] == "goat_local_screen_context"
