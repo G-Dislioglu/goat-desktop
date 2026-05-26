@@ -231,6 +231,8 @@ def test_taskbar_match_uses_warmed_cache(monkeypatch) -> None:
     result = find_uia_match_for_message("Siehst du Codex in der Taskleiste?")
 
     assert result["source"] == "uia_taskbar"
+    assert result["source_path"] == "uia_taskbar_cache"
+    assert result["cache_hit"] is True
     assert result["elements_scanned"] == 1
     assert result["match"]["element"]["name"] == "Codex - 1 aktives Fenster angeheftet"
 

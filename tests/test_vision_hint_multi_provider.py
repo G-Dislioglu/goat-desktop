@@ -20,21 +20,21 @@ class VisionHintHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802 - stdlib hook
         auth = self.headers.get("Authorization")
+        raw_body = self.rfile.read(int(self.headers.get("Content-Length", "0")))
         if self.path != "/api/goat/vision-hint":
-            self.send_error(404)
+            self._send_json({}, 404)
             return
         if auth != "Bearer test-token":
-            self.send_error(401)
+            self._send_json({}, 401)
             return
         if self.response_mode == "timeout":
             time.sleep(1.0)
             return
         if self.response_mode == "error":
-            self.send_error(500)
+            self._send_json({}, 500)
             return
 
-        length = int(self.headers.get("Content-Length", "0"))
-        payload = json.loads(self.rfile.read(length).decode("utf-8"))
+        payload = json.loads(raw_body.decode("utf-8"))
         VisionHintHandler.last_request = payload
         if self.response_mode == "alternate_fields":
             body = {
@@ -64,8 +64,11 @@ class VisionHintHandler(BaseHTTPRequestHandler):
                 "latency_ms": 123,
                 "reasoning_level_used": payload["reasoning_level"],
             }
+        self._send_json(body)
+
+    def _send_json(self, body: dict, status: int = 200) -> None:
         encoded = json.dumps(body).encode("utf-8")
-        self.send_response(200)
+        self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()

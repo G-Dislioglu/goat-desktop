@@ -95,7 +95,9 @@ def find_uia_match_for_message(
                 "effects": _no_action_effects(),
             }
         if _message_mentions_taskbar(message):
-            taskbar_match, taskbar_scanned = _find_taskbar_match_uia(target_terms, min_score=min_score, early_score=early_score)
+            taskbar_match, taskbar_scanned, taskbar_cache_hit = _find_taskbar_match_uia(
+                target_terms, min_score=min_score, early_score=early_score
+            )
             if taskbar_match is not None:
                 return {
                     "ok": True,
@@ -103,6 +105,8 @@ def find_uia_match_for_message(
                     "elements_scanned": taskbar_scanned,
                     "time_ms": round((perf_counter() - started) * 1000, 2),
                     "source": "uia_taskbar",
+                    "source_path": "uia_taskbar_cache" if taskbar_cache_hit else "uia_taskbar_scan",
+                    "cache_hit": taskbar_cache_hit,
                     "effects": _no_action_effects(),
                 }
         if _message_mentions_window(message):
@@ -114,6 +118,8 @@ def find_uia_match_for_message(
                     "elements_scanned": window_scanned,
                     "time_ms": round((perf_counter() - started) * 1000, 2),
                     "source": "win32_window",
+                    "source_path": "win32_window",
+                    "cache_hit": False,
                     "effects": _no_action_effects(),
                 }
         if not _message_mentions_taskbar(message) and not _message_mentions_window(message):
@@ -125,6 +131,8 @@ def find_uia_match_for_message(
                     "elements_scanned": fast_scanned,
                     "time_ms": round((perf_counter() - started) * 1000, 2),
                     "source": "win32_desktop",
+                    "source_path": "win32_desktop",
+                    "cache_hit": False,
                     "effects": _no_action_effects(),
                 }
         desktop = Desktop(backend="uia")
@@ -141,6 +149,8 @@ def find_uia_match_for_message(
             "match": match,
             "elements_scanned": scanned,
             "time_ms": round((perf_counter() - started) * 1000, 2),
+            "source_path": "uia_scan",
+            "cache_hit": False,
             "effects": _no_action_effects(),
         }
     except Exception as exc:  # noqa: BLE001 - UIA is an optional read-only hint
@@ -354,21 +364,21 @@ def _find_window_match_win32(target_terms: list[str], min_score: float, early_sc
     return _build_match(best, target_terms), scanned
 
 
-def _find_taskbar_match_uia(target_terms: list[str], min_score: float, early_score: float) -> tuple[dict[str, Any] | None, int]:
+def _find_taskbar_match_uia(target_terms: list[str], min_score: float, early_score: float) -> tuple[dict[str, Any] | None, int, bool]:
     cached_elements = _get_taskbar_cache()
     if cached_elements:
         match = _find_best_match_for_terms(cached_elements, target_terms, min_score=min_score)
         if match is not None:
             _mark_match_source(match, "uia_taskbar")
-            return match, len(cached_elements)
+            return match, len(cached_elements), True
 
     elements, scanned = _collect_taskbar_elements_uia()
     _set_taskbar_cache(elements)
     match = _find_best_match_for_terms(elements, target_terms, min_score=min_score)
     if match is None:
-        return None, scanned
+        return None, scanned, False
     _mark_match_source(match, "uia_taskbar")
-    return match, scanned
+    return match, scanned, False
 
 
 def _collect_taskbar_elements_uia() -> tuple[list[dict[str, Any]], int]:

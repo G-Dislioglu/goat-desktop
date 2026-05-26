@@ -397,12 +397,14 @@ class GoatTrayApp:
     def _build_chat_message_payload(self, text: str, target: str, provider: str, reasoning: str) -> dict:
         screen_context = self._last_screen_context
         screen_marker = None
+        screen_resolution = None
         is_screen_question = should_use_screen_context(text)
         if is_screen_question:
             screen_context_result = self._resolve_screen_context_for_message(text, provider, reasoning)
             if screen_context_result.get("status") == "ok":
                 screen_context = str(screen_context_result.get("summary") or "")
                 screen_marker = screen_context_result.get("marker") if isinstance(screen_context_result.get("marker"), dict) else None
+                screen_resolution = screen_context_result.get("uia") if isinstance(screen_context_result.get("uia"), dict) else None
             elif not screen_context:
                 screen_context = f"Bildschirm-Kontext nicht verfuegbar: {screen_context_result.get('error') or 'Vision fehlgeschlagen'}"
         if should_answer_screen_question_locally(text, screen_context):
@@ -432,6 +434,7 @@ class GoatTrayApp:
             "is_screen_question": is_screen_question,
             "screen_context": screen_context,
             "marker": screen_marker,
+            "screen_resolution": screen_resolution,
             "chat": chat_payload,
         }
 
@@ -453,6 +456,15 @@ class GoatTrayApp:
                 "screen_context": result.get("screen_context"),
                 "marker_source": (result.get("marker") or {}).get("source") if isinstance(result.get("marker"), dict) else None,
                 "chat_provider": (result.get("chat") or {}).get("provider") if isinstance(result.get("chat"), dict) else None,
+                "source_path": (result.get("screen_resolution") or {}).get("source_path")
+                if isinstance(result.get("screen_resolution"), dict)
+                else None,
+                "cache_hit": (result.get("screen_resolution") or {}).get("cache_hit")
+                if isinstance(result.get("screen_resolution"), dict)
+                else None,
+                "elements_scanned": (result.get("screen_resolution") or {}).get("elements_scanned")
+                if isinstance(result.get("screen_resolution"), dict)
+                else None,
             },
             "effects": _no_action_effects(),
         }
@@ -470,6 +482,9 @@ class GoatTrayApp:
                     "uia": {
                         "time_ms": uia_context.get("time_ms"),
                         "elements_scanned": uia_context.get("elements_scanned"),
+                        "source": uia_context.get("source"),
+                        "source_path": uia_context.get("source_path"),
+                        "cache_hit": uia_context.get("cache_hit"),
                         "match": match,
                     },
                 }
