@@ -3,9 +3,12 @@ from __future__ import annotations
 from goat_desktop import uia_context
 from goat_desktop.uia_context import (
     _TASKBAR_CACHE,
+    _WINDOW_CACHE,
     _find_best_uia_match_in_wrappers,
     _get_taskbar_cache,
+    _get_window_cache,
     _set_taskbar_cache,
+    _set_window_cache,
     _target_terms,
     build_uia_marker,
     build_uia_screen_context,
@@ -231,7 +234,7 @@ def test_build_uia_screen_context_names_window_source() -> None:
 
 
 def test_window_question_stops_after_window_fastpath_miss(monkeypatch) -> None:
-    monkeypatch.setattr(uia_context, "_find_window_match_win32", lambda *_args, **_kwargs: (None, 5))
+    monkeypatch.setattr(uia_context, "_find_window_match_win32", lambda *_args, **_kwargs: (None, 5, False))
 
     class FailingDesktop:
         def __init__(self, backend: str) -> None:
@@ -247,6 +250,85 @@ def test_window_question_stops_after_window_fastpath_miss(monkeypatch) -> None:
     assert result["source"] == "win32_window"
     assert result["source_path"] == "win32_window_miss"
     assert result["elements_scanned"] == 5
+
+
+def test_window_match_uses_warmed_cache(monkeypatch) -> None:
+    _set_window_cache(
+        [
+            {
+                "name": "GOAT Desktop",
+                "control_type": "Window",
+                "source": "win32_window",
+                "rect": {"left": 10, "top": 20, "right": 210, "bottom": 170},
+            }
+        ]
+    )
+    monkeypatch.setattr(uia_context, "_collect_window_elements_win32", lambda: (_ for _ in ()).throw(AssertionError("cache missed")))
+
+    result = find_uia_match_for_message("Siehst du GOAT Desktop Fenster?")
+
+    assert result["source"] == "win32_window"
+    assert result["source_path"] == "win32_window_cache"
+    assert result["cache_hit"] is True
+    assert result["elements_scanned"] == 1
+    assert result["match"]["element"]["name"] == "GOAT Desktop"
+
+
+def test_window_cache_miss_stops_without_live_refresh(monkeypatch) -> None:
+    _set_window_cache(
+        [
+            {
+                "name": "Other Window",
+                "control_type": "Window",
+                "source": "win32_window",
+                "rect": {"left": 10, "top": 20, "right": 210, "bottom": 170},
+            }
+        ]
+    )
+    monkeypatch.setattr(uia_context, "_collect_window_elements_win32", lambda: (_ for _ in ()).throw(AssertionError("cache miss should not refresh")))
+
+    result = find_uia_match_for_message("Siehst du GOAT Desktop Fenster?")
+
+    assert result["source_path"] == "win32_window_miss"
+    assert result["cache_hit"] is True
+    assert result["match"] is None
+    assert _get_window_cache()[0]["name"] == "Other Window"
+
+
+def test_window_cache_can_expire(monkeypatch) -> None:
+    _set_window_cache(
+        [
+            {
+                "name": "Codex",
+                "control_type": "Window",
+                "source": "win32_window",
+                "rect": {"left": 10, "top": 20, "right": 210, "bottom": 170},
+            }
+        ]
+    )
+    monkeypatch.setattr(uia_context, "_WINDOW_CACHE_TTL_SECONDS", -1.0)
+
+    assert _get_window_cache() == []
+
+
+def test_window_cache_hit_refreshes_ttl(monkeypatch) -> None:
+    times = iter([100.0, 110.0, 110.0, 200.0, 200.0])
+    monkeypatch.setattr(uia_context, "perf_counter", lambda: next(times))
+    monkeypatch.setattr(uia_context, "_WINDOW_CACHE_TTL_SECONDS", 120.0)
+    _set_window_cache(
+        [
+            {
+                "name": "Codex",
+                "control_type": "Window",
+                "source": "win32_window",
+                "rect": {"left": 10, "top": 20, "right": 210, "bottom": 170},
+            }
+        ]
+    )
+
+    assert _get_window_cache()
+    assert _WINDOW_CACHE["time"] == 110.0
+    assert _get_window_cache()
 
 
 def test_build_uia_screen_context_names_taskbar_source() -> None:

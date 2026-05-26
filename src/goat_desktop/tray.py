@@ -39,7 +39,7 @@ from goat_desktop.screen_context import (
 )
 from goat_desktop.stt_hint import load_stt_config
 from goat_desktop.tts_hint import load_tts_config
-from goat_desktop.uia_context import build_uia_marker, build_uia_screen_context, find_uia_match_for_message, warm_taskbar_cache
+from goat_desktop.uia_context import build_uia_marker, build_uia_screen_context, find_uia_match_for_message, warm_taskbar_cache, warm_window_cache
 from goat_desktop.vision_config import load_vision_config, save_vision_config
 from goat_desktop.vision_hint import (
     ReasoningLevel,
@@ -120,6 +120,7 @@ class GoatTrayApp:
         self.tray.show()
         self.bridge.start()
         Thread(target=warm_taskbar_cache, name="goat-taskbar-cache-warmup", daemon=True).start()
+        Thread(target=warm_window_cache, name="goat-window-cache-warmup", daemon=True).start()
         self._start_builder_bridge_if_configured()
         self._load_vision_config()
         self.popup.video_frames_toggle.setChecked(_video_frames_enabled())
