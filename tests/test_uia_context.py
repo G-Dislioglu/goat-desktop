@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from goat_desktop import uia_context
 from goat_desktop.uia_context import (
+    _TASKBAR_CACHE,
     _find_best_uia_match_in_wrappers,
     _get_taskbar_cache,
     _set_taskbar_cache,
@@ -251,6 +252,26 @@ def test_taskbar_cache_can_expire(monkeypatch) -> None:
     monkeypatch.setattr(uia_context, "_TASKBAR_CACHE_TTL_SECONDS", -1.0)
 
     assert _get_taskbar_cache() == []
+
+
+def test_taskbar_cache_hit_refreshes_ttl(monkeypatch) -> None:
+    times = iter([100.0, 110.0, 110.0, 200.0, 200.0])
+    monkeypatch.setattr(uia_context, "perf_counter", lambda: next(times))
+    monkeypatch.setattr(uia_context, "_TASKBAR_CACHE_TTL_SECONDS", 120.0)
+    _set_taskbar_cache(
+        [
+            {
+                "name": "Codex",
+                "control_type": "Button",
+                "source": "uia_taskbar",
+                "rect": {"left": 10, "top": 20, "right": 110, "bottom": 70},
+            }
+        ]
+    )
+
+    assert _get_taskbar_cache()
+    assert _TASKBAR_CACHE["time"] == 110.0
+    assert _get_taskbar_cache()
 
 
 def test_build_uia_screen_context_capitalizes_lowercase_icon_name() -> None:

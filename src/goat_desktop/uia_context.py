@@ -5,7 +5,7 @@ from threading import Lock
 from time import perf_counter
 from typing import Any
 
-_TASKBAR_CACHE_TTL_SECONDS = 15.0
+_TASKBAR_CACHE_TTL_SECONDS = 120.0
 _TASKBAR_CACHE_LOCK = Lock()
 _TASKBAR_CACHE: dict[str, Any] = {"elements": [], "time": 0.0}
 
@@ -427,7 +427,10 @@ def _get_taskbar_cache() -> list[dict[str, Any]]:
         cache_age = perf_counter() - float(_TASKBAR_CACHE.get("time") or 0.0)
         if cache_age > _TASKBAR_CACHE_TTL_SECONDS:
             return []
-        return list(_TASKBAR_CACHE.get("elements") or [])
+        elements = list(_TASKBAR_CACHE.get("elements") or [])
+        if elements:
+            _TASKBAR_CACHE["time"] = perf_counter()
+        return elements
 
 
 def _set_taskbar_cache(elements: list[dict[str, Any]]) -> None:

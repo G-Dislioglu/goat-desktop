@@ -242,6 +242,9 @@ taskbar_cache_warmup_2026_05_26:
 screen_resolver_evidence_2026_05_26:
 "Bridge-Screen-Smoke zeigt jetzt Resolver-Evidence: `source_path`, `cache_hit` und `elements_scanned`. Taskleisten-Smoke belegt beide Pfade: Scan-Pfad `uia_taskbar_scan` mit `cache_hit=false`, danach Cache-Pfad `uia_taskbar_cache` mit `cache_hit=true` in ca. 0.65ms. Diese Evidence wird aus dem Tray-Screen-Resolver bis `/chat/screen-question` durchgereicht; keine Provider-/Desktop-/Maus-/Keyboard-Aktionen."
 
+taskbar_cache_sliding_ttl_2026_05_26:
+"Taskleisten-Cache nutzt jetzt eine Sliding-TTL von 120s: jeder Cache-Treffer verlaengert die Frische, statt nach 15s hart kalt zu werden. Direkte Messung nach Warmup: Taskleistenfrage ca. 0.25-0.36ms auch nach kurzer Pause. Live-Smoke nach GOAT-Neustart und Warmup: erster Bridge-Treffer 0.45ms, zweiter nach 3s 0.60ms, jeweils `source_path=uia_taskbar_cache`, `cache_hit=true`, keine Provider-/Desktop-/Maus-/Keyboard-Aktionen."
+
 popup_product_simplification_2026_05_17:
 "Popup-UI produktnaeher verschlankt. Entfernt aus sichtbarer Haupt-UI: statische Tabellenbeschriftungen, Dev-Button 'Cue testen' und manuelle Ball-Pfeiltasten. Ballsteuerung bleibt im Tray-Menue fuer Debug/Recovery, aber normaler Produktpfad ist GOAT setzt den Ball auf erkannte Ziele/Felder/Buttons. Status wird als kompakte Chips angezeigt; Screen-Kontext, Maya-Antwort und Zielmarkierung sind groessere Ausgabefelder. Bevorzugte Popup-Groesse bleibt kompakt."
 
