@@ -84,6 +84,16 @@ def test_build_local_screen_miss_summary_removes_taskbar_context_word() -> None:
     assert "dieseszielgibtesnicht" in summary
 
 
+def test_build_local_screen_miss_summary_removes_window_context_word() -> None:
+    summary = build_local_screen_miss_summary(
+        "Siehst du DiesesZielGibtEsNicht Fenster?",
+        {"source_path": "win32_window_miss", "elements_scanned": 5},
+    )
+
+    assert "fenster" not in summary
+    assert "dieseszielgibtesnicht" in summary
+
+
 def test_build_screen_context_prompt_includes_user_question() -> None:
     prompt = build_screen_context_prompt("Wo ist StepStack?")
 

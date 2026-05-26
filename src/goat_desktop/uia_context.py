@@ -134,6 +134,16 @@ def find_uia_match_for_message(
                     "cache_hit": False,
                     "effects": _no_action_effects(),
                 }
+            return {
+                "ok": True,
+                "match": None,
+                "elements_scanned": window_scanned,
+                "time_ms": round((perf_counter() - started) * 1000, 2),
+                "source": "win32_window",
+                "source_path": "win32_window_miss",
+                "cache_hit": False,
+                "effects": _no_action_effects(),
+            }
         if not _message_mentions_taskbar(message) and not _message_mentions_window(message):
             fast_match, fast_scanned = _find_desktop_icon_match_win32(target_terms, min_score=min_score, early_score=early_score)
             if fast_match is not None:

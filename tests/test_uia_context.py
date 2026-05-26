@@ -230,6 +230,25 @@ def test_build_uia_screen_context_names_window_source() -> None:
     assert context == "Lokales Fenster: GOAT Desktop (Window) sichtbar. Vertrauen 1.00 via win32_window."
 
 
+def test_window_question_stops_after_window_fastpath_miss(monkeypatch) -> None:
+    monkeypatch.setattr(uia_context, "_find_window_match_win32", lambda *_args, **_kwargs: (None, 5))
+
+    class FailingDesktop:
+        def __init__(self, backend: str) -> None:
+            if backend == "uia":
+                raise AssertionError("explicit window miss should not use full UIA scan")
+
+    monkeypatch.setattr("pywinauto.Desktop", FailingDesktop)
+
+    result = find_uia_match_for_message("Siehst du DiesesZielGibtEsNicht Fenster?")
+
+    assert result["ok"] is True
+    assert result["match"] is None
+    assert result["source"] == "win32_window"
+    assert result["source_path"] == "win32_window_miss"
+    assert result["elements_scanned"] == 5
+
+
 def test_build_uia_screen_context_names_taskbar_source() -> None:
     context = build_uia_screen_context(
         {
