@@ -136,6 +136,17 @@ def find_uia_match_for_message(
                     "cache_hit": False,
                     "effects": _no_action_effects(),
                 }
+            if _message_mentions_desktop(message):
+                return {
+                    "ok": True,
+                    "match": None,
+                    "elements_scanned": fast_scanned,
+                    "time_ms": round((perf_counter() - started) * 1000, 2),
+                    "source": "win32_desktop",
+                    "source_path": "win32_desktop_miss",
+                    "cache_hit": False,
+                    "effects": _no_action_effects(),
+                }
         desktop = Desktop(backend="uia")
         roots = _collect_roots(desktop)
         match, scanned = _find_best_uia_match_in_wrappers(
@@ -579,6 +590,12 @@ def _message_mentions_window(message: str) -> bool:
     normalized = _normalize(message)
     parts = normalized.split()
     return "fenster" in parts or "window" in parts
+
+
+def _message_mentions_desktop(message: str) -> bool:
+    normalized = _normalize(message)
+    parts = normalized.split()
+    return "desktop" in parts or "bildschirm" in parts
 
 
 def _match_score(target_terms: list[str], name: str) -> float:

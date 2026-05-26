@@ -216,6 +216,25 @@ def test_build_uia_screen_context_names_taskbar_source() -> None:
     assert context == "Lokale Taskleiste: Codex - 1 aktives Fenster angeheftet (Button) sichtbar. Vertrauen 1.00 via uia_taskbar."
 
 
+def test_desktop_question_stops_after_desktop_fastpath_miss(monkeypatch) -> None:
+    monkeypatch.setattr(uia_context, "_find_desktop_icon_match_win32", lambda *_args, **_kwargs: (None, 3))
+
+    class FailingDesktop:
+        def __init__(self, backend: str) -> None:
+            if backend == "uia":
+                raise AssertionError("explicit desktop miss should not use full UIA scan")
+
+    monkeypatch.setattr("pywinauto.Desktop", FailingDesktop)
+
+    result = find_uia_match_for_message("Siehst du DiesesZielGibtEsNicht auf dem Desktop?")
+
+    assert result["ok"] is True
+    assert result["match"] is None
+    assert result["source"] == "win32_desktop"
+    assert result["source_path"] == "win32_desktop_miss"
+    assert result["elements_scanned"] == 3
+
+
 def test_taskbar_match_uses_warmed_cache(monkeypatch) -> None:
     _set_taskbar_cache(
         [
