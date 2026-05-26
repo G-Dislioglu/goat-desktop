@@ -8,9 +8,13 @@ from typing import Any
 _TASKBAR_CACHE_TTL_SECONDS = 120.0
 _TASKBAR_CACHE_LOCK = Lock()
 _TASKBAR_CACHE: dict[str, Any] = {"elements": [], "time": 0.0}
+_TASKBAR_WARMUP_LOCK = Lock()
+_TASKBAR_WARMUP: dict[str, Any] = {"in_progress": False, "started": 0.0, "finished": 0.0, "ok": None, "error": None}
 _WINDOW_CACHE_TTL_SECONDS = 120.0
 _WINDOW_CACHE_LOCK = Lock()
 _WINDOW_CACHE: dict[str, Any] = {"elements": [], "time": 0.0}
+_WINDOW_WARMUP_LOCK = Lock()
+_WINDOW_WARMUP: dict[str, Any] = {"in_progress": False, "started": 0.0, "finished": 0.0, "ok": None, "error": None}
 
 
 @dataclass(frozen=True)
@@ -219,9 +223,11 @@ def find_uia_match_for_message(
 
 def warm_taskbar_cache() -> dict[str, Any]:
     started = perf_counter()
+    _set_warmup_started(_TASKBAR_WARMUP, _TASKBAR_WARMUP_LOCK)
     try:
         elements, scanned = _collect_taskbar_elements_uia()
         _set_taskbar_cache(elements)
+        _set_warmup_finished(_TASKBAR_WARMUP, _TASKBAR_WARMUP_LOCK, True, None)
         return {
             "ok": True,
             "elements": len(elements),
@@ -230,6 +236,7 @@ def warm_taskbar_cache() -> dict[str, Any]:
             "effects": _no_action_effects(),
         }
     except Exception as exc:  # noqa: BLE001 - cache warmup is optional
+        _set_warmup_finished(_TASKBAR_WARMUP, _TASKBAR_WARMUP_LOCK, False, type(exc).__name__)
         return {
             "ok": False,
             "error": type(exc).__name__,
@@ -242,9 +249,11 @@ def warm_taskbar_cache() -> dict[str, Any]:
 
 def warm_window_cache() -> dict[str, Any]:
     started = perf_counter()
+    _set_warmup_started(_WINDOW_WARMUP, _WINDOW_WARMUP_LOCK)
     try:
         elements, scanned = _collect_window_elements_win32()
         _set_window_cache(elements)
+        _set_warmup_finished(_WINDOW_WARMUP, _WINDOW_WARMUP_LOCK, True, None)
         return {
             "ok": True,
             "elements": len(elements),
@@ -253,6 +262,7 @@ def warm_window_cache() -> dict[str, Any]:
             "effects": _no_action_effects(),
         }
     except Exception as exc:  # noqa: BLE001 - cache warmup is optional
+        _set_warmup_finished(_WINDOW_WARMUP, _WINDOW_WARMUP_LOCK, False, type(exc).__name__)
         return {
             "ok": False,
             "error": type(exc).__name__,
@@ -264,9 +274,25 @@ def warm_window_cache() -> dict[str, Any]:
 
 
 def get_resolver_cache_status() -> dict[str, Any]:
+    taskbar = _cache_status(
+        _TASKBAR_CACHE,
+        _TASKBAR_CACHE_LOCK,
+        _TASKBAR_CACHE_TTL_SECONDS,
+        _TASKBAR_WARMUP,
+        _TASKBAR_WARMUP_LOCK,
+    )
+    windows = _cache_status(
+        _WINDOW_CACHE,
+        _WINDOW_CACHE_LOCK,
+        _WINDOW_CACHE_TTL_SECONDS,
+        _WINDOW_WARMUP,
+        _WINDOW_WARMUP_LOCK,
+    )
     return {
-        "taskbar": _cache_status(_TASKBAR_CACHE, _TASKBAR_CACHE_LOCK, _TASKBAR_CACHE_TTL_SECONDS),
-        "windows": _cache_status(_WINDOW_CACHE, _WINDOW_CACHE_LOCK, _WINDOW_CACHE_TTL_SECONDS),
+        "ready": taskbar["warm"] and windows["warm"],
+        "state": _resolver_cache_state(taskbar, windows),
+        "taskbar": taskbar,
+        "windows": windows,
     }
 
 
@@ -552,20 +578,75 @@ def _set_window_cache(elements: list[dict[str, Any]]) -> None:
         _WINDOW_CACHE["time"] = perf_counter()
 
 
-def _cache_status(cache: dict[str, Any], lock: Lock, ttl_seconds: float) -> dict[str, Any]:
+def _cache_status(
+    cache: dict[str, Any],
+    lock: Lock,
+    ttl_seconds: float,
+    warmup: dict[str, Any],
+    warmup_lock: Lock,
+) -> dict[str, Any]:
     with lock:
         elements = list(cache.get("elements") or [])
         cache_time = float(cache.get("time") or 0.0)
+    with warmup_lock:
+        warmup_status = dict(warmup)
     age_ms = round((perf_counter() - cache_time) * 1000, 2) if cache_time > 0 else None
     ttl_ms = round(ttl_seconds * 1000, 2)
     stale = age_ms is None or age_ms > ttl_ms
+    warm = bool(elements) and not stale
+    state = _cache_state(warm, stale, warmup_status)
     return {
-        "warm": bool(elements) and not stale,
+        "state": state,
+        "warm": warm,
         "stale": stale,
         "elements": len(elements),
         "age_ms": age_ms,
         "ttl_ms": ttl_ms,
+        "warming": bool(warmup_status.get("in_progress")),
+        "lastWarmupOk": warmup_status.get("ok"),
+        "lastWarmupError": warmup_status.get("error"),
     }
+
+
+def _cache_state(warm: bool, stale: bool, warmup_status: dict[str, Any]) -> str:
+    if warm:
+        return "warm"
+    if warmup_status.get("in_progress"):
+        return "warming"
+    if warmup_status.get("ok") is False:
+        return "failed"
+    if stale and warmup_status.get("finished"):
+        return "stale"
+    return "cold"
+
+
+def _resolver_cache_state(taskbar: dict[str, Any], windows: dict[str, Any]) -> str:
+    states = {str(taskbar.get("state") or ""), str(windows.get("state") or "")}
+    if states == {"warm"}:
+        return "ready"
+    if "failed" in states:
+        return "degraded"
+    if "warming" in states:
+        return "warming"
+    if "warm" in states:
+        return "partial"
+    return "cold"
+
+
+def _set_warmup_started(warmup: dict[str, Any], lock: Lock) -> None:
+    with lock:
+        warmup["in_progress"] = True
+        warmup["started"] = perf_counter()
+        warmup["ok"] = None
+        warmup["error"] = None
+
+
+def _set_warmup_finished(warmup: dict[str, Any], lock: Lock, ok: bool, error: str | None) -> None:
+    with lock:
+        warmup["in_progress"] = False
+        warmup["finished"] = perf_counter()
+        warmup["ok"] = ok
+        warmup["error"] = error
 
 
 def _display_name(name: str) -> str:

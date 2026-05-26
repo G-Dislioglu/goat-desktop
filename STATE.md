@@ -369,3 +369,6 @@ resolver_cache_health_2026_05_26:
 
 resolver_cache_periodic_refresh_2026_05_26:
 "GOAT waermt Taskleisten- und Fensterlisten-Resolver-Caches jetzt nicht nur beim Start, sondern periodisch read-only nach. Standardintervall: 60s, testbar/steuerbar ueber GOAT_RESOLVER_CACHE_REFRESH_MS mit 10s Untergrenze. Live-Smoke mit GOAT_RESOLVER_CACHE_REFRESH_MS=10000 nach Neustart und >12s Wartezeit: /healthz zeigte taskbar warm=true, elements=26, age_ms=6684.1 und windows warm=true, elements=7, age_ms=7235.86. Damit fallen lokale Screenfragen nach Leerlauf nicht direkt wieder in kalte UIA-/Win32-Scans. Tests gruen: 173 passed; compileall gruen."
+
+resolver_cache_startup_state_2026_05_26:
+"Resolver-Cache-Health unterscheidet jetzt cold, warming, warm, stale und failed pro Cache sowie ready/warming/partial/degraded/cold als Gesamtstatus. Direkt nach GOAT-Start sieht /healthz dadurch nicht mehr wie ein leerer Fehlerzustand aus, sondern meldet warming bis der read-only Warmup fertig ist. Live-Smoke nach Neustart: erster /healthz-State `warming` mit taskbar/windows `warming`; nach 8s `ready` mit taskbar warm elements=26 und windows warm elements=7; Screenfrage 'Siehst du GOAT Desktop auf dem Bildschirm?' -> win32_window_cache, cache_hit=true, resolver time_ms=0.25, keine Provider-/Desktop-Aktion. Tests gruen: 174 passed; compileall gruen."

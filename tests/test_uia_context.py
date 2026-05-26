@@ -3,7 +3,9 @@ from __future__ import annotations
 from goat_desktop import uia_context
 from goat_desktop.uia_context import (
     _TASKBAR_CACHE,
+    _TASKBAR_WARMUP,
     _WINDOW_CACHE,
+    _WINDOW_WARMUP,
     _find_best_uia_match_in_wrappers,
     _get_taskbar_cache,
     _get_window_cache,
@@ -46,51 +48,77 @@ def test_resolver_cache_status_reports_empty_caches(monkeypatch) -> None:
     monkeypatch.setattr(uia_context, "perf_counter", lambda: 100.0)
     _TASKBAR_CACHE["elements"] = []
     _TASKBAR_CACHE["time"] = 0.0
+    _TASKBAR_WARMUP.update({"in_progress": False, "started": 0.0, "finished": 0.0, "ok": None, "error": None})
     _WINDOW_CACHE["elements"] = []
     _WINDOW_CACHE["time"] = 0.0
+    _WINDOW_WARMUP.update({"in_progress": False, "started": 0.0, "finished": 0.0, "ok": None, "error": None})
 
     status = get_resolver_cache_status()
 
-    assert status["taskbar"] == {
-        "warm": False,
-        "stale": True,
-        "elements": 0,
-        "age_ms": None,
-        "ttl_ms": 120000.0,
-    }
-    assert status["windows"] == {
-        "warm": False,
-        "stale": True,
-        "elements": 0,
-        "age_ms": None,
-        "ttl_ms": 120000.0,
-    }
+    assert status["ready"] is False
+    assert status["state"] == "cold"
+    assert status["taskbar"]["state"] == "cold"
+    assert status["taskbar"]["warm"] is False
+    assert status["taskbar"]["warming"] is False
+    assert status["taskbar"]["lastWarmupOk"] is None
+    assert status["taskbar"]["elements"] == 0
+    assert status["taskbar"]["age_ms"] is None
+    assert status["taskbar"]["ttl_ms"] == 120000.0
+    assert status["windows"]["state"] == "cold"
+    assert status["windows"]["warm"] is False
+    assert status["windows"]["warming"] is False
+    assert status["windows"]["lastWarmupOk"] is None
+    assert status["windows"]["elements"] == 0
+    assert status["windows"]["age_ms"] is None
+    assert status["windows"]["ttl_ms"] == 120000.0
 
 
 def test_resolver_cache_status_reports_warm_and_stale_caches(monkeypatch) -> None:
     monkeypatch.setattr(uia_context, "perf_counter", lambda: 100.0)
     monkeypatch.setattr(uia_context, "_TASKBAR_CACHE_TTL_SECONDS", 120.0)
     monkeypatch.setattr(uia_context, "_WINDOW_CACHE_TTL_SECONDS", 10.0)
+    _TASKBAR_WARMUP.update({"in_progress": False, "started": 100.0, "finished": 101.0, "ok": True, "error": None})
+    _WINDOW_WARMUP.update({"in_progress": False, "started": 100.0, "finished": 101.0, "ok": True, "error": None})
     _set_taskbar_cache([{"name": "Codex"}])
     _set_window_cache([{"name": "Old Window"}])
 
     monkeypatch.setattr(uia_context, "perf_counter", lambda: 111.5)
     status = get_resolver_cache_status()
 
-    assert status["taskbar"] == {
-        "warm": True,
-        "stale": False,
-        "elements": 1,
-        "age_ms": 11500.0,
-        "ttl_ms": 120000.0,
-    }
-    assert status["windows"] == {
-        "warm": False,
-        "stale": True,
-        "elements": 1,
-        "age_ms": 11500.0,
-        "ttl_ms": 10000.0,
-    }
+    assert status["ready"] is False
+    assert status["state"] == "partial"
+    assert status["taskbar"]["state"] == "warm"
+    assert status["taskbar"]["warm"] is True
+    assert status["taskbar"]["stale"] is False
+    assert status["taskbar"]["elements"] == 1
+    assert status["taskbar"]["age_ms"] == 11500.0
+    assert status["taskbar"]["ttl_ms"] == 120000.0
+    assert status["windows"]["state"] == "stale"
+    assert status["windows"]["warm"] is False
+    assert status["windows"]["stale"] is True
+    assert status["windows"]["elements"] == 1
+    assert status["windows"]["age_ms"] == 11500.0
+    assert status["windows"]["ttl_ms"] == 10000.0
+
+
+def test_resolver_cache_status_reports_warming_and_failed_states(monkeypatch) -> None:
+    monkeypatch.setattr(uia_context, "perf_counter", lambda: 200.0)
+    _TASKBAR_CACHE["elements"] = []
+    _TASKBAR_CACHE["time"] = 0.0
+    _WINDOW_CACHE["elements"] = []
+    _WINDOW_CACHE["time"] = 0.0
+    _TASKBAR_WARMUP.update({"in_progress": True, "started": 199.0, "finished": 0.0, "ok": None, "error": None})
+    _WINDOW_WARMUP.update({"in_progress": False, "started": 198.0, "finished": 199.0, "ok": False, "error": "RuntimeError"})
+
+    status = get_resolver_cache_status()
+
+    assert status["ready"] is False
+    assert status["state"] == "degraded"
+    assert status["taskbar"]["state"] == "warming"
+    assert status["taskbar"]["warming"] is True
+    assert status["windows"]["state"] == "failed"
+    assert status["windows"]["lastWarmupOk"] is False
+    assert status["windows"]["lastWarmupError"] == "RuntimeError"
 
 
 def test_find_best_uia_match_finds_named_target() -> None:
