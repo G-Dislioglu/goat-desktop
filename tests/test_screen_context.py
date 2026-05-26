@@ -96,7 +96,7 @@ def test_screen_context_fallback_response_cleans_summary_when_clear() -> None:
 def test_screen_context_fallback_response_names_uia_source() -> None:
     response = build_screen_context_fallback_response("Lokales UIA: StepStack (ListItem) sichtbar. Vertrauen 0.95 via uia.")
 
-    assert response == "Gesehen per UIA: StepStack (ListItem) sichtbar."
+    assert response == "Gesehen: StepStack sichtbar. Quelle: Lokale UI."
 
 
 def test_screen_context_fallback_response_names_desktop_source() -> None:
@@ -104,19 +104,19 @@ def test_screen_context_fallback_response_names_desktop_source() -> None:
         "Lokaler Screen: StepStack (ListItem) sichtbar. Vertrauen 1.00 via win32_desktop."
     )
 
-    assert response == "Gesehen per Desktop: StepStack (ListItem) sichtbar."
+    assert response == "Gesehen: StepStack sichtbar. Quelle: Desktop."
 
 
 def test_screen_context_fallback_response_names_window_and_taskbar_sources() -> None:
     assert (
         build_screen_context_fallback_response("Lokales Fenster: GOAT Desktop (Window) sichtbar. Vertrauen 1.00 via win32_window.")
-        == "Gesehen per Fensterliste: GOAT Desktop (Window) sichtbar."
+        == "Gesehen: GOAT Desktop sichtbar. Quelle: Fensterliste."
     )
     assert (
         build_screen_context_fallback_response(
             "Lokale Taskleiste: Codex - 1 aktives Fenster angeheftet (Button) sichtbar. Vertrauen 1.00 via uia_taskbar."
         )
-        == "Gesehen per Taskleiste: Codex - 1 aktives Fenster angeheftet (Button) sichtbar."
+        == "Gesehen: Codex - 1 aktives Fenster angeheftet sichtbar. Quelle: Taskleiste."
     )
 
 

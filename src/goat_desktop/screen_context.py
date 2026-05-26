@@ -104,15 +104,9 @@ def build_screen_context_fallback_response(screen_context: str) -> str:
         return "Nicht sicher gesehen: Bildschirm konnte nicht gelesen werden."
     if is_uncertain_screen_context(context):
         return "Nicht sicher gesehen: Ziel ist nicht klar erkennbar."
-    if _is_win32_window_context(context):
-        return f"Gesehen per Fensterliste: {_clean_seen_context(context)}"
-    if _is_uia_taskbar_context(context):
-        return f"Gesehen per Taskleiste: {_clean_seen_context(context)}"
-    if _is_win32_desktop_context(context):
-        return f"Gesehen per Desktop: {_clean_seen_context(context)}"
-    if _is_uia_context(context):
-        return f"Gesehen per UIA: {_clean_seen_context(context)}"
-    return f"Gesehen: {_clean_seen_context(context)}"
+    source_label = _source_label_for_context(context)
+    source_suffix = f" Quelle: {source_label}." if source_label else ""
+    return f"Gesehen: {_clean_seen_context(context)}{source_suffix}"
 
 
 def build_screen_context_display_status(screen_context: str) -> str:
@@ -173,7 +167,37 @@ def _clean_seen_context(screen_context: str) -> str:
         context = context.split("): ", 1)[1]
     if ". Vertrauen " in context:
         context = context.split(". Vertrauen ", 1)[0].strip()
+    context = _strip_control_type_hints(context)
     return context.rstrip(".") + "."
+
+
+def _source_label_for_context(screen_context: str) -> str:
+    if _is_win32_window_context(screen_context):
+        return "Fensterliste"
+    if _is_uia_taskbar_context(screen_context):
+        return "Taskleiste"
+    if _is_win32_desktop_context(screen_context):
+        return "Desktop"
+    if _is_uia_context(screen_context):
+        return "Lokale UI"
+    return ""
+
+
+def _strip_control_type_hints(text: str) -> str:
+    for control_type in (
+        "Button",
+        "ListItem",
+        "Window",
+        "Edit",
+        "Text",
+        "Pane",
+        "MenuItem",
+        "TabItem",
+        "CheckBox",
+        "ComboBox",
+    ):
+        text = text.replace(f" ({control_type})", "")
+    return " ".join(text.split())
 
 
 def _is_uia_context(screen_context: str) -> bool:
