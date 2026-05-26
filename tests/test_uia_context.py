@@ -14,6 +14,7 @@ from goat_desktop.uia_context import (
     _target_terms,
     build_uia_marker,
     build_uia_screen_context,
+    build_local_screen_readiness,
     find_best_uia_match,
     find_uia_match_for_message,
     get_resolver_cache_status,
@@ -119,6 +120,22 @@ def test_resolver_cache_status_reports_warming_and_failed_states(monkeypatch) ->
     assert status["windows"]["state"] == "failed"
     assert status["windows"]["lastWarmupOk"] is False
     assert status["windows"]["lastWarmupError"] == "RuntimeError"
+
+
+def test_local_screen_readiness_uses_plain_user_copy() -> None:
+    ready = build_local_screen_readiness({"ready": True, "state": "ready"})
+    warming = build_local_screen_readiness({"ready": False, "state": "warming"})
+    degraded = build_local_screen_readiness({"ready": False, "state": "degraded"})
+
+    assert ready == {
+        "ready": True,
+        "state": "ready",
+        "statusText": "Bildschirm bereit",
+        "reason": "GOAT kann sichtbare Fenster und Taskleiste schnell pruefen.",
+    }
+    assert warming["statusText"] == "Bildschirm wird vorbereitet"
+    assert "Hintergrund" in warming["reason"]
+    assert degraded["statusText"] == "Bildschirm eingeschraenkt"
 
 
 def test_find_best_uia_match_finds_named_target() -> None:

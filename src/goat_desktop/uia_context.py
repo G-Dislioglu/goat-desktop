@@ -296,6 +296,32 @@ def get_resolver_cache_status() -> dict[str, Any]:
     }
 
 
+def build_local_screen_readiness(cache_status: dict[str, Any] | None = None) -> dict[str, Any]:
+    status = cache_status if isinstance(cache_status, dict) else get_resolver_cache_status()
+    state = str(status.get("state") or "cold")
+    ready = bool(status.get("ready"))
+    labels = {
+        "ready": "Bildschirm bereit",
+        "warming": "Bildschirm wird vorbereitet",
+        "partial": "Bildschirm teilweise bereit",
+        "degraded": "Bildschirm eingeschraenkt",
+        "cold": "Bildschirm noch nicht bereit",
+    }
+    reasons = {
+        "ready": "GOAT kann sichtbare Fenster und Taskleiste schnell pruefen.",
+        "warming": "GOAT liest sichtbare Fenster und Taskleiste gerade im Hintergrund.",
+        "partial": "Ein Teil der lokalen Bildschirmpruefung ist bereit.",
+        "degraded": "Ein Teil der lokalen Bildschirmpruefung ist fehlgeschlagen.",
+        "cold": "Die lokale Bildschirmpruefung wurde noch nicht vorbereitet.",
+    }
+    return {
+        "ready": ready,
+        "state": state,
+        "statusText": labels.get(state, labels["cold"]),
+        "reason": reasons.get(state, reasons["cold"]),
+    }
+
+
 def build_uia_screen_context(match: dict[str, Any]) -> str:
     element = match.get("element") if isinstance(match.get("element"), dict) else {}
     name = _display_name(str(element.get("name") or "Ziel"))

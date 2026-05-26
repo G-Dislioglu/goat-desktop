@@ -148,21 +148,21 @@ def build_screen_context_fallback_response(screen_context: str) -> str:
 def build_screen_context_display_status(screen_context: str) -> str:
     context = screen_context.strip()
     if not context or context == "-":
-        return "Bildschirm: nicht gelesen"
+        return "Bildschirm: noch nicht geprueft"
     if is_local_screen_miss_context(context):
         source_label = _source_label_for_context(context)
-        return f"Bildschirm: lokal geprueft, kein Treffer ({source_label})" if source_label else "Bildschirm: lokal geprueft, kein Treffer"
+        return f"Nicht gefunden ({source_label})" if source_label else "Nicht gefunden"
     if is_uncertain_screen_context(context):
-        return "Bildschirm: Ziel nicht sicher gesehen"
+        return "Nicht sicher gesehen"
     if _is_win32_window_context(context):
-        return "Bildschirm: Fenster gesehen"
+        return "Fenster gefunden"
     if _is_uia_taskbar_context(context):
-        return "Bildschirm: Taskleiste gesehen"
+        return "Taskleiste gefunden"
     if _is_win32_desktop_context(context):
-        return "Bildschirm: Desktop gesehen"
+        return "Desktop gefunden"
     if _is_uia_context(context):
-        return "Bildschirm: UIA gesehen"
-    return "Bildschirm: Vision gesehen"
+        return "Bildschirm gefunden"
+    return "Bildschirm gefunden"
 
 
 def is_clear_screen_context(screen_context: str) -> bool:
@@ -232,17 +232,17 @@ def _source_label_for_context(screen_context: str) -> str:
     if "via win32_desktop_miss" in screen_context:
         return "Desktop"
     if "via win32_window_miss" in screen_context:
-        return "Fensterliste"
+        return "Fenster"
     if "via uia_taskbar_miss" in screen_context:
         return "Taskleiste"
     if _is_win32_window_context(screen_context):
-        return "Fensterliste"
+        return "Fenster"
     if _is_uia_taskbar_context(screen_context):
         return "Taskleiste"
     if _is_win32_desktop_context(screen_context):
         return "Desktop"
     if _is_uia_context(screen_context):
-        return "Lokale UI"
+        return "Bildschirm"
     return ""
 
 

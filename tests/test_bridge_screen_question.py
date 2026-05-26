@@ -81,6 +81,8 @@ def test_bridge_healthz_reports_resolver_cache_status(monkeypatch) -> None:
         bridge,
         "get_resolver_cache_status",
         lambda: {
+            "ready": True,
+            "state": "ready",
             "taskbar": {"warm": True, "stale": False, "elements": 3, "age_ms": 10.0, "ttl_ms": 120000.0},
             "windows": {"warm": False, "stale": True, "elements": 0, "age_ms": None, "ttl_ms": 120000.0},
         },
@@ -90,6 +92,8 @@ def test_bridge_healthz_reports_resolver_cache_status(monkeypatch) -> None:
     body = endpoint()
 
     assert body["ok"] is True
+    assert body["localScreen"]["ready"] is True
+    assert body["localScreen"]["statusText"] == "Bildschirm bereit"
     assert body["resolverCaches"]["taskbar"]["warm"] is True
     assert body["resolverCaches"]["taskbar"]["elements"] == 3
     assert body["resolverCaches"]["windows"]["stale"] is True

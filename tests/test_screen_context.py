@@ -151,7 +151,7 @@ def test_screen_context_fallback_response_cleans_summary_when_clear() -> None:
 def test_screen_context_fallback_response_names_uia_source() -> None:
     response = build_screen_context_fallback_response("Lokales UIA: StepStack (ListItem) sichtbar. Vertrauen 0.95 via uia.")
 
-    assert response == "Gesehen: StepStack sichtbar. Quelle: Lokale UI."
+    assert response == "Gesehen: StepStack sichtbar. Quelle: Bildschirm."
 
 
 def test_screen_context_fallback_response_names_desktop_source() -> None:
@@ -165,7 +165,7 @@ def test_screen_context_fallback_response_names_desktop_source() -> None:
 def test_screen_context_fallback_response_names_window_and_taskbar_sources() -> None:
     assert (
         build_screen_context_fallback_response("Lokales Fenster: GOAT Desktop (Window) sichtbar. Vertrauen 1.00 via win32_window.")
-        == "Gesehen: GOAT Desktop sichtbar. Quelle: Fensterliste."
+        == "Gesehen: GOAT Desktop sichtbar. Quelle: Fenster."
     )
     assert (
         build_screen_context_fallback_response(
@@ -176,28 +176,28 @@ def test_screen_context_fallback_response_names_window_and_taskbar_sources() -> 
 
 
 def test_screen_context_display_status_is_compact() -> None:
-    assert build_screen_context_display_status("Codex: uncertain bei unknown. Vertrauen 0.00.") == "Bildschirm: Ziel nicht sicher gesehen"
+    assert build_screen_context_display_status("Codex: uncertain bei unknown. Vertrauen 0.00.") == "Nicht sicher gesehen"
     assert (
         build_screen_context_display_status(
             "Lokaler Screen: Ziel fuer 'stepstack' nicht sicher gesehen, 12 Elemente gelesen. Vertrauen 0.00 via win32_desktop_miss."
         )
-        == "Bildschirm: lokal geprueft, kein Treffer (Desktop)"
+        == "Nicht gefunden (Desktop)"
     )
-    assert build_screen_context_display_status("Explorer: StepStack sichtbar. Vertrauen 0.82.") == "Bildschirm: Vision gesehen"
-    assert build_screen_context_display_status("Lokales UIA: StepStack (ListItem) sichtbar. Vertrauen 0.95 via uia.") == "Bildschirm: UIA gesehen"
+    assert build_screen_context_display_status("Explorer: StepStack sichtbar. Vertrauen 0.82.") == "Bildschirm gefunden"
+    assert build_screen_context_display_status("Lokales UIA: StepStack (ListItem) sichtbar. Vertrauen 0.95 via uia.") == "Bildschirm gefunden"
     assert (
         build_screen_context_display_status("Lokaler Screen: StepStack (ListItem) sichtbar. Vertrauen 1.00 via win32_desktop.")
-        == "Bildschirm: Desktop gesehen"
+        == "Desktop gefunden"
     )
     assert (
         build_screen_context_display_status("Lokales Fenster: GOAT Desktop (Window) sichtbar. Vertrauen 1.00 via win32_window.")
-        == "Bildschirm: Fenster gesehen"
+        == "Fenster gefunden"
     )
     assert (
         build_screen_context_display_status(
             "Lokale Taskleiste: Codex - 1 aktives Fenster angeheftet (Button) sichtbar. Vertrauen 1.00 via uia_taskbar."
         )
-        == "Bildschirm: Taskleiste gesehen"
+        == "Taskleiste gefunden"
     )
 
 
@@ -212,7 +212,7 @@ def test_local_screen_miss_context_is_detected_before_generic_uncertain() -> Non
     context = "Lokaler Screen: Ziel fuer 'stepstack' nicht sicher gesehen. Vertrauen 0.00 via uia_taskbar_miss."
 
     assert is_local_screen_miss_context(context) is True
-    assert build_screen_context_display_status(context) == "Bildschirm: lokal geprueft, kein Treffer (Taskleiste)"
+    assert build_screen_context_display_status(context) == "Nicht gefunden (Taskleiste)"
 
 
 def test_screen_question_can_be_answered_locally_when_context_is_clear() -> None:
