@@ -450,3 +450,6 @@ stage2_unsafe_context_next_step_copy_2026_05_27:
 
 action_completion_verified_status_2026_05_27:
 "Stage-1 und Stage-2 Ergebnisse enthalten jetzt `completion_verified`. Erfolgreiche Ausfuehrungen setzen `executed=true` und `completion_verified=true`; Preview/Block/Fehler bleiben `completion_verified=false`. Das Popup meldet `Navigation ausgefuehrt` oder `Eingabe ausgefuehrt` nur noch, wenn beides wahr ist. Defensive Tests decken auch den Sonderfall ab, dass ein Backend faelschlich `executed=true` aber `completion_verified=false` liefert: GOAT meldet dann nicht erledigt."
+
+stage3_review_no_execution_effects_2026_05_27:
+"Stage-3 Review-Grenze weiter verstaerkt. `/action/stage3/review` liefert selbst nach korrekter Freigabephrase weiterhin `executed=false`, `completion_verified=false`, `mayExecuteRealAction=false` und effects alle false. Damit sind wichtige Aktionen wie Kaufen, Speichern, Senden, Deploy oder Loeschen sichtbar als Review/Freigabe behandelbar, aber ohne OS-Ausfuehrung im aktuellen GOAT Desktop. Tests decken Stage-3 API, Audit und Integration ab."

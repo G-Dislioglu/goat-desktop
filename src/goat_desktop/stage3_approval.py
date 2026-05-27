@@ -31,7 +31,22 @@ class Stage3ApprovalResult:
     gate_decision: dict
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        result = asdict(self)
+        result["completion_verified"] = False
+        result["mayExecuteRealAction"] = False
+        result["effects"] = _no_action_effects()
+        return result
+
+
+def _no_action_effects() -> dict[str, bool]:
+    return {
+        "providerCallsMade": False,
+        "desktopActionsExecuted": False,
+        "mouseActionsExecuted": False,
+        "keyboardActionsExecuted": False,
+        "tradingActionsExecuted": False,
+        "mayExecuteRealAction": False,
+    }
 
 
 def review_stage3_action(request: Stage3ApprovalRequest) -> Stage3ApprovalResult:

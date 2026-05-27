@@ -64,6 +64,12 @@ def test_stage3_correct_phrase_approves_but_does_not_execute(monkeypatch, tmp_pa
     assert result.status == "approved_not_executed"
     assert result.executed is False
     assert result.approval_required is False
+    body = result.to_dict()
+    assert body["completion_verified"] is False
+    assert body["mayExecuteRealAction"] is False
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert body["effects"]["mouseActionsExecuted"] is False
+    assert body["effects"]["keyboardActionsExecuted"] is False
 
 
 def test_stage3_dry_run_approval_does_not_execute(monkeypatch, tmp_path: Path) -> None:
@@ -159,6 +165,7 @@ def test_stage3_audit_contains_scope(monkeypatch, tmp_path: Path) -> None:
     events = read_audit_events(audit_path)
     assert events[-1]["event_type"] == "stage3_approval"
     assert events[-1]["status"] == "approved_not_executed"
+    assert events[-1]["payload"]["result"]["executed"] is False
     assert "run_g4 validates hard approval only and executes no stage 3 OS action" in events[-1]["payload"][
         "assumptions"
     ]

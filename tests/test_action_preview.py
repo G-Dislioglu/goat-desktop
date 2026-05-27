@@ -3,6 +3,7 @@ from __future__ import annotations
 import goat_desktop.stage2_executor as stage2_executor
 from goat_desktop.action_preview import build_action_preview
 from goat_desktop.bridge import create_app
+from goat_desktop.stage3_approval import APPROVAL_PHRASE
 
 
 ACCEPTED = {"status": "accept", "final_bbox": [10, 20, 110, 80]}
@@ -204,6 +205,31 @@ def test_bridge_stage2_real_text_input_reports_mouse_and_keyboard_effect(monkeyp
     assert body["effects"]["mouseActionsExecuted"] is True
     assert body["effects"]["keyboardActionsExecuted"] is True
     assert calls == [("move_to", (60, 50)), ("click_left", None), ("type_text", "StepStack")]
+
+
+def test_bridge_stage3_review_never_reports_real_execution() -> None:
+    endpoint = _endpoint_for(create_app(), "/action/stage3/review")
+
+    body = endpoint(
+        {
+            "action_type": "click",
+            "label": "Kaufen",
+            "broker_decision": ACCEPTED,
+            "consequence_summary": "Das wuerde einen Kauf ausloesen.",
+            "user_approved": True,
+            "approval_phrase": APPROVAL_PHRASE,
+            "dry_run": False,
+        }
+    )
+
+    assert body["status"] == "approved_not_executed"
+    assert body["executed"] is False
+    assert body["completion_verified"] is False
+    assert body["mayExecuteRealAction"] is False
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert body["effects"]["mouseActionsExecuted"] is False
+    assert body["effects"]["keyboardActionsExecuted"] is False
+    assert body["effects"]["tradingActionsExecuted"] is False
 
 
 def _endpoint_for(app, path: str):
