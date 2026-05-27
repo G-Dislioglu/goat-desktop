@@ -441,3 +441,6 @@ stage1_popup_e2e_delay_fix_2026_05_27:
 
 stage2_popup_e2e_delay_verified_2026_05_27:
 "Stage-2 Popup-E2E-Smoke mit kontrolliertem Tk-Testfeld nach dem 150ms-Freigabe-Delay erneut geprueft. `/builder-cue` fuer action_type `type` und `safe_text_context=true` wurde accepted und emittierte nur einen Popup-Vorschlag; effects blieben im Vorschlag alle false, inklusive keyboardActions=false. UIA-Flow `Pruefen` -> `Ausfuehren` schrieb exakt `GOAT stage2 popup e2e` in das kontrollierte Testfeld, Popup zeigte `Eingabe ausgefuehrt`, textVerified=true. Keine echten Nutzerfelder, keine Screenshots, keine Audioartefakte; GOAT danach neu gestartet."
+
+stage2_popup_unsafe_context_blocked_2026_05_27:
+"Stage-2 Negativ-E2E-Smoke mit kontrolliertem Tk-Testfeld abgeschlossen. `/builder-cue` fuer action_type `type` wurde lokal accepted und zeigte nur den Popup-Vorschlag; `safe_text_context=false` fuehrte nach `Pruefen` zu Button `Nicht sicher`, buttonEnabled=false und Nutzertext `Ich tippe hier noch nicht...`. Das Testfeld blieb vor und nach Wartezeit leer (`textBlocked=true`), keyboardActions im Vorschlag false, keine echte Eingabe. GOAT danach neu gestartet; keine Screenshots, keine Audioartefakte."
