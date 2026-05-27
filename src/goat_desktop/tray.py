@@ -244,6 +244,7 @@ class GoatTrayApp:
             self.livetalk = GeminiLiveSession()
         self.cue_dispatcher = CueDispatcher()
         self.cue_dispatcher.cue_requested.connect(self.move_ball_to_cue)
+        self.cue_dispatcher.builder_cue_requested.connect(self.receive_builder_cue)
         self.bridge = LocalBridge(self.cue_dispatcher, screen_question_handler=self.handle_bridge_screen_question)
         self._connect_popup_controls()
         self.overlay.show_overlay()
@@ -965,6 +966,8 @@ class GoatTrayApp:
             "bbox": message.get("bbox"),
             "confidence": message.get("confidence", 0.9),
         }
+        if isinstance(message.get("broker_response"), dict):
+            self.pending_builder_cue["broker_response"] = message["broker_response"]
         self.pending_stage1_action = None
         self.pending_stage2_action = None
         if _is_stage1_navigation_action(action_type):
@@ -1009,6 +1012,12 @@ class GoatTrayApp:
             QTimer.singleShot(10, lambda: self._execute_pending_stage2_action(payload))
             return
         if self.pending_builder_cue is None:
+            return
+        if isinstance(self.pending_builder_cue.get("broker_response"), dict):
+            response = dict(self.pending_builder_cue["broker_response"])
+            self.popup.cue_approve.setEnabled(False)
+            self.popup.cue_reject.setEnabled(False)
+            QTimer.singleShot(10, lambda: self._finish_builder_cue({"status": "ok", "response": response}))
             return
         payload = dict(self.pending_builder_cue)
         self.popup.cue_approve.setEnabled(False)

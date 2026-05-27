@@ -3,6 +3,7 @@ from __future__ import annotations
 from goat_desktop import bridge
 from goat_desktop import tray
 from goat_desktop.bridge import create_app
+from goat_desktop.screen import WindowInfo
 from goat_desktop.tray import GoatTrayApp
 
 
@@ -97,6 +98,24 @@ def test_bridge_healthz_reports_resolver_cache_status(monkeypatch) -> None:
     assert body["resolverCaches"]["taskbar"]["warm"] is True
     assert body["resolverCaches"]["taskbar"]["elements"] == 3
     assert body["resolverCaches"]["windows"]["stale"] is True
+
+
+def test_builder_cue_endpoint_emits_proposal_without_actions(monkeypatch) -> None:
+    emitted = FakeSignal()
+    monkeypatch.setattr(
+        bridge,
+        "get_active_window",
+        lambda: WindowInfo(hwnd=1, title="Test Window", rect=[0, 0, 300, 200], foreground=True),
+    )
+    endpoint = _endpoint_for(create_app(dispatch_builder_cue=emitted.emit), "/builder-cue")
+
+    body = endpoint({"source": "test_cue", "action_type": "type", "label": "Testfeld", "bbox": [20, 20, 120, 50]})
+
+    assert body["ok"] is True
+    assert body["scope"] == "local_builder_cue_proposal"
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert emitted.payloads[0]["label"] == "Testfeld"
+    assert emitted.payloads[0]["broker_response"]["safety_state"] == "accept"
 
 
 def test_local_bridge_reports_port_in_use_without_starting_thread(monkeypatch) -> None:

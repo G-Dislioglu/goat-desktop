@@ -245,6 +245,30 @@ def test_accepted_stage2_cue_turns_into_input_preview() -> None:
     assert fake.popup.cue_approve.enabled is True
 
 
+def test_stage2_builder_cue_can_use_prechecked_broker_response() -> None:
+    fake = FakeTray()
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {
+            "action_type": "type",
+            "label": "Suchfeld",
+            "text": "StepStack",
+            "safe_text_context": True,
+            "bbox": [10, 20, 110, 80],
+            "broker_response": {
+                "safety_state": "accept",
+                "broker_decision": {"status": "accept", "final_bbox": [10, 20, 110, 80]},
+            },
+        },
+    )
+
+    GoatTrayApp._finish_builder_cue(fake, {"status": "ok", "response": fake.pending_builder_cue["broker_response"]})
+
+    assert fake.popup.screen_context_value.text() == "Freigabe fuer Eingabe"
+    assert fake.popup.cue_approve.text() == "Ausfuehren"
+    assert fake.popup.cue_approve.enabled is True
+
+
 def test_stage2_preview_without_safe_context_disables_execute() -> None:
     fake = FakeTray()
     GoatTrayApp.receive_builder_cue(

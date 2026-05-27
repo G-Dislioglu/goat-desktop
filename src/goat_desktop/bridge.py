@@ -22,10 +22,12 @@ from goat_desktop.vision_hint import load_vision_hint_config, get_vision_hint
 
 class CueDispatcher(QObject):
     cue_requested = pyqtSignal(int, int)
+    builder_cue_requested = pyqtSignal(dict)
 
 
 def create_app(
     dispatch_cue: Callable[[int, int], None] | None = None,
+    dispatch_builder_cue: Callable[[dict[str, Any]], None] | None = None,
     screen_question_handler: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
 ) -> FastAPI:
     app = FastAPI(title="GOAT Desktop Local Bridge", version="0.1.0")
@@ -95,6 +97,32 @@ def create_app(
             "safety_state": decision["status"],
             "anchors": decision["anchors"],
             "broker_decision": decision,
+        }
+
+    @app.post("/builder-cue")
+    def builder_cue(payload: dict[str, Any]) -> dict[str, Any]:
+        window = get_active_window()
+        candidate = build_candidate(payload, window)
+        decision = verify_candidate(candidate, window)
+        response = {
+            "safety_state": decision["status"],
+            "anchors": decision["anchors"],
+            "broker_decision": decision,
+        }
+        if decision["status"] == "accept" and dispatch_cue is not None:
+            left, top, right, bottom = decision["final_bbox"]
+            dispatch_cue(int((left + right) / 2), int((top + bottom) / 2))
+        if dispatch_builder_cue is not None:
+            cue_payload = dict(payload)
+            cue_payload["broker_response"] = response
+            dispatch_builder_cue(cue_payload)
+        return {
+            "ok": decision["status"] == "accept",
+            "diagnostic": True,
+            "scope": "local_builder_cue_proposal",
+            "safety_state": decision["status"],
+            "broker_response": response,
+            "effects": _no_action_effects(),
         }
 
     @app.post("/screen-marker")
@@ -335,7 +363,11 @@ class LocalBridge:
         self.dispatcher = dispatcher
         self.host = host
         self.port = port
-        self.app = create_app(self.dispatcher.cue_requested.emit, screen_question_handler=screen_question_handler)
+        self.app = create_app(
+            self.dispatcher.cue_requested.emit,
+            self.dispatcher.builder_cue_requested.emit,
+            screen_question_handler=screen_question_handler,
+        )
         self.server: uvicorn.Server | None = None
         self.thread: Thread | None = None
         self.status = "stopped"
