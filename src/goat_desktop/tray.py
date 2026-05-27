@@ -154,7 +154,7 @@ def _execution_step_title(preview: dict) -> str:
 
 def _stage2_preview_message(stage2_action: dict, preview: dict) -> str:
     if not stage2_action.get("safe_text_context"):
-        return "Ich tippe hier noch nicht. Ich habe das Eingabefeld nicht sicher genug erkannt."
+        return "Ich tippe hier noch nicht. Sag mir genauer, welches Feld das ist, oder zeig es deutlicher."
     message = str(preview.get("message") or "Bitte pruefe die Eingabe.")
     return f"{message} Klicke nur auf Ausfuehren, wenn Feld und Text stimmen."
 
@@ -173,7 +173,7 @@ def _friendly_action_failure_message(response: dict, *, stage: str) -> str:
         if "verification failed" in lowered:
             return "Ich bin nicht sicher, ob die Eingabe angekommen ist. Ich melde sie nicht als erledigt."
         if "safe_text_context" in lowered:
-            return "Ich tippe hier nicht. Ich habe das Eingabefeld nicht sicher genug erkannt."
+            return "Ich tippe hier nicht. Sag mir genauer, welches Feld das ist, oder zeig es deutlicher."
         if "empty" in lowered:
             return "Ich tippe keinen leeren Text ein."
         if "multi-line" in lowered:

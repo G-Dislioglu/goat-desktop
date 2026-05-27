@@ -353,7 +353,7 @@ def test_stage2_preview_without_safe_context_disables_execute() -> None:
         },
     )
 
-    assert fake.popup.maya_value.text() == "Ich tippe hier noch nicht. Ich habe das Eingabefeld nicht sicher genug erkannt."
+    assert fake.popup.maya_value.text() == "Ich tippe hier noch nicht. Sag mir genauer, welches Feld das ist, oder zeig es deutlicher."
     assert fake.popup.cue_approve.text() == "Nicht sicher"
     assert fake.popup.cue_approve.enabled is False
 
@@ -375,7 +375,7 @@ def test_stage2_failed_execution_uses_plain_user_message() -> None:
     )
 
     assert fake.popup.screen_context_value.text() == "Eingabe nicht ausgefuehrt"
-    assert fake.popup.maya_value.text() == "Ich tippe hier nicht. Ich habe das Eingabefeld nicht sicher genug erkannt."
+    assert fake.popup.maya_value.text() == "Ich tippe hier nicht. Sag mir genauer, welches Feld das ist, oder zeig es deutlicher."
     assert fake.popup.cue_approve.enabled is False
 
 

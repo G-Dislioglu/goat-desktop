@@ -444,3 +444,6 @@ stage2_popup_e2e_delay_verified_2026_05_27:
 
 stage2_popup_unsafe_context_blocked_2026_05_27:
 "Stage-2 Negativ-E2E-Smoke mit kontrolliertem Tk-Testfeld abgeschlossen. `/builder-cue` fuer action_type `type` wurde lokal accepted und zeigte nur den Popup-Vorschlag; `safe_text_context=false` fuehrte nach `Pruefen` zu Button `Nicht sicher`, buttonEnabled=false und Nutzertext `Ich tippe hier noch nicht...`. Das Testfeld blieb vor und nach Wartezeit leer (`textBlocked=true`), keyboardActions im Vorschlag false, keine echte Eingabe. GOAT danach neu gestartet; keine Screenshots, keine Audioartefakte."
+
+stage2_unsafe_context_next_step_copy_2026_05_27:
+"Unsichere Stage-2-Eingabefelder erklaeren jetzt den naechsten Schritt klarer. Statt nur `Eingabefeld nicht sicher genug erkannt` sagt GOAT im Popup: `Ich tippe hier noch nicht. Sag mir genauer, welches Feld das ist, oder zeig es deutlicher.` Die Sperre bleibt unveraendert: Button `Nicht sicher`, keine Tastaturaktion, keine Ausfuehrung ohne safe_text_context=true."
