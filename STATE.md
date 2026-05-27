@@ -426,3 +426,6 @@ stage2_popup_e2e_builder_cue_2026_05_27:
 
 builder_cue_contract_hardened_2026_05_27:
 "`/builder-cue` ist jetzt als reiner Vorschlagskanal gehaertet. Builder muss `source`, `action_type`, `label` und explizite `bbox` liefern; GOAT defaultet nicht mehr still auf das aktive Fensterzentrum. Nur lokal akzeptierte Geometrie emittiert einen Popup-Vorschlag. Fehlende Felder, Vision-only Quellen oder vom lokalen Verifier abgelehnte BBoxen fuehren zu `popupProposalEmitted=false`, `mayExecute=false` und effects alle false. Der Endpunkt bewegt keinen Cue direkt und fuehrt keine Maus-/Tastatur-/Desktop-Aktion aus; Ausfuehrung bleibt ausschliesslich ueber `Pruefen` -> `Ausfuehren` im Popup."
+
+builder_cue_reject_plain_ux_2026_05_27:
+"Abgelehnte oder fehlerhafte Builder-Cues werden im sichtbaren Popup jetzt normalnutzerfreundlich erklaert. Statt Rohfehlern wie fehlender `bbox`, fehlendem `action_type`, Timeout oder `outside active window` zeigt GOAT kurze Hilfetexte wie `Ich konnte das Ziel nicht sicher zuordnen. Bitte zeig mir nochmal, welches Ziel du meinst.` oder `Die lokale Pruefung hat gerade nicht geantwortet. Bitte versuch es nochmal.` Pending-Actions werden bei Reject geloescht; `Pruefen` bleibt deaktiviert und es wird nichts ausgefuehrt."

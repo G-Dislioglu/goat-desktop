@@ -125,6 +125,69 @@ def test_accepted_stage1_cue_turns_into_navigation_preview() -> None:
     assert fake.popup.cue_approve.enabled is True
 
 
+def test_rejected_builder_cue_uses_plain_user_message() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {
+            "ok": False,
+            "status": "rejected",
+            "scope": "local_builder_cue_proposal",
+            "reason": "bbox with four numeric values is required; action_type is required",
+        },
+    )
+
+    assert fake.pending_builder_cue is None
+    assert fake.pending_stage1_action is None
+    assert fake.pending_stage2_action is None
+    assert fake.popup.target_value.text() == "Kein Ziel markiert"
+    assert fake.popup.screen_context_value.text() == "Ziel nicht sicher erkannt"
+    assert fake.popup.maya_value.text() == (
+        "Ich konnte das Ziel nicht sicher zuordnen. Bitte zeig mir nochmal, welches Ziel du meinst."
+    )
+    assert fake.popup.cue_approve.text() == "Pruefen"
+    assert fake.popup.cue_approve.enabled is False
+    assert fake.popup.cue_reject.enabled is True
+    assert fake.shown is True
+
+
+def test_builder_cue_http_error_uses_plain_user_message() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp._finish_builder_cue(fake, {"status": "error", "error": "TimeoutError('timed out')"})
+
+    assert fake.popup.screen_context_value.text() == "Ziel konnte nicht geprueft werden"
+    assert fake.popup.maya_value.text() == "Die lokale Pruefung hat gerade nicht geantwortet. Bitte versuch es nochmal."
+    assert fake.popup.cue_approve.enabled is False
+    assert fake.popup.cue_reject.enabled is True
+
+
+def test_builder_cue_verifier_reject_uses_plain_user_message() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "ok",
+            "response": {
+                "safety_state": "stop",
+                "broker_decision": {
+                    "status": "stop",
+                    "reason": "bbox center is outside active window",
+                },
+            },
+        },
+    )
+
+    assert fake.popup.screen_context_value.text() == "Ziel nicht sicher"
+    assert fake.popup.maya_value.text() == (
+        "Ich konnte das Ziel nicht sicher zuordnen. Bitte zeig mir nochmal, welches Ziel du meinst."
+    )
+    assert fake.popup.cue_approve.enabled is False
+    assert fake.popup.cue_reject.enabled is True
+
+
 def test_accepted_scroll_cue_turns_into_scroll_preview() -> None:
     fake = FakeTray()
     GoatTrayApp.receive_builder_cue(

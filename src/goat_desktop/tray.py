@@ -182,6 +182,19 @@ def _friendly_action_failure_message(response: dict, *, stage: str) -> str:
     return reason or "Bitte pruefe das Ziel erneut."
 
 
+def _friendly_builder_cue_failure_message(payload: dict) -> str:
+    reason = str(payload.get("reason") or payload.get("error") or "").strip().lower()
+    if "bbox" in reason or "outside active window" in reason or "geometry" in reason:
+        return "Ich konnte das Ziel nicht sicher zuordnen. Bitte zeig mir nochmal, welches Ziel du meinst."
+    if "source" in reason or "vision" in reason:
+        return "Ich brauche ein klar erkanntes Ziel auf deinem Bildschirm, bevor ich etwas vorbereite."
+    if "action_type" in reason or "label" in reason:
+        return "Mir fehlt noch, was genau ich mit dem Ziel machen soll. Sag es bitte nochmal kurz."
+    if "timed out" in reason or "timeout" in reason or "connection" in reason:
+        return "Die lokale Pruefung hat gerade nicht geantwortet. Bitte versuch es nochmal."
+    return "Ich konnte das Ziel nicht sicher erkennen. Bitte beschreib es nochmal oder zeig es deutlicher."
+
+
 def _friendly_stage1_success_message(response: dict) -> str:
     action_type = str(response.get("action_type") or "").strip().lower()
     target = response.get("target") if isinstance(response.get("target"), dict) else {}
@@ -959,6 +972,20 @@ class GoatTrayApp:
         self.popup.connection_chip.setText(_status_chip_text(text))
 
     def receive_builder_cue(self, message: dict) -> None:
+        if message.get("status") == "rejected" or (
+            message.get("ok") is False and message.get("scope") == "local_builder_cue_proposal"
+        ):
+            self.pending_builder_cue = None
+            self.pending_stage1_action = None
+            self.pending_stage2_action = None
+            self.popup.target_value.setText("Kein Ziel markiert")
+            self.popup.screen_context_value.setText("Ziel nicht sicher erkannt")
+            self.popup.maya_value.setText(_friendly_builder_cue_failure_message(message))
+            self.popup.cue_approve.setText("Pruefen")
+            self.popup.cue_approve.setEnabled(False)
+            self.popup.cue_reject.setEnabled(True)
+            self.show_popup()
+            return
         action_type = str(message.get("action_type") or "").strip()
         self.pending_builder_cue = {
             "source": message.get("source", "active_window"),
@@ -1066,14 +1093,14 @@ class GoatTrayApp:
             return
         if payload.get("status") != "ok":
             self.popup.screen_context_value.setText("Ziel konnte nicht geprueft werden")
-            self.popup.maya_value.setText(str(payload.get("error") or "Bitte versuch es erneut."))
+            self.popup.maya_value.setText(_friendly_builder_cue_failure_message(payload))
             self.popup.cue_approve.setEnabled(False)
             self.popup.cue_reject.setEnabled(True)
             return
         response = dict(payload.get("response") or {})
         if response.get("safety_state") != "accept":
             self.popup.screen_context_value.setText("Ziel nicht sicher")
-            self.popup.maya_value.setText("Bitte markiere das Ziel neu.")
+            self.popup.maya_value.setText(_friendly_builder_cue_failure_message(response.get("broker_decision") or response))
             self.popup.cue_approve.setEnabled(False)
             self.popup.cue_reject.setEnabled(True)
             return
