@@ -99,6 +99,18 @@ def test_bridge_healthz_reports_resolver_cache_status(monkeypatch) -> None:
     assert body["resolverCaches"]["windows"]["stale"] is True
 
 
+def test_local_bridge_reports_port_in_use_without_starting_thread(monkeypatch) -> None:
+    monkeypatch.setattr(bridge, "_port_is_available", lambda _host, _port: False)
+    local_bridge = bridge.LocalBridge(bridge.CueDispatcher())
+
+    result = local_bridge.start()
+
+    assert result["ok"] is False
+    assert result["status"] == "port_in_use"
+    assert local_bridge.status == "port_in_use"
+    assert local_bridge.thread is None
+
+
 def test_bridge_screen_question_fails_closed_without_handler() -> None:
     endpoint = _endpoint_for(create_app(), "/chat/screen-question")
     body = endpoint({"message": "Siehst du StepStack?"})

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import socket
 from pathlib import Path
 from math import isfinite
 from threading import Thread
@@ -337,15 +338,33 @@ class LocalBridge:
         self.app = create_app(self.dispatcher.cue_requested.emit, screen_question_handler=screen_question_handler)
         self.server: uvicorn.Server | None = None
         self.thread: Thread | None = None
+        self.status = "stopped"
+        self.last_error: str | None = None
 
-    def start(self) -> None:
+    def start(self) -> dict[str, Any]:
         if self.thread is not None and self.thread.is_alive():
-            return
+            return {"ok": True, "status": "running", "host": self.host, "port": self.port}
+        if not _port_is_available(self.host, self.port):
+            self.status = "port_in_use"
+            self.last_error = f"{self.host}:{self.port} is already in use"
+            return {"ok": False, "status": self.status, "host": self.host, "port": self.port, "error": self.last_error}
         config = uvicorn.Config(self.app, host=self.host, port=self.port, log_level="warning")
         self.server = uvicorn.Server(config)
         self.thread = Thread(target=self.server.run, name="goat-local-bridge", daemon=True)
         self.thread.start()
+        self.status = "starting"
+        self.last_error = None
+        return {"ok": True, "status": self.status, "host": self.host, "port": self.port}
 
     def stop(self) -> None:
         if self.server is not None:
             self.server.should_exit = True
+
+
+def _port_is_available(host: str, port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        try:
+            probe.bind((host, int(port)))
+        except OSError:
+            return False
+    return True

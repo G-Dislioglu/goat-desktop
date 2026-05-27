@@ -79,6 +79,20 @@ def test_status_chips_use_plain_user_states() -> None:
     assert fake.popup.connection_chip.text() == "Status: Verbunden"
     assert _status_chip_text("builder: reconnecting") == "Status: Verbinde neu"
     assert _status_chip_text("lokal") == "Status: Bereit"
+    assert _status_chip_text("already running") == "Status: Schon offen"
+
+
+def test_bridge_port_in_use_shows_single_instance_message() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp._handle_bridge_start_result(fake, {"ok": False, "status": "port_in_use", "port": 8765})
+
+    assert fake.popup.connection_value.text() == "GOAT laeuft schon"
+    assert fake.popup.connection_chip.text() == "Status: Schon offen"
+    assert fake.popup.screen_context_value.text() == "GOAT ist bereits offen"
+    assert fake.popup.maya_value.text() == "Bitte nutze das vorhandene GOAT-Fenster. Diese Instanz fuehrt nichts aus."
+    assert fake.popup.cue_approve.enabled is False
+    assert fake.popup.cue_reject.enabled is False
 
 
 def test_speech_chip_uses_plain_user_states() -> None:

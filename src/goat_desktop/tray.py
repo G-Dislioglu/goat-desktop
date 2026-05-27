@@ -108,6 +108,8 @@ def _pending_action_hint(stage1_action: dict | None, stage2_action: dict | None)
 
 def _status_chip_text(connection_text: str) -> str:
     normalized = connection_text.strip().lower()
+    if "already running" in normalized or "port_in_use" in normalized or "schon" in normalized:
+        return "Status: Schon offen"
     if not normalized or normalized in {"lokal", "offline"}:
         return "Status: Bereit"
     if "connected" in normalized or "verbunden" in normalized:
@@ -254,7 +256,7 @@ class GoatTrayApp:
         self.tray.activated.connect(self._on_activated)
         self.tray.setContextMenu(self._build_menu())
         self.tray.show()
-        self.bridge.start()
+        self._handle_bridge_start_result(self.bridge.start())
         _start_resolver_cache_warmup_once()
         self._resolver_cache_timer = QTimer()
         self._resolver_cache_timer.setInterval(_resolver_cache_refresh_interval_ms())
@@ -264,6 +266,22 @@ class GoatTrayApp:
         self._load_vision_config()
         self.popup.video_frames_toggle.setChecked(_video_frames_enabled())
         self._refresh_audio_status()
+
+    def _handle_bridge_start_result(self, result: dict | None) -> None:
+        if not result or result.get("ok"):
+            return
+        if result.get("status") == "port_in_use":
+            self.popup.connection_value.setText("GOAT laeuft schon")
+            self.popup.connection_chip.setText(_status_chip_text("already running"))
+            self.popup.screen_context_value.setText("GOAT ist bereits offen")
+            self.popup.maya_value.setText("Bitte nutze das vorhandene GOAT-Fenster. Diese Instanz fuehrt nichts aus.")
+            self.popup.cue_approve.setEnabled(False)
+            self.popup.cue_reject.setEnabled(False)
+            return
+        self.popup.connection_value.setText("Startproblem")
+        self.popup.connection_chip.setText("Status: Problem")
+        self.popup.screen_context_value.setText("GOAT konnte nicht vollstaendig starten")
+        self.popup.maya_value.setText("Bitte starte GOAT neu.")
 
     def show_popup(self) -> None:
         if not self.popup.isVisible():

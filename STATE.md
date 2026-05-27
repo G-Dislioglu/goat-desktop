@@ -411,3 +411,6 @@ plain_approval_buttons_2026_05_26:
 
 plain_main_status_chips_2026_05_27:
 "Sichtbare Hauptstatus-Chips sind normalnutzerfreundlicher. Statt `Verbindung: ...` und `Audio: ...` zeigt das Popup jetzt `Status: Bereit/Verbunden/Verbinde neu` und `Sprache: Bereit/Arbeitet/Fertig/Problem`. Interne Detailwerte bleiben fuer Code/Diagnose erhalten, werden aber im Hauptpfad nicht roh angezeigt. Action-Logik unveraendert; keine neue Aktionserlaubnis. Tests gruen: 214 passed; compileall gruen."
+
+single_instance_bridge_guard_2026_05_27:
+"GOAT erkennt jetzt beim Start, wenn der lokale Bridge-Port 127.0.0.1:8765 bereits belegt ist. LocalBridge startet dann keinen zweiten Bridge-Server, gibt `port_in_use` zurueck und das Popup zeigt normalnutzerfreundlich `GOAT ist bereits offen` / `Bitte nutze das vorhandene GOAT-Fenster. Diese Instanz fuehrt nichts aus.` Status-Chip: `Status: Schon offen`. Live-Smoke: zweite gestartete Instanz hat den Listener nicht uebernommen (`listenerUnchanged=true`), /healthz der ersten Instanz blieb ok. Keine neue Aktionserlaubnis. Tests gruen: 216 passed; compileall gruen."
