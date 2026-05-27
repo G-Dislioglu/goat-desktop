@@ -432,3 +432,6 @@ builder_cue_reject_plain_ux_2026_05_27:
 
 approval_flow_step_copy_2026_05_27:
 "Der sichtbare Freigabe-Flow ist fuer normale Nutzer klarer zweistufig formuliert. Bei Vorschlaegen steht jetzt `Schritt 1: Ziel pruefen` bzw. `Schritt 1: Eingabefeld pruefen`; nach erfolgreicher lokaler Pruefung steht `Schritt 2: ...` mit klarem Hinweis, nur dann auf `Ausfuehren` zu klicken, wenn Ziel, Feld oder Text stimmen. Buttons und Sicherheitsgates bleiben unveraendert: erst pruefen, dann ausfuehren; ohne Freigabe keine Maus-/Tastaturaktion."
+
+builder_cue_live_contract_smoke_2026_05_27:
+"Live-Smoke gegen laufende lokale Bridge abgeschlossen. /healthz meldete `Bildschirm bereit`. `/builder-cue` mit vollstaendigem lokalen `test_cue` und BBox im aktiven Fenster: ok=true, safety_state=accept, popupProposalEmitted=true, aber desktopActions=false, mouseActions=false, keyboardActions=false, mayExecute=false. Fehlende BBox: rejected, popupProposalEmitted=false. BBox ausserhalb des aktiven Fensters: safety_state=stop, popupProposalEmitted=false, desktopActions=false. Danach GOAT neu gestartet, damit kein Testvorschlag im Popup stehen bleibt; /healthz danach wieder `Bildschirm bereit`. Keine Screenshots, keine Audioartefakte."
