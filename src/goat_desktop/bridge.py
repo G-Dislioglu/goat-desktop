@@ -10,7 +10,7 @@ import uvicorn
 from fastapi import FastAPI
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from goat_desktop.broker import build_candidate, verify_candidate
+from goat_desktop.broker import LOCAL_GEOMETRY_SOURCES, build_candidate, verify_candidate
 from goat_desktop.action_preview import build_action_preview
 from goat_desktop.screen import capture_active_window, get_active_window
 from goat_desktop.stage1_executor import Stage1ExecutionRequest, execute_stage1_action
@@ -101,6 +101,9 @@ def create_app(
 
     @app.post("/builder-cue")
     def builder_cue(payload: dict[str, Any]) -> dict[str, Any]:
+        contract_errors = _builder_cue_contract_errors(payload)
+        if contract_errors:
+            return _builder_cue_rejected("; ".join(contract_errors))
         window = get_active_window()
         candidate = build_candidate(payload, window)
         decision = verify_candidate(candidate, window)
@@ -109,19 +112,22 @@ def create_app(
             "anchors": decision["anchors"],
             "broker_decision": decision,
         }
-        if decision["status"] == "accept" and dispatch_cue is not None:
-            left, top, right, bottom = decision["final_bbox"]
-            dispatch_cue(int((left + right) / 2), int((top + bottom) / 2))
-        if dispatch_builder_cue is not None:
+        proposal_emitted = False
+        if decision["status"] == "accept" and dispatch_builder_cue is not None:
             cue_payload = dict(payload)
             cue_payload["broker_response"] = response
             dispatch_builder_cue(cue_payload)
+            proposal_emitted = True
         return {
             "ok": decision["status"] == "accept",
             "diagnostic": True,
             "scope": "local_builder_cue_proposal",
             "safety_state": decision["status"],
             "broker_response": response,
+            "requiresPopupApproval": True,
+            "mayExecute": False,
+            "authority": "proposal_only_user_approval_required",
+            "dispatch": {"popupProposalEmitted": proposal_emitted},
             "effects": _no_action_effects(),
         }
 
@@ -298,6 +304,54 @@ def validate_flat_marker_contract(payload: dict[str, Any]) -> dict[str, Any]:
             "requiresGate": True,
         },
         "effects": effects,
+    }
+
+
+def _builder_cue_contract_errors(payload: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    source = str(payload.get("source") or "").strip()
+    action_type = str(payload.get("action_type") or "").strip()
+    label = str(payload.get("label") or "").strip()
+    bbox = payload.get("bbox")
+
+    if not source:
+        errors.append("source is required")
+    elif source not in LOCAL_GEOMETRY_SOURCES:
+        errors.append("source must be an accepted local geometry source")
+    if source == "vision":
+        errors.append("vision source cannot create a builder cue proposal")
+    if not action_type:
+        errors.append("action_type is required")
+    if not label:
+        errors.append("label is required")
+    if not isinstance(bbox, list) or len(bbox) != 4:
+        errors.append("bbox with four numeric values is required")
+    else:
+        try:
+            normalized = [float(value) for value in bbox]
+        except (TypeError, ValueError):
+            errors.append("bbox values must be numeric")
+        else:
+            if not all(isfinite(value) for value in normalized):
+                errors.append("bbox values must be finite")
+            elif normalized[2] <= normalized[0] or normalized[3] <= normalized[1]:
+                errors.append("bbox must have positive size")
+    return errors
+
+
+def _builder_cue_rejected(reason: str) -> dict[str, Any]:
+    return {
+        "ok": False,
+        "diagnostic": True,
+        "scope": "local_builder_cue_proposal",
+        "status": "rejected",
+        "safety_state": "stop",
+        "reason": reason,
+        "requiresPopupApproval": True,
+        "mayExecute": False,
+        "authority": "proposal_only_user_approval_required",
+        "dispatch": {"popupProposalEmitted": False},
+        "effects": _no_action_effects(),
     }
 
 

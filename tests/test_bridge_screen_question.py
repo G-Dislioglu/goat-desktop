@@ -102,6 +102,36 @@ def test_bridge_healthz_reports_resolver_cache_status(monkeypatch) -> None:
 
 def test_builder_cue_endpoint_emits_proposal_without_actions(monkeypatch) -> None:
     emitted = FakeSignal()
+    moved: list[tuple[int, int]] = []
+    monkeypatch.setattr(
+        bridge,
+        "get_active_window",
+        lambda: WindowInfo(hwnd=1, title="Test Window", rect=[0, 0, 300, 200], foreground=True),
+    )
+    endpoint = _endpoint_for(
+        create_app(dispatch_cue=lambda x, y: moved.append((x, y)), dispatch_builder_cue=emitted.emit),
+        "/builder-cue",
+    )
+
+    body = endpoint({"source": "test_cue", "action_type": "type", "label": "Testfeld", "bbox": [20, 20, 120, 50]})
+
+    assert body["ok"] is True
+    assert body["scope"] == "local_builder_cue_proposal"
+    assert body["requiresPopupApproval"] is True
+    assert body["mayExecute"] is False
+    assert body["authority"] == "proposal_only_user_approval_required"
+    assert body["dispatch"]["popupProposalEmitted"] is True
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert body["effects"]["mouseActionsExecuted"] is False
+    assert body["effects"]["keyboardActionsExecuted"] is False
+    assert body["effects"]["mayExecuteRealAction"] is False
+    assert moved == []
+    assert emitted.payloads[0]["label"] == "Testfeld"
+    assert emitted.payloads[0]["broker_response"]["safety_state"] == "accept"
+
+
+def test_builder_cue_rejects_missing_bbox_without_dispatch(monkeypatch) -> None:
+    emitted = FakeSignal()
     monkeypatch.setattr(
         bridge,
         "get_active_window",
@@ -109,13 +139,69 @@ def test_builder_cue_endpoint_emits_proposal_without_actions(monkeypatch) -> Non
     )
     endpoint = _endpoint_for(create_app(dispatch_builder_cue=emitted.emit), "/builder-cue")
 
-    body = endpoint({"source": "test_cue", "action_type": "type", "label": "Testfeld", "bbox": [20, 20, 120, 50]})
+    body = endpoint({"source": "test_cue", "action_type": "type", "label": "Testfeld"})
 
-    assert body["ok"] is True
-    assert body["scope"] == "local_builder_cue_proposal"
+    assert body["ok"] is False
+    assert body["status"] == "rejected"
+    assert body["safety_state"] == "stop"
+    assert "bbox" in body["reason"]
+    assert body["dispatch"]["popupProposalEmitted"] is False
     assert body["effects"]["desktopActionsExecuted"] is False
-    assert emitted.payloads[0]["label"] == "Testfeld"
-    assert emitted.payloads[0]["broker_response"]["safety_state"] == "accept"
+    assert emitted.payloads == []
+
+
+def test_builder_cue_rejects_missing_action_type_without_dispatch(monkeypatch) -> None:
+    emitted = FakeSignal()
+    monkeypatch.setattr(
+        bridge,
+        "get_active_window",
+        lambda: WindowInfo(hwnd=1, title="Test Window", rect=[0, 0, 300, 200], foreground=True),
+    )
+    endpoint = _endpoint_for(create_app(dispatch_builder_cue=emitted.emit), "/builder-cue")
+
+    body = endpoint({"source": "test_cue", "label": "Testfeld", "bbox": [20, 20, 120, 50]})
+
+    assert body["ok"] is False
+    assert body["status"] == "rejected"
+    assert "action_type" in body["reason"]
+    assert body["dispatch"]["popupProposalEmitted"] is False
+    assert emitted.payloads == []
+
+
+def test_builder_cue_rejects_vision_source_without_dispatch(monkeypatch) -> None:
+    emitted = FakeSignal()
+    monkeypatch.setattr(
+        bridge,
+        "get_active_window",
+        lambda: WindowInfo(hwnd=1, title="Test Window", rect=[0, 0, 300, 200], foreground=True),
+    )
+    endpoint = _endpoint_for(create_app(dispatch_builder_cue=emitted.emit), "/builder-cue")
+
+    body = endpoint({"source": "vision", "action_type": "hover", "label": "Testfeld", "bbox": [20, 20, 120, 50]})
+
+    assert body["ok"] is False
+    assert body["status"] == "rejected"
+    assert "source" in body["reason"]
+    assert body["dispatch"]["popupProposalEmitted"] is False
+    assert emitted.payloads == []
+
+
+def test_builder_cue_verifier_reject_does_not_emit_popup(monkeypatch) -> None:
+    emitted = FakeSignal()
+    monkeypatch.setattr(
+        bridge,
+        "get_active_window",
+        lambda: WindowInfo(hwnd=1, title="Test Window", rect=[0, 0, 300, 200], foreground=True),
+    )
+    endpoint = _endpoint_for(create_app(dispatch_builder_cue=emitted.emit), "/builder-cue")
+
+    body = endpoint({"source": "test_cue", "action_type": "hover", "label": "Testfeld", "bbox": [400, 20, 500, 50]})
+
+    assert body["ok"] is False
+    assert body["safety_state"] == "stop"
+    assert body["dispatch"]["popupProposalEmitted"] is False
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert emitted.payloads == []
 
 
 def test_local_bridge_reports_port_in_use_without_starting_thread(monkeypatch) -> None:
