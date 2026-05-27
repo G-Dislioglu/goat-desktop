@@ -53,6 +53,7 @@ def test_stage1_scroll_executes_when_gate_allows(monkeypatch, tmp_path: Path) ->
 
     assert result.status == "executed"
     assert result.executed is True
+    assert result.completion_verified is True
     assert result.stage == 1
     assert backend.scrolls == [-240]
     assert backend.moves == []
@@ -68,6 +69,7 @@ def test_stage1_hover_moves_to_broker_bbox_center(monkeypatch, tmp_path: Path) -
     )
 
     assert result.status == "executed"
+    assert result.completion_verified is True
     assert result.target == {"x": 120, "y": 220}
     assert backend.moves == [(120, 220)]
     assert backend.scrolls == []
@@ -89,6 +91,7 @@ def test_stage1_hover_verifies_pointer_position_after_move(monkeypatch, tmp_path
 
     assert result.status == "failed"
     assert result.executed is False
+    assert result.completion_verified is False
     assert result.target == {"x": 120, "y": 220}
     assert "pointer verification failed" in result.reason
 
@@ -104,6 +107,7 @@ def test_stage1_scroll_backend_failure_is_not_reported_as_executed(monkeypatch, 
 
     assert result.status == "failed"
     assert result.executed is False
+    assert result.completion_verified is False
     assert result.action_type == "scroll"
     assert "mouse backend failed" in result.reason
 
@@ -216,4 +220,5 @@ def test_execution_audit_contains_stage1_scope(monkeypatch, tmp_path: Path) -> N
     events = read_audit_events(audit_path)
     assert events[-1]["event_type"] == "stage1_execution"
     assert events[-1]["status"] == "executed"
+    assert events[-1]["payload"]["result"]["completion_verified"] is True
     assert "run_g2 only executes stage 1 free-navigation actions" in events[-1]["payload"]["assumptions"]

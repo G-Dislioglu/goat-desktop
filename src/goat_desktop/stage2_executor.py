@@ -108,6 +108,7 @@ class Stage2ExecutionResult:
     preview: dict
     gate_decision: dict
     target: dict | None = None
+    completion_verified: bool = False
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -236,6 +237,7 @@ def execute_stage2_text_input(
             preview=preview,
             gate_decision=gate_decision.to_dict(),
             target=target,
+            completion_verified=True,
         ),
     )
 

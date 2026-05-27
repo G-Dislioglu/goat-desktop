@@ -51,6 +51,7 @@ class Stage1ExecutionResult:
     reason: str
     gate_decision: dict
     target: dict | None = None
+    completion_verified: bool = False
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -123,6 +124,7 @@ def execute_stage1_action(
                 reason="stage 1 scroll executed through configured mouse backend",
                 gate_decision=gate_decision.to_dict(),
                 target={"scroll_amount": request.scroll_amount},
+                completion_verified=True,
             ),
         )
 
@@ -178,6 +180,7 @@ def execute_stage1_action(
                 reason="stage 1 pointer move executed to broker-verified bbox center",
                 gate_decision=gate_decision.to_dict(),
                 target=target,
+                completion_verified=True,
             ),
         )
 

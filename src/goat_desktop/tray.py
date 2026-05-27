@@ -223,6 +223,10 @@ def _friendly_stage2_success_message(response: dict) -> str:
     return f"Ich habe den Text in {label} eingetragen. Bitte pruefe kurz, ob er stimmt."
 
 
+def _action_completion_verified(response: dict) -> bool:
+    return bool(response.get("executed")) and bool(response.get("completion_verified", response.get("executed")))
+
+
 def _build_resolver_evidence(screen_resolution: object) -> dict[str, object]:
     resolution = screen_resolution if isinstance(screen_resolution, dict) else {}
     return {
@@ -1084,7 +1088,7 @@ class GoatTrayApp:
     def _finish_builder_cue(self, payload: dict) -> None:
         if payload.get("status") in {"stage1_done", "stage2_done"}:
             response = dict(payload.get("response") or {})
-            if response.get("executed"):
+            if _action_completion_verified(response):
                 if payload.get("status") == "stage2_done":
                     self.popup.screen_context_value.setText("Eingabe ausgefuehrt")
                     self.popup.maya_value.setText(_friendly_stage2_success_message(response))

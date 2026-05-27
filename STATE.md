@@ -447,3 +447,6 @@ stage2_popup_unsafe_context_blocked_2026_05_27:
 
 stage2_unsafe_context_next_step_copy_2026_05_27:
 "Unsichere Stage-2-Eingabefelder erklaeren jetzt den naechsten Schritt klarer. Statt nur `Eingabefeld nicht sicher genug erkannt` sagt GOAT im Popup: `Ich tippe hier noch nicht. Sag mir genauer, welches Feld das ist, oder zeig es deutlicher.` Die Sperre bleibt unveraendert: Button `Nicht sicher`, keine Tastaturaktion, keine Ausfuehrung ohne safe_text_context=true."
+
+action_completion_verified_status_2026_05_27:
+"Stage-1 und Stage-2 Ergebnisse enthalten jetzt `completion_verified`. Erfolgreiche Ausfuehrungen setzen `executed=true` und `completion_verified=true`; Preview/Block/Fehler bleiben `completion_verified=false`. Das Popup meldet `Navigation ausgefuehrt` oder `Eingabe ausgefuehrt` nur noch, wenn beides wahr ist. Defensive Tests decken auch den Sonderfall ab, dass ein Backend faelschlich `executed=true` aber `completion_verified=false` liefert: GOAT meldet dann nicht erledigt."

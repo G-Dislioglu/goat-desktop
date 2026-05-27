@@ -68,6 +68,7 @@ def test_stage2_without_approval_returns_preview(monkeypatch, tmp_path: Path) ->
 
     assert result.status == "preview"
     assert result.executed is False
+    assert result.completion_verified is False
     assert result.preview["text"] == "hello"
     assert backend.typed == []
 
@@ -111,6 +112,7 @@ def test_stage2_executes_after_approval_and_safe_context(monkeypatch, tmp_path: 
 
     assert result.status == "executed"
     assert result.executed is True
+    assert result.completion_verified is True
     assert result.stage == 2
     assert result.target == {"x": 140, "y": 220}
     assert backend.moves == [(140, 220)]
@@ -137,6 +139,7 @@ def test_stage2_backend_failure_is_not_reported_as_executed(monkeypatch, tmp_pat
 
     assert result.status == "failed"
     assert result.executed is False
+    assert result.completion_verified is False
     assert result.target == {"x": 140, "y": 220}
     assert "text input backend failed" in result.reason
     assert backend.moves == [(140, 220)]
@@ -168,6 +171,7 @@ def test_stage2_failed_verification_is_not_reported_as_executed(monkeypatch, tmp
 
     assert result.status == "failed"
     assert result.executed is False
+    assert result.completion_verified is False
     assert result.target == {"x": 140, "y": 220}
     assert "text input verification failed" in result.reason
     assert backend.typed == ["GOAT safe input"]
@@ -316,6 +320,7 @@ def test_stage2_audit_contains_scope(monkeypatch, tmp_path: Path) -> None:
     events = read_audit_events(audit_path)
     assert events[-1]["event_type"] == "stage2_execution"
     assert events[-1]["status"] == "executed"
+    assert events[-1]["payload"]["result"]["completion_verified"] is True
     assert "run_g3 only executes stage 2 text input after explicit preview approval" in events[-1]["payload"][
         "assumptions"
     ]

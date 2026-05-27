@@ -439,6 +439,44 @@ def test_stage1_verification_failure_uses_plain_user_message() -> None:
     assert fake.popup.maya_value.text() == "Ich bin nicht sicher, ob die Navigation angekommen ist. Ich melde sie nicht als erledigt."
 
 
+def test_stage1_unverified_completion_is_not_reported_as_done() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "stage1_done",
+            "response": {
+                "executed": True,
+                "completion_verified": False,
+                "reason": "pointer verification failed after move",
+            },
+        },
+    )
+
+    assert fake.popup.screen_context_value.text() == "Navigation nicht ausgefuehrt"
+    assert fake.popup.maya_value.text() == "Ich bin nicht sicher, ob die Navigation angekommen ist. Ich melde sie nicht als erledigt."
+
+
+def test_stage2_unverified_completion_is_not_reported_as_done() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "stage2_done",
+            "response": {
+                "executed": True,
+                "completion_verified": False,
+                "reason": "text input verification failed after typing",
+            },
+        },
+    )
+
+    assert fake.popup.screen_context_value.text() == "Eingabe nicht ausgefuehrt"
+    assert fake.popup.maya_value.text() == "Ich bin nicht sicher, ob die Eingabe angekommen ist. Ich melde sie nicht als erledigt."
+
+
 def test_stage2_done_resets_pending_input() -> None:
     fake = FakeTray()
     fake.pending_builder_cue = {"label": "Suchfeld"}
