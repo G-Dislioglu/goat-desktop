@@ -5,10 +5,12 @@ import sys
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QApplication
 
+from goat_desktop.dpi import enable_dpi_awareness
 from goat_desktop.tray import GoatTrayApp
 
 
 def main() -> int:
+    enable_dpi_awareness()
     app = QApplication(sys.argv)
     app.setApplicationName("GOAT Desktop")
     app.setQuitOnLastWindowClosed(False)

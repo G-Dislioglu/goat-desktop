@@ -414,3 +414,6 @@ plain_main_status_chips_2026_05_27:
 
 single_instance_bridge_guard_2026_05_27:
 "GOAT erkennt jetzt beim Start, wenn der lokale Bridge-Port 127.0.0.1:8765 bereits belegt ist. LocalBridge startet dann keinen zweiten Bridge-Server, gibt `port_in_use` zurueck und das Popup zeigt normalnutzerfreundlich `GOAT ist bereits offen` / `Bitte nutze das vorhandene GOAT-Fenster. Diese Instanz fuehrt nichts aus.` Status-Chip: `Status: Schon offen`. Live-Smoke: zweite gestartete Instanz hat den Listener nicht uebernommen (`listenerUnchanged=true`), /healthz der ersten Instanz blieb ok. Keine neue Aktionserlaubnis. Tests gruen: 216 passed; compileall gruen."
+
+dpi_aware_stage1_smoke_2026_05_27:
+"GOAT setzt beim Start DPI-Awareness vor QApplication, damit Stage-1 Mauskoordinaten unter Windows-Skalierung stabiler sind. Live-Smoke nach Neustart: /healthz ok, `Bildschirm bereit`, Preview Hover read-only (`mayExecute=false`, mouse=false, keyboard=false), Stage-1 Hover ohne Freigabe -> `preview_required`, executed=false, Stage-1 Hover mit Freigabe auf aktuelle Mausposition -> `executed=true`, mouse=true, keyboard=false, target x=431/y=688. Externe DPI-aware Nachmessung nach 100ms: x=431/y=688, Delta 0/0. Kein Klick, kein Tippen, keine Screenshot-/Audio-Artefakte. Tests gruen: 218 passed; compileall gruen."
