@@ -408,3 +408,6 @@ action_result_plain_next_step_2026_05_26:
 
 plain_approval_buttons_2026_05_26:
 "Sichtbarer Freigabepfad nutzt jetzt einfache Buttontexte: `Pruefen`, `Ausfuehren`, `Abbrechen`. Alte Hauptpfad-Begriffe wie `Ziel verwenden`, `Ziel pruefen` und `Nein, anderes Ziel` sind aus Popup/Tray entfernt. Abbruchstatus heisst `Abgebrochen`. Action-Logik und Sicherheitsgates unveraendert; keine neue Aktionserlaubnis. Tests gruen: 212 passed; compileall gruen."
+
+plain_main_status_chips_2026_05_27:
+"Sichtbare Hauptstatus-Chips sind normalnutzerfreundlicher. Statt `Verbindung: ...` und `Audio: ...` zeigt das Popup jetzt `Status: Bereit/Verbunden/Verbinde neu` und `Sprache: Bereit/Arbeitet/Fertig/Problem`. Interne Detailwerte bleiben fuer Code/Diagnose erhalten, werden aber im Hauptpfad nicht roh angezeigt. Action-Logik unveraendert; keine neue Aktionserlaubnis. Tests gruen: 214 passed; compileall gruen."

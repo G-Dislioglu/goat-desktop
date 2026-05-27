@@ -106,6 +106,32 @@ def _pending_action_hint(stage1_action: dict | None, stage2_action: dict | None)
     return "Nur mit deiner Freigabe geht es weiter."
 
 
+def _status_chip_text(connection_text: str) -> str:
+    normalized = connection_text.strip().lower()
+    if not normalized or normalized in {"lokal", "offline"}:
+        return "Status: Bereit"
+    if "connected" in normalized or "verbunden" in normalized:
+        return "Status: Verbunden"
+    if "reconnecting" in normalized or "verbind" in normalized:
+        return "Status: Verbinde neu"
+    return "Status: Bereit"
+
+
+def _speech_chip_text(audio_text: str) -> str:
+    normalized = audio_text.strip().lower()
+    if not normalized or normalized == "-":
+        return "Sprache: Bereit"
+    if "fehlgeschlagen" in normalized or "nicht moeglich" in normalized:
+        return "Sprache: Problem"
+    if "laedt" in normalized or "lädt" in normalized or "denke" in normalized:
+        return "Sprache: Arbeitet"
+    if "aktiv" in normalized:
+        return "Sprache: Bereit"
+    if "ms" in normalized or "vorgelesen" in normalized:
+        return "Sprache: Fertig"
+    return "Sprache: Bereit"
+
+
 def _pending_target_text(label: str, stage2_action: dict | None) -> str:
     if stage2_action:
         return f"Eingabefeld: {label}"
@@ -492,6 +518,7 @@ class GoatTrayApp:
                     rec=float(result.get("record_seconds") or 0.0),
                 )
             )
+            self.popup.audio_chip.setText("Sprache: Fertig")
         self.popup.talk_button.setEnabled(True)
         self.popup.talk_button.setText("Halten zum Sprechen")
 
@@ -818,15 +845,17 @@ class GoatTrayApp:
         self.popup.read_aloud.setText("Vorlesen")
         if payload.get("status") == "ok" and payload.get("audio_played"):
             self.popup.audio_value.setText("Vorgelesen ({time:.0f}ms)".format(time=float(payload.get("tts_time_ms") or 0.0)))
+            self.popup.audio_chip.setText("Sprache: Fertig")
             return
         error = str(payload.get("error") or "TTS fehlgeschlagen")
         self.popup.audio_value.setText(f"Vorlesen fehlgeschlagen: {error}")
+        self.popup.audio_chip.setText("Sprache: Problem")
 
     def _refresh_audio_status(self) -> None:
         if self.livetalk.provider == "gemini_live":
             text = "Gemini Live aktiv"
             self.popup.audio_value.setText(text)
-            self.popup.audio_chip.setText(f"Audio: {text}")
+            self.popup.audio_chip.setText(_speech_chip_text(text))
             return
         stt = load_stt_config()
         tts = load_tts_config()
@@ -842,7 +871,7 @@ class GoatTrayApp:
             tts_label = f"TTS {tts.mode.value}"
         text = f"{stt_label} / {tts_label}"
         self.popup.audio_value.setText(text)
-        self.popup.audio_chip.setText(f"Audio: {text}")
+        self.popup.audio_chip.setText(_speech_chip_text(text))
 
     def _update_livetalk_status(self, state: str) -> None:
         if self.livetalk.provider == "gemini_live":
@@ -899,7 +928,7 @@ class GoatTrayApp:
         token = os.environ.get("GOAT_BUILDER_TOKEN")
         if not url or not token:
             self.popup.connection_value.setText("lokal")
-            self.popup.connection_chip.setText("Verbindung: lokal")
+            self.popup.connection_chip.setText(_status_chip_text("lokal"))
             return
         self.builder_bridge = BuilderBridgeClient(url=url, token=token)
         self.builder_bridge.status_changed.connect(self._update_connection_status)
@@ -908,7 +937,7 @@ class GoatTrayApp:
 
     def _update_connection_status(self, text: str) -> None:
         self.popup.connection_value.setText(text)
-        self.popup.connection_chip.setText(f"Verbindung: {text}")
+        self.popup.connection_chip.setText(_status_chip_text(text))
 
     def receive_builder_cue(self, message: dict) -> None:
         action_type = str(message.get("action_type") or "").strip()

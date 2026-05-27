@@ -19,6 +19,8 @@ def test_popup_uses_assistant_first_labels() -> None:
     assert popup.maya_caption.text() == "Maya"
     assert popup.screen_context_value.text() == "Noch keine Frage"
     assert popup.maya_value.text() == "Bereit. Frag mich, was ich fuer dich finden soll."
+    assert popup.connection_chip.text() == "Status: Bereit"
+    assert popup.audio_chip.text() == "Sprache: Bereit"
     assert popup.talk_button.text() == "Mit Maya sprechen"
     assert popup.cue_approve.text() == "Pruefen"
     assert popup.cue_reject.text() == "Abbrechen"

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from goat_desktop.tray import GoatTrayApp
+from goat_desktop.tray import GoatTrayApp, _speech_chip_text, _status_chip_text
 
 
 class FakeLabel:
@@ -25,6 +25,10 @@ class FakeButton(FakeLabel):
 
 class FakePopup:
     def __init__(self) -> None:
+        self.connection_value = FakeLabel()
+        self.connection_chip = FakeLabel()
+        self.audio_value = FakeLabel()
+        self.audio_chip = FakeLabel()
         self.target_value = FakeLabel()
         self.screen_context_value = FakeLabel()
         self.maya_value = FakeLabel()
@@ -64,6 +68,23 @@ def test_builder_stage1_cue_shows_target_check_before_navigation() -> None:
     assert fake.popup.cue_approve.enabled is True
     assert fake.popup.cue_reject.enabled is True
     assert fake.shown is True
+
+
+def test_status_chips_use_plain_user_states() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp._update_connection_status(fake, "builder: connected")
+
+    assert fake.popup.connection_value.text() == "builder: connected"
+    assert fake.popup.connection_chip.text() == "Status: Verbunden"
+    assert _status_chip_text("builder: reconnecting") == "Status: Verbinde neu"
+    assert _status_chip_text("lokal") == "Status: Bereit"
+
+
+def test_speech_chip_uses_plain_user_states() -> None:
+    assert _speech_chip_text("Gemini Live aktiv") == "Sprache: Bereit"
+    assert _speech_chip_text("Gemini Live 800ms / Aufnahme 1.2s") == "Sprache: Fertig"
+    assert _speech_chip_text("Vorlesen fehlgeschlagen: test") == "Sprache: Problem"
 
 
 def test_accepted_stage1_cue_turns_into_navigation_preview() -> None:

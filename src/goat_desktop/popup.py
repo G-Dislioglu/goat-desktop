@@ -117,8 +117,8 @@ class GoatPopup(QWidget):
 
         status_row = QHBoxLayout()
         status_row.setSpacing(8)
-        self.connection_chip = self._chip("Verbindung: offline")
-        self.audio_chip = self._chip("Audio: -")
+        self.connection_chip = self._chip("Status: Bereit")
+        self.audio_chip = self._chip("Sprache: Bereit")
         status_row.addWidget(self.connection_chip, 1)
         status_row.addWidget(self.audio_chip, 2)
         root.addLayout(status_row)
