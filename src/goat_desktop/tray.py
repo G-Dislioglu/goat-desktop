@@ -142,14 +142,25 @@ def _pending_target_text(label: str, stage2_action: dict | None) -> str:
 
 def _pending_check_text(stage2_action: dict | None) -> str:
     if stage2_action:
-        return "Bitte pruefe das Eingabefeld"
-    return "Bitte pruefe das markierte Ziel"
+        return "Schritt 1: Eingabefeld pruefen"
+    return "Schritt 1: Ziel pruefen"
+
+
+def _execution_step_title(preview: dict) -> str:
+    title = str(preview.get("title") or "Freigabe erforderlich")
+    return f"Schritt 2: {title}"
 
 
 def _stage2_preview_message(stage2_action: dict, preview: dict) -> str:
     if not stage2_action.get("safe_text_context"):
         return "Ich tippe hier noch nicht. Ich habe das Eingabefeld nicht sicher genug erkannt."
-    return str(preview.get("message") or "Bitte pruefe die Eingabe.")
+    message = str(preview.get("message") or "Bitte pruefe die Eingabe.")
+    return f"{message} Klicke nur auf Ausfuehren, wenn Feld und Text stimmen."
+
+
+def _stage1_preview_message(preview: dict) -> str:
+    message = str(preview.get("message") or "Bitte pruefe die Aktion.")
+    return f"{message} Klicke nur auf Ausfuehren, wenn das markierte Ziel stimmt."
 
 
 def _friendly_action_failure_message(response: dict, *, stage: str) -> str:
@@ -1120,7 +1131,7 @@ class GoatTrayApp:
                 text=str(self.pending_stage2_action.get("text") or ""),
                 dry_run=True,
             )
-            self.popup.screen_context_value.setText(str(preview.get("title") or "Freigabe erforderlich"))
+            self.popup.screen_context_value.setText(_execution_step_title(preview))
             self.popup.maya_value.setText(_stage2_preview_message(self.pending_stage2_action, preview))
             safe_text_context = bool(self.pending_stage2_action.get("safe_text_context"))
             self.popup.cue_approve.setText("Ausfuehren" if safe_text_context else "Nicht sicher")
@@ -1135,8 +1146,8 @@ class GoatTrayApp:
             dry_run=True,
             context={"scroll_amount": int(self.pending_stage1_action.get("scroll_amount") or -360)},
         )
-        self.popup.screen_context_value.setText(str(preview.get("title") or "Freigabe erforderlich"))
-        self.popup.maya_value.setText(str(preview.get("message") or "Bitte pruefe die Aktion."))
+        self.popup.screen_context_value.setText(_execution_step_title(preview))
+        self.popup.maya_value.setText(_stage1_preview_message(preview))
         self.popup.cue_approve.setText("Ausfuehren")
         self.popup.cue_approve.setEnabled(bool(preview.get("ok")))
         self.popup.cue_reject.setEnabled(True)

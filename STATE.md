@@ -429,3 +429,6 @@ builder_cue_contract_hardened_2026_05_27:
 
 builder_cue_reject_plain_ux_2026_05_27:
 "Abgelehnte oder fehlerhafte Builder-Cues werden im sichtbaren Popup jetzt normalnutzerfreundlich erklaert. Statt Rohfehlern wie fehlender `bbox`, fehlendem `action_type`, Timeout oder `outside active window` zeigt GOAT kurze Hilfetexte wie `Ich konnte das Ziel nicht sicher zuordnen. Bitte zeig mir nochmal, welches Ziel du meinst.` oder `Die lokale Pruefung hat gerade nicht geantwortet. Bitte versuch es nochmal.` Pending-Actions werden bei Reject geloescht; `Pruefen` bleibt deaktiviert und es wird nichts ausgefuehrt."
+
+approval_flow_step_copy_2026_05_27:
+"Der sichtbare Freigabe-Flow ist fuer normale Nutzer klarer zweistufig formuliert. Bei Vorschlaegen steht jetzt `Schritt 1: Ziel pruefen` bzw. `Schritt 1: Eingabefeld pruefen`; nach erfolgreicher lokaler Pruefung steht `Schritt 2: ...` mit klarem Hinweis, nur dann auf `Ausfuehren` zu klicken, wenn Ziel, Feld oder Text stimmen. Buttons und Sicherheitsgates bleiben unveraendert: erst pruefen, dann ausfuehren; ohne Freigabe keine Maus-/Tastaturaktion."

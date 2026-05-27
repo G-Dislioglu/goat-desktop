@@ -62,7 +62,7 @@ def test_builder_stage1_cue_shows_target_check_before_navigation() -> None:
 
     assert fake.pending_stage1_action == {"action_type": "hover", "label": "Senden Button", "scroll_amount": -360}
     assert fake.popup.target_value.text() == "Zielvorschlag: Senden Button"
-    assert fake.popup.screen_context_value.text() == "Bitte pruefe das markierte Ziel"
+    assert fake.popup.screen_context_value.text() == "Schritt 1: Ziel pruefen"
     assert fake.popup.maya_value.text() == "Danach kannst du GOAT navigieren lassen."
     assert fake.popup.cue_approve.text() == "Pruefen"
     assert fake.popup.cue_approve.enabled is True
@@ -117,9 +117,10 @@ def test_accepted_stage1_cue_turns_into_navigation_preview() -> None:
     )
 
     assert fake.pending_stage1_action["broker_decision"] == {"status": "accept", "final_bbox": [10, 20, 110, 80]}
-    assert fake.popup.screen_context_value.text() == "GOAT kann dich navigieren"
+    assert fake.popup.screen_context_value.text() == "Schritt 2: GOAT kann dich navigieren"
     assert fake.popup.maya_value.text() == (
-        "GOAT will den Mauszeiger auf Senden Button bewegen. Dabei wird nichts geklickt und nichts getippt."
+        "GOAT will den Mauszeiger auf Senden Button bewegen. Dabei wird nichts geklickt und nichts getippt. "
+        "Klicke nur auf Ausfuehren, wenn das markierte Ziel stimmt."
     )
     assert fake.popup.cue_approve.text() == "Ausfuehren"
     assert fake.popup.cue_approve.enabled is True
@@ -207,9 +208,10 @@ def test_accepted_scroll_cue_turns_into_scroll_preview() -> None:
     )
 
     assert fake.pending_stage1_action["scroll_amount"] == 360
-    assert fake.popup.screen_context_value.text() == "GOAT kann dich navigieren"
+    assert fake.popup.screen_context_value.text() == "Schritt 2: GOAT kann dich navigieren"
     assert fake.popup.maya_value.text() == (
-        "GOAT will auf der Seite nach oben scrollen. Dabei wird nichts geklickt und nichts getippt."
+        "GOAT will auf der Seite nach oben scrollen. Dabei wird nichts geklickt und nichts getippt. "
+        "Klicke nur auf Ausfuehren, wenn das markierte Ziel stimmt."
     )
     assert fake.popup.cue_approve.text() == "Ausfuehren"
     assert fake.popup.cue_approve.enabled is True
@@ -270,7 +272,7 @@ def test_builder_stage2_cue_shows_input_check_before_execution() -> None:
         "safe_text_context": True,
     }
     assert fake.popup.target_value.text() == "Eingabefeld: Suchfeld"
-    assert fake.popup.screen_context_value.text() == "Bitte pruefe das Eingabefeld"
+    assert fake.popup.screen_context_value.text() == "Schritt 1: Eingabefeld pruefen"
     assert fake.popup.maya_value.text() == "Danach kannst du die Eingabe freigeben."
     assert fake.popup.cue_approve.text() == "Pruefen"
 
@@ -300,9 +302,10 @@ def test_accepted_stage2_cue_turns_into_input_preview() -> None:
     )
 
     assert fake.pending_stage2_action["broker_decision"] == {"status": "accept", "final_bbox": [10, 20, 110, 80]}
-    assert fake.popup.screen_context_value.text() == "Freigabe fuer Eingabe"
+    assert fake.popup.screen_context_value.text() == "Schritt 2: Freigabe fuer Eingabe"
     assert fake.popup.maya_value.text() == (
-        'GOAT will Text in Suchfeld eingeben: "StepStack". Bitte pruefe die Eingabe vor dem Ausfuehren.'
+        'GOAT will Text in Suchfeld eingeben: "StepStack". Bitte pruefe die Eingabe vor dem Ausfuehren. '
+        "Klicke nur auf Ausfuehren, wenn Feld und Text stimmen."
     )
     assert fake.popup.cue_approve.text() == "Ausfuehren"
     assert fake.popup.cue_approve.enabled is True
@@ -327,7 +330,7 @@ def test_stage2_builder_cue_can_use_prechecked_broker_response() -> None:
 
     GoatTrayApp._finish_builder_cue(fake, {"status": "ok", "response": fake.pending_builder_cue["broker_response"]})
 
-    assert fake.popup.screen_context_value.text() == "Freigabe fuer Eingabe"
+    assert fake.popup.screen_context_value.text() == "Schritt 2: Freigabe fuer Eingabe"
     assert fake.popup.cue_approve.text() == "Ausfuehren"
     assert fake.popup.cue_approve.enabled is True
 
