@@ -60,6 +60,7 @@ from goat_desktop.vision_hint import (
 
 _RESOLVER_CACHE_REFRESH_INTERVAL_MS = 60_000
 _LOCAL_ACTION_TIMEOUT_SECONDS = 2
+_POST_APPROVAL_ACTION_DELAY_MS = 150
 
 
 def _no_action_effects() -> dict[str, bool]:
@@ -1040,14 +1041,14 @@ class GoatTrayApp:
             self.popup.cue_approve.setEnabled(False)
             self.popup.cue_reject.setEnabled(False)
             self.popup.screen_context_value.setText("Navigation wird ausgefuehrt")
-            QTimer.singleShot(10, lambda: self._execute_pending_stage1_action(payload))
+            QTimer.singleShot(_POST_APPROVAL_ACTION_DELAY_MS, lambda: self._execute_pending_stage1_action(payload))
             return
         if self.pending_stage2_action and self.pending_stage2_action.get("broker_decision"):
             payload = dict(self.pending_stage2_action)
             self.popup.cue_approve.setEnabled(False)
             self.popup.cue_reject.setEnabled(False)
             self.popup.screen_context_value.setText("Eingabe wird ausgefuehrt")
-            QTimer.singleShot(10, lambda: self._execute_pending_stage2_action(payload))
+            QTimer.singleShot(_POST_APPROVAL_ACTION_DELAY_MS, lambda: self._execute_pending_stage2_action(payload))
             return
         if self.pending_builder_cue is None:
             return
