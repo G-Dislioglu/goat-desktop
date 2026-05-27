@@ -438,3 +438,6 @@ builder_cue_live_contract_smoke_2026_05_27:
 
 stage1_popup_e2e_delay_fix_2026_05_27:
 "Stage-1 Popup-E2E-Smoke mit kontrolliertem Tk-Testfenster abgeschlossen. Erster UIA-Click-Smoke zeigte eine Race-Bedingung: GOAT meldete intern `Navigation ausgefuehrt`, aber der UIA-Klick konnte den Cursor danach wieder auf den `Ausfuehren`-Button setzen. Fix: echte Stage-1/Stage-2-Ausfuehrung startet 150ms nach Freigabe-Klick, damit der Klick abgeschlossen ist. Wiederholter Live-Smoke: `/builder-cue` accepted, `Pruefen` -> `Ausfuehren` per UIA, Popup zeigt `Navigation ausgefuehrt`, Cursor target x=484/y=405, gemessen x=484/y=405, Delta 0/0. Kein Klick auf Ziel, kein Tippen, keine Screenshots, keine Audioartefakte."
+
+stage2_popup_e2e_delay_verified_2026_05_27:
+"Stage-2 Popup-E2E-Smoke mit kontrolliertem Tk-Testfeld nach dem 150ms-Freigabe-Delay erneut geprueft. `/builder-cue` fuer action_type `type` und `safe_text_context=true` wurde accepted und emittierte nur einen Popup-Vorschlag; effects blieben im Vorschlag alle false, inklusive keyboardActions=false. UIA-Flow `Pruefen` -> `Ausfuehren` schrieb exakt `GOAT stage2 popup e2e` in das kontrollierte Testfeld, Popup zeigte `Eingabe ausgefuehrt`, textVerified=true. Keine echten Nutzerfelder, keine Screenshots, keine Audioartefakte; GOAT danach neu gestartet."
