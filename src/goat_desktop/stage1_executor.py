@@ -130,6 +130,7 @@ def execute_stage1_action(
         )
 
     if "hover" in action_text or "move" in action_text or "tooltip" in action_text:
+        pointer_action_type = _pointer_action_type(request.action_type)
         target = _target_center(request.broker_decision)
         if target is None:
             return _audit_execution(
@@ -151,7 +152,7 @@ def execute_stage1_action(
                 Stage1ExecutionResult(
                     status="failed",
                     executed=False,
-                    action_type="hover",
+                    action_type=pointer_action_type,
                     stage=gate_decision.stage,
                     reason="mouse backend failed before pointer move completed",
                     gate_decision=gate_decision.to_dict(),
@@ -164,7 +165,7 @@ def execute_stage1_action(
                 Stage1ExecutionResult(
                     status="failed",
                     executed=False,
-                    action_type="hover",
+                    action_type=pointer_action_type,
                     stage=gate_decision.stage,
                     reason="pointer verification failed after move",
                     gate_decision=gate_decision.to_dict(),
@@ -176,7 +177,7 @@ def execute_stage1_action(
             Stage1ExecutionResult(
                 status="executed",
                 executed=True,
-                action_type="hover",
+                action_type=pointer_action_type,
                 stage=gate_decision.stage,
                 reason="stage 1 pointer move executed to broker-verified bbox center",
                 gate_decision=gate_decision.to_dict(),
@@ -208,6 +209,13 @@ def _target_center(broker_decision: dict) -> dict[str, int] | None:
     if right <= left or bottom <= top:
         return None
     return {"x": int(round((left + right) / 2)), "y": int(round((top + bottom) / 2))}
+
+
+def _pointer_action_type(action_type: str) -> str:
+    normalized = action_type.strip().lower()
+    if "move" in normalized and "hover" not in normalized:
+        return "move"
+    return "hover"
 
 
 def _pointer_is_at_target(backend: MouseBackend, target: dict[str, int]) -> bool:

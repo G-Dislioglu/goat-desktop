@@ -429,7 +429,7 @@ def _stage1_effects(result: dict[str, Any]) -> dict[str, Any]:
     executed = bool(result.get("executed"))
     action_type = str(result.get("action_type") or "")
     effects["desktopActionsExecuted"] = executed
-    effects["mouseActionsExecuted"] = executed and action_type in {"hover", "scroll"}
+    effects["mouseActionsExecuted"] = executed and action_type in {"hover", "move", "scroll"}
     effects["mayExecuteRealAction"] = executed
     return effects
 

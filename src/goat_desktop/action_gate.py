@@ -109,6 +109,7 @@ STAGE_1_TERMS = {
     "tab",
     "open menu",
     "hover",
+    "move",
     "move pointer",
     "move mouse",
     "tooltip",

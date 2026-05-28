@@ -28,6 +28,16 @@ def test_stage_1_hover_to_consequential_label_stays_navigation(monkeypatch, tmp_
     assert decision.allowed_to_execute is False
 
 
+def test_stage_1_move_action_is_navigation(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
+
+    decision = evaluate_action_gate(ActionRequest("move", "marker", ACCEPTED))
+
+    assert decision.stage == 1
+    assert decision.status == "dry_run_ready"
+    assert decision.allowed_to_execute is False
+
+
 def test_stage_1_navigation_to_sensitive_label_stays_locked(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
 

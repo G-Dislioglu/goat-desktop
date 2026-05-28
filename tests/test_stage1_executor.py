@@ -76,6 +76,23 @@ def test_stage1_hover_moves_to_broker_bbox_center(monkeypatch, tmp_path: Path) -
     assert backend.scrolls == []
 
 
+def test_stage1_move_preserves_move_action_type(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
+    backend = RecordingMouseBackend()
+
+    result = execute_stage1_action(
+        Stage1ExecutionRequest("move", "marker", ACCEPTED, dry_run=False),
+        backend=backend,
+    )
+
+    assert result.status == "executed"
+    assert result.action_type == "move"
+    assert result.completion_verified is True
+    assert result.target == {"x": 120, "y": 220}
+    assert backend.moves == [(120, 220)]
+    assert backend.scrolls == []
+
+
 def test_stage1_hover_verifies_pointer_position_after_move(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
 

@@ -6,7 +6,7 @@ import pytest
 
 import goat_desktop.stage2_executor as stage2_executor
 from goat_desktop.action_preview import build_action_preview
-from goat_desktop.bridge import create_app
+from goat_desktop.bridge import _stage1_effects, create_app
 from goat_desktop.stage3_approval import APPROVAL_PHRASE
 
 
@@ -205,6 +205,14 @@ def test_bridge_stage1_dry_run_remains_read_only() -> None:
     assert "dry_run_ready" in body["reason"]
     assert body["effects"]["desktopActionsExecuted"] is False
     assert body["effects"]["mouseActionsExecuted"] is False
+
+
+def test_stage1_effects_treat_move_as_mouse_navigation() -> None:
+    effects = _stage1_effects({"executed": True, "action_type": "move"})
+
+    assert effects["desktopActionsExecuted"] is True
+    assert effects["mouseActionsExecuted"] is True
+    assert effects["keyboardActionsExecuted"] is False
 
 
 def test_bridge_stage2_requires_user_approval_for_real_text_input() -> None:

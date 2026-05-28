@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage1_result_signals_2026_05_28:
+"Stage-1 Ergebnis- und Fehlersignale unterscheiden jetzt klarer zwischen Mauszeiger-Bewegung und Scrollen. Das Popup meldet `Mauszeiger bewegt` bzw. `Scrollen ausgefuehrt` und nutzt passende Fehlertexte fuer Pointer-/Scroll-Fehler. `move` ist jetzt durchgaengig Stage-1-Navigation, bleibt im Executor-Result als `move` erhalten und wird in Bridge-Effects als Mausnavigation gezaehlt. Zieltests gruen: Action-Gate/Stage1-Executor/Action-Preview/Tray-Stage1-UX mit 89 Tests."
+
 stage1_navigation_popup_copy_2026_05_28:
 "Stage-1 Navigation im Popup nutzt jetzt die Preview-Buttons direkt: Hover/Move erscheinen als `Navigieren`, Scroll als `Scrollen`, statt pauschal `Ausfuehren`. Die Freigabe-Copy spricht von Navigation freigeben und bleibt explizit bei `nichts geklickt`/`nichts getippt`, damit Normalnutzer keine Klick- oder Texteingabe-Aktion erwarten. Zieltests gruen: Tray-Stage1-UX plus Action-Preview mit 61 Tests."
 

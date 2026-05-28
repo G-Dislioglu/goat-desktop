@@ -240,7 +240,7 @@ def test_stage1_done_resets_pending_navigation() -> None:
 
     assert fake.pending_builder_cue is None
     assert fake.pending_stage1_action is None
-    assert fake.popup.screen_context_value.text() == "Navigation ausgefuehrt"
+    assert fake.popup.screen_context_value.text() == "Mauszeiger bewegt"
     assert fake.popup.maya_value.text() == (
         "Ich habe den Mauszeiger zum Ziel bewegt. Du kannst jetzt weitermachen oder mir den naechsten Schritt sagen."
     )
@@ -259,7 +259,7 @@ def test_stage1_scroll_done_names_next_step() -> None:
         {"status": "stage1_done", "response": {"executed": True, "action_type": "scroll", "target": {"scroll_amount": -360}}},
     )
 
-    assert fake.popup.screen_context_value.text() == "Navigation ausgefuehrt"
+    assert fake.popup.screen_context_value.text() == "Scrollen ausgefuehrt"
     assert fake.popup.maya_value.text() == (
         "Ich habe die Seite nach unten gescrollt. Sag mir einfach, was als Naechstes dran ist."
     )
@@ -775,12 +775,27 @@ def test_stage1_backend_failure_uses_plain_user_message() -> None:
         fake,
         {
             "status": "stage1_done",
-            "response": {"executed": False, "reason": "mouse backend failed before pointer move completed"},
+            "response": {"executed": False, "action_type": "hover", "reason": "mouse backend failed before pointer move completed"},
         },
     )
 
-    assert fake.popup.screen_context_value.text() == "Navigation nicht ausgefuehrt"
-    assert fake.popup.maya_value.text() == "Die Navigation hat nicht geklappt. Ich melde sie nicht als erledigt."
+    assert fake.popup.screen_context_value.text() == "Mauszeiger nicht bewegt"
+    assert fake.popup.maya_value.text() == "Ich konnte den Mauszeiger nicht zum Ziel bewegen. Ich melde es nicht als erledigt."
+
+
+def test_stage1_scroll_backend_failure_uses_scroll_user_message() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "stage1_done",
+            "response": {"executed": False, "action_type": "scroll", "reason": "mouse backend failed before scroll completed"},
+        },
+    )
+
+    assert fake.popup.screen_context_value.text() == "Scrollen nicht ausgefuehrt"
+    assert fake.popup.maya_value.text() == "Ich konnte die Seite nicht scrollen. Ich melde es nicht als erledigt."
 
 
 def test_stage1_verification_failure_uses_plain_user_message() -> None:
@@ -790,12 +805,12 @@ def test_stage1_verification_failure_uses_plain_user_message() -> None:
         fake,
         {
             "status": "stage1_done",
-            "response": {"executed": False, "reason": "pointer verification failed after move"},
+            "response": {"executed": False, "action_type": "move", "reason": "pointer verification failed after move"},
         },
     )
 
-    assert fake.popup.screen_context_value.text() == "Navigation nicht ausgefuehrt"
-    assert fake.popup.maya_value.text() == "Ich bin nicht sicher, ob die Navigation angekommen ist. Ich melde sie nicht als erledigt."
+    assert fake.popup.screen_context_value.text() == "Mauszeiger nicht bewegt"
+    assert fake.popup.maya_value.text() == "Ich bin nicht sicher, ob der Mauszeiger am Ziel angekommen ist. Ich melde es nicht als erledigt."
 
 
 def test_stage1_unverified_completion_is_not_reported_as_done() -> None:
@@ -807,14 +822,15 @@ def test_stage1_unverified_completion_is_not_reported_as_done() -> None:
             "status": "stage1_done",
             "response": {
                 "executed": True,
+                "action_type": "hover",
                 "completion_verified": False,
                 "reason": "pointer verification failed after move",
             },
         },
     )
 
-    assert fake.popup.screen_context_value.text() == "Navigation nicht ausgefuehrt"
-    assert fake.popup.maya_value.text() == "Ich bin nicht sicher, ob die Navigation angekommen ist. Ich melde sie nicht als erledigt."
+    assert fake.popup.screen_context_value.text() == "Mauszeiger nicht bewegt"
+    assert fake.popup.maya_value.text() == "Ich bin nicht sicher, ob der Mauszeiger am Ziel angekommen ist. Ich melde es nicht als erledigt."
 
 
 def test_stage2_unverified_completion_is_not_reported_as_done() -> None:

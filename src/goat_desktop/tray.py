@@ -253,10 +253,13 @@ def _friendly_action_failure_message(response: dict, *, stage: str) -> str:
         if "approval" in lowered or "preview" in lowered or "dry_run" in lowered:
             return "Bitte pruefe die Eingabe erst im GOAT-Fenster."
         return "Ich habe nichts eingetippt. Bitte pruefe Feld und Text erneut."
+    action_type = str(response.get("action_type") or "").strip().lower()
     if "backend failed" in lowered:
-        return "Die Navigation hat nicht geklappt. Ich melde sie nicht als erledigt."
+        if action_type == "scroll":
+            return "Ich konnte die Seite nicht scrollen. Ich melde es nicht als erledigt."
+        return "Ich konnte den Mauszeiger nicht zum Ziel bewegen. Ich melde es nicht als erledigt."
     if "verification failed" in lowered:
-        return "Ich bin nicht sicher, ob die Navigation angekommen ist. Ich melde sie nicht als erledigt."
+        return "Ich bin nicht sicher, ob der Mauszeiger am Ziel angekommen ist. Ich melde es nicht als erledigt."
     if "approval" in lowered or "preview" in lowered or "dry_run" in lowered:
         return "Bitte gib die Navigation erst im GOAT-Fenster frei."
     return reason or "Bitte pruefe das Ziel erneut."
@@ -283,6 +286,22 @@ def _friendly_stage1_success_message(response: dict) -> str:
         direction = "nach unten" if amount < 0 else "nach oben"
         return f"Ich habe die Seite {direction} gescrollt. Sag mir einfach, was als Naechstes dran ist."
     return "Ich habe den Mauszeiger zum Ziel bewegt. Du kannst jetzt weitermachen oder mir den naechsten Schritt sagen."
+
+
+def _friendly_stage1_success_title(response: dict) -> str:
+    action_type = str(response.get("action_type") or "").strip().lower()
+    if action_type == "scroll":
+        return "Scrollen ausgefuehrt"
+    return "Mauszeiger bewegt"
+
+
+def _friendly_stage1_failure_title(response: dict) -> str:
+    action_type = str(response.get("action_type") or "").strip().lower()
+    if action_type == "scroll":
+        return "Scrollen nicht ausgefuehrt"
+    if action_type in {"hover", "move"}:
+        return "Mauszeiger nicht bewegt"
+    return "Navigation nicht ausgefuehrt"
 
 
 def _friendly_stage2_success_message(response: dict) -> str:
@@ -1209,7 +1228,7 @@ class GoatTrayApp:
                     self.popup.screen_context_value.setText("Eingabe ausgefuehrt")
                     self.popup.maya_value.setText(_friendly_stage2_success_message(response))
                 else:
-                    self.popup.screen_context_value.setText("Navigation ausgefuehrt")
+                    self.popup.screen_context_value.setText(_friendly_stage1_success_title(response))
                     self.popup.maya_value.setText(_friendly_stage1_success_message(response))
                 self.pending_builder_cue = None
                 self.pending_stage1_action = None
@@ -1219,7 +1238,9 @@ class GoatTrayApp:
                 _set_review_status(self.popup)
             else:
                 self.popup.screen_context_value.setText(
-                    "Eingabe nicht ausgefuehrt" if payload.get("status") == "stage2_done" else "Navigation nicht ausgefuehrt"
+                    "Eingabe nicht ausgefuehrt"
+                    if payload.get("status") == "stage2_done"
+                    else _friendly_stage1_failure_title(response)
                 )
                 self.popup.maya_value.setText(_friendly_action_failure_message(response, stage=str(payload.get("status") or "")))
             self.popup.cue_approve.setText("Pruefen")
