@@ -52,6 +52,7 @@ class FakeTray:
         self.pending_stage1_action = None
         self.pending_stage2_action = None
         self.pending_stage3_action = None
+        self.pending_stage4_action = None
         self.shown = False
 
     def show_popup(self) -> None:
@@ -441,6 +442,91 @@ def test_stage2_preview_with_too_long_text_disables_execute() -> None:
 
     assert fake.popup.maya_value.text() == "Der Text ist zu lang. Ich tippe aktuell hoechstens 120 Zeichen automatisch."
     assert fake.popup.cue_approve.text() == "Zu lang"
+    assert fake.popup.cue_approve.enabled is False
+
+
+def test_sensitive_type_cue_is_locked_before_stage2() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {
+            "action_type": "type",
+            "label": "Passwortfeld",
+            "text": "secret",
+            "safe_text_context": True,
+            "bbox": [10, 20, 110, 80],
+        },
+    )
+
+    assert fake.pending_stage1_action is None
+    assert fake.pending_stage2_action is None
+    assert fake.pending_stage3_action is None
+    assert fake.pending_stage4_action == {
+        "action_type": "type",
+        "label": "Passwortfeld",
+        "context": {},
+    }
+    assert fake.popup.target_value.text() == "Zielvorschlag: Passwortfeld"
+    assert fake.popup.screen_context_value.text() == "Schritt 1: Ziel pruefen"
+    assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
+    assert fake.popup.cue_approve.text() == "Pruefen"
+    assert fake.popup.cue_approve.enabled is True
+
+
+def test_accepted_sensitive_type_cue_turns_into_locked_popup() -> None:
+    fake = FakeTray()
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {
+            "action_type": "type",
+            "label": "Passwortfeld",
+            "text": "secret",
+            "safe_text_context": True,
+            "bbox": [10, 20, 110, 80],
+        },
+    )
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "ok",
+            "response": {
+                "safety_state": "accept",
+                "broker_decision": {"status": "accept", "final_bbox": [10, 20, 110, 80]},
+            },
+        },
+    )
+
+    assert fake.pending_stage4_action["broker_decision"] == {"status": "accept", "final_bbox": [10, 20, 110, 80]}
+    assert fake.popup.screen_context_value.text() == "Schritt 2: Bitte selbst erledigen"
+    assert fake.popup.review_status_value.text() == "Gesperrt - selbst erledigen"
+    assert fake.popup.review_status_value.isHidden() is False
+    assert fake.popup.maya_value.text() == (
+        "GOAT fuehrt das nicht aus: Text in Passwortfeld eingeben. "
+        "Bitte erledige sensible Eingaben selbst im Programm."
+    )
+    assert fake.popup.cue_approve.text() == "Verstanden"
+    assert fake.popup.cue_approve.enabled is True
+
+
+def test_sensitive_type_ack_closes_without_execution() -> None:
+    fake = FakeTray()
+    fake.pending_builder_cue = {"label": "Passwortfeld", "bbox": [10, 20, 110, 80]}
+    fake.pending_stage4_action = {
+        "action_type": "type",
+        "label": "Passwortfeld",
+        "broker_decision": {"status": "accept", "final_bbox": [10, 20, 110, 80]},
+    }
+    fake.popup.review_status_value.setVisible(True)
+
+    GoatTrayApp.approve_pending_cue(fake)
+
+    assert fake.pending_builder_cue is None
+    assert fake.pending_stage4_action is None
+    assert fake.popup.screen_context_value.text() == "Sperre geschlossen"
+    assert fake.popup.maya_value.text() == "Ich habe nichts ausgefuehrt. Bitte erledige sensible Eingaben selbst im Programm."
+    assert fake.popup.review_status_value.isHidden() is True
     assert fake.popup.cue_approve.enabled is False
 
 

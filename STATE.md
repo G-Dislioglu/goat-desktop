@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_sensitive_popup_lock_2026_05_28:
+"Sensible Type-Cues wie Passwortfelder werden im Tray jetzt vor Stage-2 erkannt und als eigener gesperrter Pfad behandelt. Das Popup zeigt `Gesperrt - selbst erledigen`, Button `Verstanden`, keine Ausfuehrfreigabe und keinen Stage-3-Review-Schein. Stage-4-Previews spiegeln den sensiblen Eingabetext nicht mehr im Popup oder actionText. Zieltests gruen: Tray/Action-Preview-Subset mit 56 Tests."
+
 stage2_invalid_text_bridge_effects_2026_05_28:
 "Stage-2 Bridge-Regression fuer ungueltige Texte ergaenzt: Mehrzeilige und zu lange Texte bleiben selbst bei `dry_run=false`, `user_approved=true` und `safe_text_context=true` blockiert, melden `completion_verified=false` und setzen keine Desktop-, Maus- oder Tastatureffekte. Fake-Backend wird dabei nicht aufgerufen."
 

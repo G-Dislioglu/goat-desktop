@@ -29,7 +29,8 @@ def build_action_preview(
     )
     target = _target_name(label)
     action_kind = _action_kind(action_type)
-    action_text = _plain_action(action_type, target, text, preview_context)
+    preview_text = "" if gate.stage == 4 else text
+    action_text = _plain_action(action_type, target, preview_text, preview_context)
     review_guidance = _stage3_review_guidance(f"{action_type} {target}".strip().lower(), gate.stage, gate.status)
     return {
         "ok": gate.status not in {"stop", "locked"},
