@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_redaction_policy_tests_2026_05_28:
+"Direkte Unit-Tests fuer die zentrale Redaction-Policy ergaenzt. Abgesichert sind stabile Normalnutzer-Labels (`sensibles Feld`, `sensibles Ziel`), Nicht-Mutation der Quelldaten, Text-/Label-/Classification-Redaction und rekursive Kontext-Redaction in verschachtelter Broker-Evidence. Zieltests gruen: Redaction-Policy plus Contract mit 6 Tests."
+
 stage4_redaction_contract_2026_05_28:
 "Zentraler Stage-4-Redaction-Contract ergaenzt. Der Test prueft mit denselben Rohwerten (`label`, `text`, `context`) Action-Gate, Stage-2-Response, lokale Audit-Events, `/builder-cue` Response und Popup-Payload und garantiert, dass rohe Secret-Werte dort nicht auftauchen. Zieltest gruen: `tests/test_stage4_redaction_contract.py` mit 1 Test."
 
