@@ -404,11 +404,10 @@ def test_accepted_stage3_cue_turns_into_review_only_popup() -> None:
     assert fake.pending_stage1_action is None
     assert fake.pending_stage2_action is None
     assert fake.pending_stage3_action["broker_decision"] == {"status": "accept", "final_bbox": [10, 20, 110, 80]}
-    assert fake.popup.screen_context_value.text() == "Schritt 2: Wichtige Aktion braucht Freigabe"
+    assert fake.popup.screen_context_value.text() == "Schritt 2: Nur Review - keine Ausfuehrung"
     assert fake.popup.maya_value.text() == (
         "GOAT will etwas ueber Senden Button senden oder teilen. Das kann Folgen haben und braucht deine klare Freigabe. "
-        "Pruefe Empfaenger, Inhalt und Sichtbarkeit selbst, bevor du im Programm sendest. "
-        "GOAT fuehrt wichtige Aktionen hier noch nicht aus."
+        "Pruefe Empfaenger, Inhalt und Sichtbarkeit selbst, bevor du im Programm sendest."
     )
     assert fake.popup.cue_approve.text() == "Verstanden"
     assert fake.popup.cue_approve.enabled is True
@@ -431,11 +430,10 @@ def test_accepted_stage3_delete_cue_uses_specific_review_copy() -> None:
 
     assert fake.pending_stage1_action is None
     assert fake.pending_stage2_action is None
-    assert fake.popup.screen_context_value.text() == "Schritt 2: Wichtige Aktion braucht Freigabe"
+    assert fake.popup.screen_context_value.text() == "Schritt 2: Nur Review - keine Ausfuehrung"
     assert fake.popup.maya_value.text() == (
         "GOAT will Loeschen oder Abbrechen ueber Loeschen ausloesen. Das kann Folgen haben und braucht deine klare Freigabe. "
-        "Pruefe selbst, ob du das wirklich entfernen, abbrechen oder beenden willst. "
-        "GOAT fuehrt wichtige Aktionen hier noch nicht aus."
+        "Pruefe selbst, ob du das wirklich entfernen, abbrechen oder beenden willst."
     )
     assert fake.popup.cue_approve.text() == "Verstanden"
     assert fake.popup.cue_approve.enabled is True

@@ -154,6 +154,11 @@ def _execution_step_title(preview: dict) -> str:
     return f"Schritt 2: {title}"
 
 
+def _stage3_review_step_title(preview: dict) -> str:
+    status = str(preview.get("reviewStatus") or "Nur Review - keine Ausfuehrung")
+    return f"Schritt 2: {status}"
+
+
 def _stage2_preview_message(stage2_action: dict, preview: dict) -> str:
     if not stage2_action.get("safe_text_context"):
         return "Ich tippe hier noch nicht. Sag mir genauer, welches Feld das ist, oder zeig es deutlicher."
@@ -167,8 +172,9 @@ def _stage1_preview_message(preview: dict) -> str:
 
 
 def _stage3_review_message(preview: dict) -> str:
-    message = str(preview.get("message") or "Diese Aktion braucht Freigabe.")
-    return f"{message} GOAT fuehrt wichtige Aktionen hier noch nicht aus."
+    action_text = str(preview.get("actionText") or "eine wichtige Aktion ausloesen")
+    guidance = str(preview.get("reviewGuidance") or "Pruefe die Folgen selbst und fuehre die Aktion nur aus, wenn du sicher bist.")
+    return f"GOAT will {action_text}. Das kann Folgen haben und braucht deine klare Freigabe. {guidance}"
 
 
 def _friendly_action_failure_message(response: dict, *, stage: str) -> str:
@@ -1161,7 +1167,7 @@ class GoatTrayApp:
                 dry_run=True,
                 context={"consequence_summary": str(self.pending_stage3_action.get("consequence_summary") or "")},
             )
-            self.popup.screen_context_value.setText(_execution_step_title(preview))
+            self.popup.screen_context_value.setText(_stage3_review_step_title(preview))
             self.popup.maya_value.setText(_stage3_review_message(preview))
             self.popup.cue_approve.setText("Verstanden")
             self.popup.cue_approve.setEnabled(bool(preview.get("ok")))

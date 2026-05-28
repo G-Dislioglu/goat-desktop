@@ -39,6 +39,7 @@ def build_action_preview(
         "message": _message_for_gate(gate.stage, gate.status, action_text, review_guidance),
         "actionText": action_text,
         "reviewGuidance": review_guidance,
+        "reviewStatus": _review_status_for_gate(gate.stage, gate.status),
         "primaryButton": _primary_button_for_gate(gate.stage, gate.status, action_kind),
         "secondaryButton": "Abbrechen",
         "requiresUserApproval": gate.requires_user_approval,
@@ -135,6 +136,12 @@ def _title_for_gate(stage: int, status: str) -> str:
     if stage == 2:
         return "Freigabe fuer Eingabe"
     return "Wichtige Aktion braucht Freigabe"
+
+
+def _review_status_for_gate(stage: int, status: str) -> str:
+    if stage == 3 and status not in {"locked", "stop"}:
+        return "Nur Review - keine Ausfuehrung"
+    return ""
 
 
 def _message_for_gate(stage: int, status: str, action_text: str, review_guidance: str = "") -> str:

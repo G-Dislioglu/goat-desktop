@@ -57,6 +57,7 @@ def test_stage3_preview_requires_clear_approval() -> None:
         "Pruefe Betrag, Anbieter und Verpflichtung selbst, bevor du im Programm bestaetigst."
     )
     assert preview["reviewGuidance"] == "Pruefe Betrag, Anbieter und Verpflichtung selbst, bevor du im Programm bestaetigst."
+    assert preview["reviewStatus"] == "Nur Review - keine Ausfuehrung"
     assert preview["requiresUserApproval"] is True
 
 
@@ -113,6 +114,7 @@ def test_stage3_preview_names_consequential_action_type(
     assert preview["title"] == "Wichtige Aktion braucht Freigabe"
     assert preview["actionText"] == expected_action_text
     assert preview["reviewGuidance"] == expected_guidance
+    assert preview["reviewStatus"] == "Nur Review - keine Ausfuehrung"
     assert preview["message"] == (
         f"GOAT will {expected_action_text}. Das kann Folgen haben und braucht deine klare Freigabe. {expected_guidance}"
     )
