@@ -97,6 +97,7 @@ class Stage2ExecutionRequest:
     user_approved: bool = False
     dry_run: bool = True
     safe_text_context: bool = False
+    context: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -124,6 +125,7 @@ def execute_stage2_text_input(
         broker_decision=request.broker_decision,
         user_approved=request.user_approved,
         dry_run=request.dry_run,
+        context=request.context or {},
     )
     gate_decision = evaluate_action_gate(gate_request)
     preview = _preview(request, include_text=gate_decision.stage != int(ActionStage.TECHNICAL_LOCK))

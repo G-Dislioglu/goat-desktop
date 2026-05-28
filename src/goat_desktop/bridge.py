@@ -230,6 +230,7 @@ def create_app(
             user_approved=user_approved,
             dry_run=requested_dry_run,
             safe_text_context=safe_text_context,
+            context=_action_preview_context(payload),
         )
         result = execute_stage2_text_input(request).to_dict()
         result["effects"] = _stage2_effects(result)

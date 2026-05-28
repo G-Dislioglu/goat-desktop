@@ -250,6 +250,36 @@ def test_stage4_is_blocked(monkeypatch, tmp_path: Path) -> None:
     assert "ultra-private-value" not in json.dumps(events)
 
 
+def test_stage4_context_is_blocked_and_redacted(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
+    result = execute_stage2_text_input(
+        Stage2ExecutionRequest(
+            "type",
+            "Login Feld",
+            ACCEPTED,
+            "context-private-value",
+            user_approved=True,
+            dry_run=False,
+            safe_text_context=True,
+            context={"input_type": "password", "control_type": "Edit"},
+        ),
+        backend=RecordingTextBackend(),
+    )
+
+    assert result.status == "blocked"
+    assert result.stage == 4
+    assert result.executed is False
+    assert result.preview["text"] == ""
+    assert result.preview["text_redacted"] is True
+
+    events = read_audit_events(tmp_path / "audit.jsonl")
+    stage2_event = next(event for event in events if event["event_type"] == "stage2_execution")
+    assert stage2_event["payload"]["request"]["text"] == ""
+    assert stage2_event["payload"]["request"]["text_redacted"] is True
+    assert stage2_event["payload"]["request"]["context"] == {"input_type": "password", "control_type": "Edit"}
+    assert "context-private-value" not in json.dumps(events)
+
+
 def test_multiline_text_is_blocked(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
     result = execute_stage2_text_input(

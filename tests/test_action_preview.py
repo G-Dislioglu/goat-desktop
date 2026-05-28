@@ -373,6 +373,50 @@ def test_bridge_stage2_sensitive_text_is_locked_without_echoing_secret(monkeypat
     assert calls == []
 
 
+def test_bridge_stage2_sensitive_context_is_locked_without_echoing_secret(monkeypatch) -> None:
+    calls: list[str] = []
+
+    class FakeTextInputBackend:
+        def move_to(self, _x: int, _y: int) -> None:
+            calls.append("move_to")
+
+        def click_left(self) -> None:
+            calls.append("click_left")
+
+        def type_text(self, _text: str) -> None:
+            calls.append("type_text")
+
+    monkeypatch.setattr(stage2_executor, "Win32TextInputBackend", FakeTextInputBackend)
+    endpoint = _endpoint_for(create_app(), "/action/stage2/text")
+
+    body = endpoint(
+        {
+            "action_type": "type",
+            "label": "Login Feld",
+            "text": "context-secret-value",
+            "broker_decision": ACCEPTED,
+            "safe_text_context": True,
+            "dry_run": False,
+            "user_approved": True,
+            "context": {"automation_id": "api-token-input"},
+        }
+    )
+
+    assert body["status"] == "blocked"
+    assert body["stage"] == 4
+    assert body["executed"] is False
+    assert body["completion_verified"] is False
+    assert body["preview"]["text"] == ""
+    assert body["preview"]["text_length"] == 0
+    assert body["preview"]["text_redacted"] is True
+    assert body["gate_decision"]["status"] == "locked"
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert body["effects"]["mouseActionsExecuted"] is False
+    assert body["effects"]["keyboardActionsExecuted"] is False
+    assert "context-secret-value" not in json.dumps(body)
+    assert calls == []
+
+
 def test_bridge_stage3_review_never_reports_real_execution() -> None:
     endpoint = _endpoint_for(create_app(), "/action/stage3/review")
 
