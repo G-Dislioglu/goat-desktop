@@ -474,6 +474,59 @@ def test_sensitive_type_cue_is_locked_before_stage2() -> None:
     assert fake.popup.cue_approve.enabled is True
 
 
+def test_sensitive_context_cue_is_locked_before_stage2() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {
+            "action_type": "type",
+            "label": "Login Feld",
+            "text": "private",
+            "safe_text_context": True,
+            "bbox": [10, 20, 110, 80],
+            "context": {"input_type": "password", "control_type": "Edit"},
+        },
+    )
+
+    assert fake.pending_stage1_action is None
+    assert fake.pending_stage2_action is None
+    assert fake.pending_stage3_action is None
+    assert fake.pending_stage4_action == {
+        "action_type": "type",
+        "label": "Login Feld",
+        "context": {"input_type": "password", "control_type": "Edit"},
+    }
+    assert fake.popup.target_value.text() == "Zielvorschlag: Login Feld"
+    assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
+    assert fake.popup.cue_approve.text() == "Pruefen"
+    assert fake.popup.cue_approve.enabled is True
+
+
+def test_sensitive_aria_context_cue_is_locked_before_stage2() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {
+            "action_type": "type",
+            "label": "Code Feld",
+            "text": "123456",
+            "safe_text_context": True,
+            "bbox": [10, 20, 110, 80],
+            "context": {"aria_label": "2FA code"},
+        },
+    )
+
+    assert fake.pending_stage2_action is None
+    assert fake.pending_stage4_action == {
+        "action_type": "type",
+        "label": "Code Feld",
+        "context": {"aria_label": "2FA code"},
+    }
+    assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
+
+
 def test_accepted_sensitive_type_cue_turns_into_locked_popup() -> None:
     fake = FakeTray()
     GoatTrayApp.receive_builder_cue(

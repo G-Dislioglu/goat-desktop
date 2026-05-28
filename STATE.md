@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_context_popup_lock_2026_05_28:
+"Stage-4 Popup-Lock ist jetzt explizit gegen sensible Kontext-/UIA-Metadaten abgesichert. Builder-Cues mit harmlos wirkendem Label, aber `context.input_type=password` oder `context.aria_label=2FA code`, werden vor Stage-2 als gesperrter Pfad behandelt: keine pending Stage-2-Ausfuehrung, sichtbarer Hinweis `Das wirkt sensibel. GOAT wird das nicht ausfuehren.` Zieltests gruen: Tray/Action-Classification-Subset mit 54 Tests."
+
 stage4_sensitive_stage2_redaction_2026_05_28:
 "Stage-2 Executor/Bridge redigiert sensible Texte bei Stage-4-Lock jetzt auch in Preview und Audit: `preview.text` ist leer, `text_length=0`, `text_redacted=true`, und lokale Stage-2-Audit-Requests enthalten den eingegebenen sensiblen Wert nicht. Bridge-Regression prueft, dass gesperrte sensible Texte keine Maus-, Tastatur- oder Desktop-Effekte ausloesen und nicht im Response-JSON auftauchen. Zieltests gruen: Action-Preview/Stage2/Tray-Subset mit 69 Tests."
 
