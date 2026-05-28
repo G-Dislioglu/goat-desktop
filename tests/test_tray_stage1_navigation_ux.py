@@ -372,6 +372,30 @@ def test_stage2_preview_without_safe_context_disables_execute() -> None:
     assert fake.popup.cue_approve.enabled is False
 
 
+def test_stage2_preview_without_text_disables_execute() -> None:
+    fake = FakeTray()
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {"action_type": "type", "label": "Suchfeld", "text": "  ", "safe_text_context": True, "bbox": [10, 20, 110, 80]},
+    )
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "ok",
+            "response": {
+                "safety_state": "accept",
+                "broker_decision": {"status": "accept", "final_bbox": [10, 20, 110, 80]},
+            },
+        },
+    )
+
+    assert fake.popup.maya_value.text() == "Ich tippe hier noch nicht. Mir fehlt noch der Text, den ich eintragen soll."
+    assert fake.popup.cue_approve.text() == "Kein Text"
+    assert fake.popup.cue_approve.enabled is False
+    assert fake.popup.review_status_value.visible is False
+
+
 def test_builder_stage3_cue_shows_review_before_any_execution() -> None:
     fake = FakeTray()
 

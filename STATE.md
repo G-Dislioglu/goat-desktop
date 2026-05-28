@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage2_empty_text_popup_block_2026_05_28:
+"Stage-2 Texteingabe blockiert leere Eingaben jetzt bereits im Popup-Hauptpfad. Wenn ein Builder-Cue zwar ein sicheres Eingabefeld meldet, aber keinen nicht-leeren Text liefert, zeigt GOAT `Ich tippe hier noch nicht. Mir fehlt noch der Text, den ich eintragen soll.`, der Button heisst `Kein Text` und bleibt deaktiviert. Dadurch entsteht keine scheinbare Ausfuehrfreigabe fuer leere Texte; Executor-Guards bleiben zusaetzlich bestehen. Zieltests gruen: Stage-2 Popup/Executor-Subset mit 41 Tests."
+
 text_chat_auto_screen_context_2026_05_25:
 "GOAT Desktop Textchat nutzt Bildschirmkontext jetzt automatisch fuer sichtbare Ziel-/Navigationsfragen wie `wo ist ...`, `siehst du ...`, `zeig mir ...` oder `navigier ...`. Der Hauptworkflow braucht dafuer keinen manuellen `Bildschirm pruefen`-Button: GOAT captured den sichtbaren Desktop in einem temporaeren Ordner, fragt Builder Vision nach kurzer semantischer Zusammenfassung, loescht den Screenshot automatisch und gibt den Kontext an Maya Chat weiter. Vision bleibt read-only; es werden keine Klicks, Tastatur- oder Desktop-Aktionen ausgefuehrt. Tests gruen: compileall, fokussiertes Screen/Chat/Vision-Subset und volle Suite mit 114 Tests."
 

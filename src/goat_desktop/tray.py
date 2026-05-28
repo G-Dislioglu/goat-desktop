@@ -162,8 +162,14 @@ def _stage3_review_step_title(preview: dict) -> str:
 def _stage2_preview_message(stage2_action: dict, preview: dict) -> str:
     if not stage2_action.get("safe_text_context"):
         return "Ich tippe hier noch nicht. Sag mir genauer, welches Feld das ist, oder zeig es deutlicher."
+    if not _stage2_has_text(stage2_action):
+        return "Ich tippe hier noch nicht. Mir fehlt noch der Text, den ich eintragen soll."
     message = str(preview.get("message") or "Bitte pruefe die Eingabe.")
     return f"{message} Klicke nur auf Ausfuehren, wenn Feld und Text stimmen."
+
+
+def _stage2_has_text(stage2_action: dict) -> bool:
+    return bool(str(stage2_action.get("text") or "").strip())
 
 
 def _stage1_preview_message(preview: dict) -> str:
@@ -1203,8 +1209,15 @@ class GoatTrayApp:
             self.popup.maya_value.setText(_stage2_preview_message(self.pending_stage2_action, preview))
             _set_review_status(self.popup)
             safe_text_context = bool(self.pending_stage2_action.get("safe_text_context"))
-            self.popup.cue_approve.setText("Ausfuehren" if safe_text_context else "Nicht sicher")
-            self.popup.cue_approve.setEnabled(bool(preview.get("ok")) and safe_text_context)
+            has_text = _stage2_has_text(self.pending_stage2_action)
+            if not safe_text_context:
+                approve_label = "Nicht sicher"
+            elif not has_text:
+                approve_label = "Kein Text"
+            else:
+                approve_label = "Ausfuehren"
+            self.popup.cue_approve.setText(approve_label)
+            self.popup.cue_approve.setEnabled(bool(preview.get("ok")) and safe_text_context and has_text)
             self.popup.cue_reject.setEnabled(True)
             return
         self.pending_stage1_action["broker_decision"] = broker_decision
