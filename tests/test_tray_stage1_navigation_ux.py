@@ -6,12 +6,19 @@ from goat_desktop.tray import GoatTrayApp, _speech_chip_text, _status_chip_text
 class FakeLabel:
     def __init__(self, text: str = "") -> None:
         self._text = text
+        self.visible = True
 
     def setText(self, text: str) -> None:
         self._text = text
 
     def text(self) -> str:
         return self._text
+
+    def setVisible(self, visible: bool) -> None:
+        self.visible = visible
+
+    def isHidden(self) -> bool:
+        return not self.visible
 
 
 class FakeButton(FakeLabel):
@@ -30,6 +37,8 @@ class FakePopup:
         self.audio_value = FakeLabel()
         self.audio_chip = FakeLabel()
         self.target_value = FakeLabel()
+        self.review_status_value = FakeLabel()
+        self.review_status_value.setVisible(False)
         self.screen_context_value = FakeLabel()
         self.maya_value = FakeLabel()
         self.cue_approve = FakeButton("Pruefen")
@@ -64,6 +73,7 @@ def test_builder_stage1_cue_shows_target_check_before_navigation() -> None:
     assert fake.pending_stage1_action == {"action_type": "hover", "label": "Senden Button", "scroll_amount": -360}
     assert fake.popup.target_value.text() == "Zielvorschlag: Senden Button"
     assert fake.popup.screen_context_value.text() == "Schritt 1: Ziel pruefen"
+    assert fake.popup.review_status_value.isHidden() is True
     assert fake.popup.maya_value.text() == "Danach kannst du GOAT navigieren lassen."
     assert fake.popup.cue_approve.text() == "Pruefen"
     assert fake.popup.cue_approve.enabled is True
@@ -119,6 +129,7 @@ def test_accepted_stage1_cue_turns_into_navigation_preview() -> None:
 
     assert fake.pending_stage1_action["broker_decision"] == {"status": "accept", "final_bbox": [10, 20, 110, 80]}
     assert fake.popup.screen_context_value.text() == "Schritt 2: GOAT kann dich navigieren"
+    assert fake.popup.review_status_value.isHidden() is True
     assert fake.popup.maya_value.text() == (
         "GOAT will den Mauszeiger auf Senden Button bewegen. Dabei wird nichts geklickt und nichts getippt. "
         "Klicke nur auf Ausfuehren, wenn das markierte Ziel stimmt."
@@ -145,6 +156,7 @@ def test_rejected_builder_cue_uses_plain_user_message() -> None:
     assert fake.pending_stage2_action is None
     assert fake.popup.target_value.text() == "Kein Ziel markiert"
     assert fake.popup.screen_context_value.text() == "Ziel nicht sicher erkannt"
+    assert fake.popup.review_status_value.isHidden() is True
     assert fake.popup.maya_value.text() == (
         "Ich konnte das Ziel nicht sicher zuordnen. Bitte zeig mir nochmal, welches Ziel du meinst."
     )
@@ -304,6 +316,7 @@ def test_accepted_stage2_cue_turns_into_input_preview() -> None:
 
     assert fake.pending_stage2_action["broker_decision"] == {"status": "accept", "final_bbox": [10, 20, 110, 80]}
     assert fake.popup.screen_context_value.text() == "Schritt 2: Freigabe fuer Eingabe"
+    assert fake.popup.review_status_value.isHidden() is True
     assert fake.popup.maya_value.text() == (
         'GOAT will Text in Suchfeld eingeben: "StepStack". Bitte pruefe die Eingabe vor dem Ausfuehren. '
         "Klicke nur auf Ausfuehren, wenn Feld und Text stimmen."
@@ -405,6 +418,8 @@ def test_accepted_stage3_cue_turns_into_review_only_popup() -> None:
     assert fake.pending_stage2_action is None
     assert fake.pending_stage3_action["broker_decision"] == {"status": "accept", "final_bbox": [10, 20, 110, 80]}
     assert fake.popup.screen_context_value.text() == "Schritt 2: Nur Review - keine Ausfuehrung"
+    assert fake.popup.review_status_value.text() == "Nur Review - keine Ausfuehrung"
+    assert fake.popup.review_status_value.isHidden() is False
     assert fake.popup.maya_value.text() == (
         "GOAT will etwas ueber Senden Button senden oder teilen. Das kann Folgen haben und braucht deine klare Freigabe. "
         "Pruefe Empfaenger, Inhalt und Sichtbarkeit selbst, bevor du im Programm sendest."
@@ -431,6 +446,8 @@ def test_accepted_stage3_delete_cue_uses_specific_review_copy() -> None:
     assert fake.pending_stage1_action is None
     assert fake.pending_stage2_action is None
     assert fake.popup.screen_context_value.text() == "Schritt 2: Nur Review - keine Ausfuehrung"
+    assert fake.popup.review_status_value.text() == "Nur Review - keine Ausfuehrung"
+    assert fake.popup.review_status_value.isHidden() is False
     assert fake.popup.maya_value.text() == (
         "GOAT will Loeschen oder Abbrechen ueber Loeschen ausloesen. Das kann Folgen haben und braucht deine klare Freigabe. "
         "Pruefe selbst, ob du das wirklich entfernen, abbrechen oder beenden willst."
@@ -455,6 +472,7 @@ def test_stage3_review_acknowledge_does_not_start_stage1_or_stage2_execution() -
     assert fake.pending_stage2_action is None
     assert fake.pending_stage3_action is None
     assert fake.popup.screen_context_value.text() == "Nicht ausgefuehrt"
+    assert fake.popup.review_status_value.isHidden() is True
     assert fake.popup.maya_value.text() == "Ich fuehre wichtige Aktionen noch nicht aus. Bitte erledige das selbst."
     assert fake.popup.cue_approve.text() == "Pruefen"
     assert fake.popup.cue_approve.enabled is False
@@ -610,4 +628,5 @@ def test_reject_pending_cue_resets_navigation_state() -> None:
     assert fake.pending_stage2_action is None
     assert fake.pending_stage3_action is None
     assert fake.popup.screen_context_value.text() == "Abgebrochen"
+    assert fake.popup.review_status_value.isHidden() is True
     assert fake.popup.cue_approve.text() == "Pruefen"

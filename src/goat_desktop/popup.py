@@ -104,6 +104,8 @@ class GoatPopup(QWidget):
         self.screen_context_value = QLabel("Noch keine Frage")
         self.maya_value = QLabel("Bereit. Frag mich, was ich fuer dich finden soll.")
         self.target_value = QLabel("Kein Ziel markiert")
+        self.review_status_value = QLabel("")
+        self.review_status_value.setVisible(False)
         for value_label in (
             self.screen_context_caption,
             self.maya_caption,
@@ -112,6 +114,7 @@ class GoatPopup(QWidget):
             self.screen_context_value,
             self.maya_value,
             self.target_value,
+            self.review_status_value,
         ):
             value_label.setWordWrap(True)
 
@@ -129,11 +132,13 @@ class GoatPopup(QWidget):
         output_layout.setContentsMargins(10, 8, 10, 8)
         output_layout.setSpacing(6)
         self.target_value.setObjectName("target")
+        self.review_status_value.setObjectName("reviewStatus")
         self.screen_context_caption.setObjectName("caption")
         self.maya_caption.setObjectName("caption")
         self.screen_context_value.setObjectName("output")
         self.maya_value.setObjectName("output")
         output_layout.addWidget(self.target_value)
+        output_layout.addWidget(self.review_status_value)
         output_layout.addWidget(self.screen_context_caption)
         output_layout.addWidget(self.screen_context_value)
         output_layout.addWidget(self.maya_caption)
@@ -227,6 +232,14 @@ class GoatPopup(QWidget):
                 font-weight: 600;
                 padding: 4px 6px;
             }
+            QLabel#reviewStatus {
+                color: #f2f4f8;
+                background: #332b18;
+                border: 1px solid #8a6a20;
+                border-radius: 8px;
+                padding: 6px 8px;
+                font-weight: 600;
+            }
             QLabel#caption {
                 color: #aeb7c7;
                 font-size: 11px;
@@ -291,6 +304,8 @@ class GoatPopup(QWidget):
         self.exit_livetalk.setVisible(active)
         self.video_frames_toggle.setVisible(active)
         self.target_value.setVisible(not active)
+        if active:
+            self.review_status_value.setVisible(False)
         self.chat_input.setVisible(True)
         self.chat_send.setVisible(True)
         if not active:

@@ -177,6 +177,14 @@ def _stage3_review_message(preview: dict) -> str:
     return f"GOAT will {action_text}. Das kann Folgen haben und braucht deine klare Freigabe. {guidance}"
 
 
+def _set_review_status(popup: object, text: str = "") -> None:
+    label = getattr(popup, "review_status_value", None)
+    if label is None:
+        return
+    label.setText(text)
+    label.setVisible(bool(text))
+
+
 def _friendly_action_failure_message(response: dict, *, stage: str) -> str:
     reason = str(response.get("reason") or "").strip()
     lowered = reason.lower()
@@ -1009,6 +1017,7 @@ class GoatTrayApp:
             self.pending_stage1_action = None
             self.pending_stage2_action = None
             self.pending_stage3_action = None
+            _set_review_status(self.popup)
             self.popup.target_value.setText("Kein Ziel markiert")
             self.popup.screen_context_value.setText("Ziel nicht sicher erkannt")
             self.popup.maya_value.setText(_friendly_builder_cue_failure_message(message))
@@ -1029,6 +1038,7 @@ class GoatTrayApp:
         self.pending_stage1_action = None
         self.pending_stage2_action = None
         self.pending_stage3_action = None
+        _set_review_status(self.popup)
         if _is_stage1_navigation_action(action_type):
             self.pending_stage1_action = {
                 "action_type": action_type,
@@ -1081,6 +1091,7 @@ class GoatTrayApp:
             self.pending_stage3_action = None
             self.popup.screen_context_value.setText("Nicht ausgefuehrt")
             self.popup.maya_value.setText("Ich fuehre wichtige Aktionen noch nicht aus. Bitte erledige das selbst.")
+            _set_review_status(self.popup)
             self.popup.cue_approve.setText("Pruefen")
             self.popup.cue_approve.setEnabled(False)
             self.popup.cue_reject.setEnabled(False)
@@ -1129,6 +1140,8 @@ class GoatTrayApp:
                 self.pending_builder_cue = None
                 self.pending_stage1_action = None
                 self.pending_stage2_action = None
+                self.pending_stage3_action = None
+                _set_review_status(self.popup)
             else:
                 self.popup.screen_context_value.setText(
                     "Eingabe nicht ausgefuehrt" if payload.get("status") == "stage2_done" else "Navigation nicht ausgefuehrt"
@@ -1141,6 +1154,7 @@ class GoatTrayApp:
         if payload.get("status") != "ok":
             self.popup.screen_context_value.setText("Ziel konnte nicht geprueft werden")
             self.popup.maya_value.setText(_friendly_builder_cue_failure_message(payload))
+            _set_review_status(self.popup)
             self.popup.cue_approve.setEnabled(False)
             self.popup.cue_reject.setEnabled(True)
             return
@@ -1148,12 +1162,14 @@ class GoatTrayApp:
         if response.get("safety_state") != "accept":
             self.popup.screen_context_value.setText("Ziel nicht sicher")
             self.popup.maya_value.setText(_friendly_builder_cue_failure_message(response.get("broker_decision") or response))
+            _set_review_status(self.popup)
             self.popup.cue_approve.setEnabled(False)
             self.popup.cue_reject.setEnabled(True)
             return
         if self.pending_stage1_action is None and self.pending_stage2_action is None and self.pending_stage3_action is None:
             self.popup.screen_context_value.setText("Ziel ist markiert")
             self.popup.maya_value.setText("Sag mir, was du damit tun moechtest.")
+            _set_review_status(self.popup)
             self.popup.cue_approve.setEnabled(False)
             self.popup.cue_reject.setEnabled(True)
             return
@@ -1169,6 +1185,7 @@ class GoatTrayApp:
             )
             self.popup.screen_context_value.setText(_stage3_review_step_title(preview))
             self.popup.maya_value.setText(_stage3_review_message(preview))
+            _set_review_status(self.popup, str(preview.get("reviewStatus") or "Nur Review - keine Ausfuehrung"))
             self.popup.cue_approve.setText("Verstanden")
             self.popup.cue_approve.setEnabled(bool(preview.get("ok")))
             self.popup.cue_reject.setEnabled(True)
@@ -1184,6 +1201,7 @@ class GoatTrayApp:
             )
             self.popup.screen_context_value.setText(_execution_step_title(preview))
             self.popup.maya_value.setText(_stage2_preview_message(self.pending_stage2_action, preview))
+            _set_review_status(self.popup)
             safe_text_context = bool(self.pending_stage2_action.get("safe_text_context"))
             self.popup.cue_approve.setText("Ausfuehren" if safe_text_context else "Nicht sicher")
             self.popup.cue_approve.setEnabled(bool(preview.get("ok")) and safe_text_context)
@@ -1199,6 +1217,7 @@ class GoatTrayApp:
         )
         self.popup.screen_context_value.setText(_execution_step_title(preview))
         self.popup.maya_value.setText(_stage1_preview_message(preview))
+        _set_review_status(self.popup)
         self.popup.cue_approve.setText("Ausfuehren")
         self.popup.cue_approve.setEnabled(bool(preview.get("ok")))
         self.popup.cue_reject.setEnabled(True)
@@ -1259,6 +1278,7 @@ class GoatTrayApp:
         self.pending_stage1_action = None
         self.pending_stage2_action = None
         self.pending_stage3_action = None
+        _set_review_status(self.popup)
         self.popup.target_value.setText("Kein Ziel markiert")
         self.popup.screen_context_value.setText("Abgebrochen")
         self.popup.maya_value.setText("Bereit. Sag mir, welches Ziel du meinst.")

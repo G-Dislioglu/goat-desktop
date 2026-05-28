@@ -471,3 +471,6 @@ stage3_review_guidance_copy_2026_05_28:
 
 stage3_review_status_split_2026_05_28:
 "Stage-3 Popup-Review ist visuell/textlich klarer getrennt: Action-Preview liefert `reviewStatus=Nur Review - keine Ausfuehrung`, und das Popup zeigt im Statusfeld `Schritt 2: Nur Review - keine Ausfuehrung`. Mayas Text enthaelt nur noch Aktion + Handlungsempfehlung, nicht mehr den Zusatz `GOAT fuehrt wichtige Aktionen hier noch nicht aus` im langen Absatz. Safety unveraendert: `Freigabe pruefen` in Preview, `Verstanden` im Popup, `mayExecute=false`, effects false, keine Stage-3-OS-Ausfuehrung."
+
+stage3_review_visible_chip_2026_05_28:
+"Stage-3 Review-only ist im Popup jetzt als eigene sichtbare Zeile hervorgehoben. `GoatPopup` hat `review_status_value`, standardmaessig verborgen; Stage-3-Review setzt dort `Nur Review - keine Ausfuehrung`, andere Cue-/Fehler-/Stage1-/Stage2-/Abbruchpfade raeumen die Zeile wieder weg. LiveTalk blendet die Review-Zeile ebenfalls aus. Keine Aenderung an Berechtigungen: Stage 3 bleibt review-only, kein Ausfuehren-Button, keine OS-Ausfuehrung."
