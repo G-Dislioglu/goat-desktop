@@ -54,7 +54,7 @@ Invoke-RestMethod -Uri http://127.0.0.1:8765/healthz -TimeoutSec 5
 - `STATE.md`
 - `RADAR.md`
 - `CLAUDE-CONTEXT.md`
-- `GOAT-DESKTOP-VISION.md`
+- `docs/GOAT-DESKTOP-VISION.md`
 
 ## Do Not Overwrite
 
@@ -62,7 +62,7 @@ Invoke-RestMethod -Uri http://127.0.0.1:8765/healthz -TimeoutSec 5
 - `RADAR.md`
 - `CLAUDE-CONTEXT.md`
 - `SESSION-LOG.md`
-- `GOAT-DESKTOP-VISION.md`
+- `docs/GOAT-DESKTOP-VISION.md`
 - existing run reports under `docs/`
 
 Append or add narrowly scoped files instead.

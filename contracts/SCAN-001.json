@@ -15,7 +15,7 @@
     "STATE.md",
     "RADAR.md",
     "CLAUDE-CONTEXT.md",
-    "GOAT-DESKTOP-VISION.md"
+    "docs/GOAT-DESKTOP-VISION.md"
   ],
   "excluded_context": [
     ".env*",
@@ -33,7 +33,7 @@
     "RADAR.md",
     "CLAUDE-CONTEXT.md",
     "SESSION-LOG.md",
-    "GOAT-DESKTOP-VISION.md",
+    "docs/GOAT-DESKTOP-VISION.md",
     "docs/run-*.md",
     "docs/run-*.json",
     "docs/run-*.jsonl"
