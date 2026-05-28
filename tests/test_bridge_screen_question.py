@@ -248,6 +248,59 @@ def test_builder_cue_rejects_missing_action_type_without_dispatch(monkeypatch) -
     assert emitted.payloads == []
 
 
+def test_builder_cue_rejects_invalid_scroll_amount_without_dispatch(monkeypatch) -> None:
+    emitted = FakeSignal()
+    monkeypatch.setattr(
+        bridge,
+        "get_active_window",
+        lambda: WindowInfo(hwnd=1, title="Test Window", rect=[0, 0, 300, 200], foreground=True),
+    )
+    endpoint = _endpoint_for(create_app(dispatch_builder_cue=emitted.emit), "/builder-cue")
+
+    body = endpoint(
+        {
+            "source": "test_cue",
+            "action_type": "scroll",
+            "label": "Seite",
+            "bbox": [20, 20, 120, 50],
+            "scroll_amount": "viel",
+        }
+    )
+
+    assert body["ok"] is False
+    assert body["status"] == "rejected"
+    assert "scroll_amount" in body["reason"]
+    assert body["dispatch"]["popupProposalEmitted"] is False
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert emitted.payloads == []
+
+
+def test_builder_cue_rejects_zero_scroll_amount_without_dispatch(monkeypatch) -> None:
+    emitted = FakeSignal()
+    monkeypatch.setattr(
+        bridge,
+        "get_active_window",
+        lambda: WindowInfo(hwnd=1, title="Test Window", rect=[0, 0, 300, 200], foreground=True),
+    )
+    endpoint = _endpoint_for(create_app(dispatch_builder_cue=emitted.emit), "/builder-cue")
+
+    body = endpoint(
+        {
+            "source": "test_cue",
+            "action_type": "scroll",
+            "label": "Seite",
+            "bbox": [20, 20, 120, 50],
+            "scroll_amount": 0,
+        }
+    )
+
+    assert body["ok"] is False
+    assert body["status"] == "rejected"
+    assert "scroll_amount" in body["reason"]
+    assert body["dispatch"]["popupProposalEmitted"] is False
+    assert emitted.payloads == []
+
+
 def test_builder_cue_rejects_vision_source_without_dispatch(monkeypatch) -> None:
     emitted = FakeSignal()
     monkeypatch.setattr(

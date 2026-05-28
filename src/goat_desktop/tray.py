@@ -102,6 +102,26 @@ def _is_stage2_text_action(action_type: str) -> bool:
     return any(token in normalized for token in ("type", "text", "input"))
 
 
+def _stage1_scroll_amount(message: dict) -> int:
+    value = message.get("scroll_amount")
+    if value is None or value == "":
+        return -360
+    try:
+        amount = int(float(value))
+    except (TypeError, ValueError):
+        return -360
+    return amount if amount != 0 else -360
+
+
+def _normalized_stage1_action_type(action_type: str) -> str:
+    normalized = action_type.strip().lower()
+    if "scroll" in normalized:
+        return "scroll"
+    if "move" in normalized and "hover" not in normalized:
+        return "move"
+    return "hover"
+
+
 def _pending_action_hint(
     stage1_action: dict | None,
     stage2_action: dict | None,
@@ -1119,9 +1139,9 @@ class GoatTrayApp:
             }
         elif _is_stage1_navigation_action(action_type):
             self.pending_stage1_action = {
-                "action_type": action_type,
+                "action_type": _normalized_stage1_action_type(action_type),
                 "label": label,
-                "scroll_amount": int(message.get("scroll_amount") or -360),
+                "scroll_amount": _stage1_scroll_amount(message),
             }
         elif _is_stage2_text_action(action_type):
             self.pending_stage2_action = {

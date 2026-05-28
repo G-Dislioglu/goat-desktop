@@ -349,6 +349,16 @@ def _builder_cue_contract_errors(payload: dict[str, Any]) -> list[str]:
                 errors.append("bbox values must be finite")
             elif normalized[2] <= normalized[0] or normalized[3] <= normalized[1]:
                 errors.append("bbox must have positive size")
+    if "scroll" in action_type.lower() and "scroll_amount" in payload:
+        try:
+            scroll_amount = float(payload.get("scroll_amount"))
+        except (TypeError, ValueError):
+            errors.append("scroll_amount must be numeric")
+        else:
+            if not isfinite(scroll_amount):
+                errors.append("scroll_amount must be finite")
+            elif int(scroll_amount) == 0:
+                errors.append("scroll_amount must not be zero")
     return errors
 
 

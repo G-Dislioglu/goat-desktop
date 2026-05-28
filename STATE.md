@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage1_builder_cue_input_hardening_2026_05_28:
+"Stage-1 Builder-Cue-Eingang ist robuster: `/builder-cue` weist ungueltige oder nullwertige `scroll_amount` bei Scroll-Cues ohne Popup-Dispatch ab, und das Tray normalisiert Stage-1-Aktionstypen kanonisch zu `hover`, `move` oder `scroll`. Direkte In-App-Payloads mit kaputtem Scrollwert fallen defensiv auf `-360` zurueck, statt den Popup-Pfad abzubrechen. Zieltests gruen: Bridge/Tray/Stage1/Gate-Subset mit 85 Tests."
+
 stage1_result_signals_2026_05_28:
 "Stage-1 Ergebnis- und Fehlersignale unterscheiden jetzt klarer zwischen Mauszeiger-Bewegung und Scrollen. Das Popup meldet `Mauszeiger bewegt` bzw. `Scrollen ausgefuehrt` und nutzt passende Fehlertexte fuer Pointer-/Scroll-Fehler. `move` ist jetzt durchgaengig Stage-1-Navigation, bleibt im Executor-Result als `move` erhalten und wird in Bridge-Effects als Mausnavigation gezaehlt. Zieltests gruen: Action-Gate/Stage1-Executor/Action-Preview/Tray-Stage1-UX mit 89 Tests."
 

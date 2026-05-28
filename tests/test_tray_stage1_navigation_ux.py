@@ -82,6 +82,24 @@ def test_builder_stage1_cue_shows_target_check_before_navigation() -> None:
     assert fake.shown is True
 
 
+def test_stage1_cue_normalizes_move_action_type() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {
+            "action_type": " MOVE ",
+            "label": "Marker",
+            "bbox": [10, 20, 110, 80],
+        },
+    )
+
+    assert fake.pending_stage1_action == {"action_type": "move", "label": "Marker", "scroll_amount": -360}
+    assert fake.popup.target_value.text() == "Zielvorschlag: Marker"
+    assert fake.popup.screen_context_value.text() == "Schritt 1: Ziel pruefen"
+    assert fake.popup.maya_value.text() == "Danach kannst du GOAT navigieren lassen."
+
+
 def test_status_chips_use_plain_user_states() -> None:
     fake = FakeTray()
 
@@ -228,6 +246,30 @@ def test_accepted_scroll_cue_turns_into_scroll_preview() -> None:
         "Gib Scrollen nur frei, wenn das markierte Ziel stimmt."
     )
     assert fake.popup.cue_approve.text() == "Scrollen"
+    assert fake.popup.cue_approve.enabled is True
+
+
+def test_scroll_cue_with_bad_amount_falls_back_to_safe_default() -> None:
+    fake = FakeTray()
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {"action_type": "scroll", "label": "Seite", "bbox": [10, 20, 110, 80], "scroll_amount": "viel"},
+    )
+
+    assert fake.pending_stage1_action == {"action_type": "scroll", "label": "Seite", "scroll_amount": -360}
+    assert fake.popup.screen_context_value.text() == "Schritt 1: Ziel pruefen"
+    assert fake.popup.cue_approve.enabled is True
+
+
+def test_scroll_cue_with_zero_amount_falls_back_to_safe_default() -> None:
+    fake = FakeTray()
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {"action_type": "scroll", "label": "Seite", "bbox": [10, 20, 110, 80], "scroll_amount": 0},
+    )
+
+    assert fake.pending_stage1_action == {"action_type": "scroll", "label": "Seite", "scroll_amount": -360}
+    assert fake.popup.screen_context_value.text() == "Schritt 1: Ziel pruefen"
     assert fake.popup.cue_approve.enabled is True
 
 
