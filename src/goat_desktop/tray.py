@@ -208,7 +208,8 @@ def _stage2_preview_message(stage2_action: dict, preview: dict) -> str:
     if text_guard == "too_long":
         return f"Der Text ist zu lang. Ich tippe aktuell hoechstens {MAX_STAGE2_TEXT_LENGTH} Zeichen automatisch."
     message = str(preview.get("message") or "Bitte pruefe die Eingabe.")
-    return f"{message} Klicke nur auf Ausfuehren, wenn Feld und Text stimmen."
+    approve_label = str(preview.get("primaryButton") or "Eingabe freigeben")
+    return f"{message} Gib {approve_label} nur frei, wenn Feld und Text stimmen."
 
 
 def _stage2_text_guard(stage2_action: dict) -> str | None:
@@ -226,7 +227,7 @@ def _stage2_approve_label(stage2_action: dict) -> str:
         return "Mehrzeilig"
     if text_guard == "too_long":
         return "Zu lang"
-    return "Ausfuehren"
+    return "Eingabe freigeben"
 
 
 def _stage1_preview_message(preview: dict) -> str:

@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage2_input_release_copy_2026_05_28:
+"Stage-2 UI-Sprache trennt Texteingabe jetzt klar von generischer Ausfuehrung: Action-Preview, Bridge-Preview und Tray-Popup nutzen `Eingabe freigeben` und `vor der Freigabe` statt `Eingabe ausfuehren`/`Ausfuehren`. Der Stage-2 Dry-Run-/Preview-Grund sagt jetzt `Erst Eingabe pruefen, dann freigeben.` Zieltests gruen: Action-Preview/Tray-Stage1-UX/Stage2-Executor-Subset mit 92 Tests."
+
 stage2_preview_required_guards_2026_05_28:
 "Stage-2 `/action/stage2/text` zeigt im Preview-Required-Pfad jetzt schon vor User-Freigabe, ob die Eingabe freigabefaehig ist. Die Bridge setzt `preview.readyToApprove=false` fuer unsicheren Kontext, leeren/mehrzeiligen/zu langen Text und gesperrte Stage-4-Faelle; sensible Preview-Required-Antworten bleiben redigiert und fuehren keine Maus-/Tastatureffekte aus. Zieltests gruen: Action-Preview/Stage2/Tray/Stage4-Redaction-Subset mit 93 Tests."
 

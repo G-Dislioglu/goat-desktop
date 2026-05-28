@@ -42,18 +42,19 @@ def test_stage2_preview_names_text_before_execution() -> None:
     preview = build_action_preview("type", "Suchfeld", ACCEPTED, text="StepStack", dry_run=True)
 
     assert preview["title"] == "Freigabe fuer Eingabe"
-    assert preview["message"] == 'GOAT will Text in Suchfeld eingeben: "StepStack". Bitte pruefe die Eingabe vor dem Ausfuehren.'
-    assert preview["primaryButton"] == "Eingabe ausfuehren"
+    assert preview["message"] == 'GOAT will Text in Suchfeld eingeben: "StepStack". Bitte pruefe die Eingabe vor der Freigabe.'
+    assert preview["primaryButton"] == "Eingabe freigeben"
     assert preview["requiresUserApproval"] is True
     assert preview["mayExecute"] is False
+    assert preview["reason"] == "Erst Eingabe pruefen, dann freigeben."
 
 
 def test_stage2_input_label_overrides_hover_preview_copy() -> None:
     preview = build_action_preview("hover", "Suchfeld", ACCEPTED, text="StepStack", dry_run=True)
 
     assert preview["stage"] == 2
-    assert preview["message"] == 'GOAT will Text in Suchfeld eingeben: "StepStack". Bitte pruefe die Eingabe vor dem Ausfuehren.'
-    assert preview["primaryButton"] == "Eingabe ausfuehren"
+    assert preview["message"] == 'GOAT will Text in Suchfeld eingeben: "StepStack". Bitte pruefe die Eingabe vor der Freigabe.'
+    assert preview["primaryButton"] == "Eingabe freigeben"
 
 
 def test_stage3_preview_requires_clear_approval() -> None:
@@ -242,7 +243,7 @@ def test_bridge_stage2_requires_user_approval_for_real_text_input() -> None:
     assert body["executed"] is False
     assert body["reason"] == "Bitte pruefe die Eingabe zuerst in GOAT."
     assert body["preview"]["title"] == "Freigabe fuer Eingabe"
-    assert body["preview"]["primaryButton"] == "Eingabe ausfuehren"
+    assert body["preview"]["primaryButton"] == "Eingabe freigeben"
     assert body["preview"]["safeTextContext"] is True
     assert body["preview"]["readyToApprove"] is True
     assert body["effects"]["desktopActionsExecuted"] is False
@@ -357,7 +358,7 @@ def test_bridge_stage2_dry_run_remains_read_only() -> None:
 
     assert body["status"] == "preview"
     assert body["executed"] is False
-    assert "preview" in body["reason"]
+    assert body["reason"] == "Erst Eingabe pruefen, dann freigeben."
     assert body["effects"]["desktopActionsExecuted"] is False
     assert body["effects"]["mouseActionsExecuted"] is False
     assert body["effects"]["keyboardActionsExecuted"] is False

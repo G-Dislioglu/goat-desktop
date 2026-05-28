@@ -387,10 +387,10 @@ def test_accepted_stage2_cue_turns_into_input_preview() -> None:
     assert fake.popup.screen_context_value.text() == "Schritt 2: Freigabe fuer Eingabe"
     assert fake.popup.review_status_value.isHidden() is True
     assert fake.popup.maya_value.text() == (
-        'GOAT will Text in Suchfeld eingeben: "StepStack". Bitte pruefe die Eingabe vor dem Ausfuehren. '
-        "Klicke nur auf Ausfuehren, wenn Feld und Text stimmen."
+        'GOAT will Text in Suchfeld eingeben: "StepStack". Bitte pruefe die Eingabe vor der Freigabe. '
+        "Gib Eingabe freigeben nur frei, wenn Feld und Text stimmen."
     )
-    assert fake.popup.cue_approve.text() == "Ausfuehren"
+    assert fake.popup.cue_approve.text() == "Eingabe freigeben"
     assert fake.popup.cue_approve.enabled is True
 
 
@@ -414,7 +414,7 @@ def test_stage2_builder_cue_can_use_prechecked_broker_response() -> None:
     GoatTrayApp._finish_builder_cue(fake, {"status": "ok", "response": fake.pending_builder_cue["broker_response"]})
 
     assert fake.popup.screen_context_value.text() == "Schritt 2: Freigabe fuer Eingabe"
-    assert fake.popup.cue_approve.text() == "Ausfuehren"
+    assert fake.popup.cue_approve.text() == "Eingabe freigeben"
     assert fake.popup.cue_approve.enabled is True
 
 

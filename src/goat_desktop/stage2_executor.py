@@ -172,13 +172,18 @@ def execute_stage2_text_input(
         )
 
     if not gate_decision.allowed_to_execute:
+        reason = (
+            "Erst Eingabe pruefen, dann freigeben."
+            if gate_decision.status in {"preview", "dry_run_ready"}
+            else f"action gate did not allow execution: {gate_decision.status}"
+        )
         return _audit_execution(
             request,
             Stage2ExecutionResult(
                 status="preview",
                 executed=False,
                 stage=gate_decision.stage,
-                reason=f"action gate did not allow execution: {gate_decision.status}",
+                reason=reason,
                 preview=preview,
                 gate_decision=gate_decision.to_dict(),
             ),

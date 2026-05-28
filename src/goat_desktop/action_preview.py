@@ -47,7 +47,7 @@ def build_action_preview(
         "secondaryButton": "Abbrechen",
         "requiresUserApproval": gate.requires_user_approval,
         "mayExecute": gate.allowed_to_execute,
-        "reason": _reason_for_gate(gate.status),
+        "reason": _reason_for_gate(gate.status, gate.stage),
         "gateDecision": gate.to_dict(),
         "gateActionType": gate_action_type,
         "effects": _no_action_effects(),
@@ -170,7 +170,7 @@ def _message_for_gate(stage: int, status: str, action_text: str, review_guidance
     if stage == 1:
         return f"GOAT will {action_text}. Dabei wird nichts geklickt und nichts getippt."
     if stage == 2:
-        return f"GOAT will {action_text}. Bitte pruefe die Eingabe vor dem Ausfuehren."
+        return f"GOAT will {action_text}. Bitte pruefe die Eingabe vor der Freigabe."
     guidance = f" {review_guidance}" if review_guidance else ""
     return f"GOAT will {action_text}. Das kann Folgen haben und braucht deine klare Freigabe.{guidance}"
 
@@ -183,11 +183,13 @@ def _primary_button_for_gate(stage: int, status: str, action_kind: str = "other"
             return "Scrollen"
         return "Navigieren"
     if stage == 2:
-        return "Eingabe ausfuehren"
+        return "Eingabe freigeben"
     return "Freigabe pruefen"
 
 
-def _reason_for_gate(status: str) -> str:
+def _reason_for_gate(status: str, stage: int) -> str:
+    if status == "preview" and stage == 2:
+        return "Erst Eingabe pruefen, dann freigeben."
     reasons = {
         "stop": "Ziel wurde nicht sicher bestaetigt.",
         "locked": "Sensible oder technisch gesperrte Aktion.",

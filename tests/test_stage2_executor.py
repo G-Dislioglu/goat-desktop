@@ -197,7 +197,7 @@ def test_stage2_dry_run_blocks_execution(monkeypatch, tmp_path: Path) -> None:
 
     assert result.status == "preview"
     assert result.executed is False
-    assert "dry_run_ready" in result.reason
+    assert result.reason == "Erst Eingabe pruefen, dann freigeben."
     assert backend.typed == []
 
 
