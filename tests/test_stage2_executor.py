@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from goat_desktop.audit_log import read_audit_events
@@ -227,7 +228,7 @@ def test_stage4_is_blocked(monkeypatch, tmp_path: Path) -> None:
             "type",
             "password field",
             ACCEPTED,
-            "secret",
+            "ultra-private-value",
             user_approved=True,
             dry_run=False,
             safe_text_context=True,
@@ -238,6 +239,15 @@ def test_stage4_is_blocked(monkeypatch, tmp_path: Path) -> None:
     assert result.status == "blocked"
     assert result.stage == 4
     assert result.executed is False
+    assert result.preview["text"] == ""
+    assert result.preview["text_length"] == 0
+    assert result.preview["text_redacted"] is True
+
+    events = read_audit_events(tmp_path / "audit.jsonl")
+    stage2_event = next(event for event in events if event["event_type"] == "stage2_execution")
+    assert stage2_event["payload"]["request"]["text"] == ""
+    assert stage2_event["payload"]["request"]["text_redacted"] is True
+    assert "ultra-private-value" not in json.dumps(events)
 
 
 def test_multiline_text_is_blocked(monkeypatch, tmp_path: Path) -> None:

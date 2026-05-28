@@ -126,7 +126,7 @@ def execute_stage2_text_input(
         dry_run=request.dry_run,
     )
     gate_decision = evaluate_action_gate(gate_request)
-    preview = _preview(request)
+    preview = _preview(request, include_text=gate_decision.stage != int(ActionStage.TECHNICAL_LOCK))
 
     if gate_decision.stage != int(ActionStage.LIGHT_APPROVAL):
         return _audit_execution(
@@ -242,14 +242,17 @@ def execute_stage2_text_input(
     )
 
 
-def _preview(request: Stage2ExecutionRequest) -> dict:
-    return {
+def _preview(request: Stage2ExecutionRequest, *, include_text: bool = True) -> dict:
+    preview = {
         "label": request.label,
-        "text": request.text,
-        "text_length": len(request.text),
+        "text": request.text if include_text else "",
+        "text_length": len(request.text) if include_text else 0,
         "requires_user_approval": True,
         "safe_text_context": request.safe_text_context,
     }
+    if not include_text:
+        preview["text_redacted"] = True
+    return preview
 
 
 def _validate_text(text: str) -> str | None:
@@ -292,7 +295,7 @@ def _audit_execution(
         "stage2_execution",
         result.status,
         {
-            "request": asdict(request),
+            "request": _audit_request(request, result),
             "result": result.to_dict(),
             "assumptions": [
                 "run_g3 only executes stage 2 text input after explicit preview approval",
@@ -303,3 +306,11 @@ def _audit_execution(
         },
     )
     return result
+
+
+def _audit_request(request: Stage2ExecutionRequest, result: Stage2ExecutionResult) -> dict:
+    payload = asdict(request)
+    if result.stage == int(ActionStage.TECHNICAL_LOCK):
+        payload["text"] = ""
+        payload["text_redacted"] = True
+    return payload

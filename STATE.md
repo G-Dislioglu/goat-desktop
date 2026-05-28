@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_sensitive_stage2_redaction_2026_05_28:
+"Stage-2 Executor/Bridge redigiert sensible Texte bei Stage-4-Lock jetzt auch in Preview und Audit: `preview.text` ist leer, `text_length=0`, `text_redacted=true`, und lokale Stage-2-Audit-Requests enthalten den eingegebenen sensiblen Wert nicht. Bridge-Regression prueft, dass gesperrte sensible Texte keine Maus-, Tastatur- oder Desktop-Effekte ausloesen und nicht im Response-JSON auftauchen. Zieltests gruen: Action-Preview/Stage2/Tray-Subset mit 69 Tests."
+
 stage4_sensitive_popup_lock_2026_05_28:
 "Sensible Type-Cues wie Passwortfelder werden im Tray jetzt vor Stage-2 erkannt und als eigener gesperrter Pfad behandelt. Das Popup zeigt `Gesperrt - selbst erledigen`, Button `Verstanden`, keine Ausfuehrfreigabe und keinen Stage-3-Review-Schein. Stage-4-Previews spiegeln den sensiblen Eingabetext nicht mehr im Popup oder actionText. Zieltests gruen: Tray/Action-Preview-Subset mit 56 Tests."
 
