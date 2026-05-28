@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+action_layer_stage4_redaction_integration_2026_05_28:
+"Action-Layer-Integrationstest prueft jetzt die Stage-4-Redaction im End-to-End-Entscheidungsfluss. Die locked Audit-Events duerfen rohe Secret-Labels wie `api-token-input` und rohe Summaries wie `raw-secret-summary` nicht enthalten. Zieltests gruen: Action-Layer-Integration plus Stage4-Contract mit 2 Tests."
+
 stage4_redaction_contract_all_layers_2026_05_28:
 "Der zentrale Stage-4-Redaction-Contract umfasst jetzt alle Action-Layer: Action-Gate, Stage-1, Stage-2, Stage-3, Audit-Events, `/builder-cue` Response und Popup-Payload. Mit denselben Rohwerten fuer Label/Text/Summary/Context wird geprueft, dass keine rohen Secret-Werte in den serialisierten Oberflaechen auftauchen. Zieltest gruen: Stage4-Redaction-Contract mit 1 Test."
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from goat_desktop.audit_log import read_audit_events
@@ -87,9 +88,9 @@ def test_action_layer_end_to_end_decision_chain(monkeypatch, tmp_path: Path) -> 
     stage4 = review_stage3_action(
         Stage3ApprovalRequest(
             "type",
-            "password field",
+            "api-token-input",
             ACCEPTED,
-            "This would type into a password field.",
+            "This would type raw-secret-summary.",
             user_approved=True,
             approval_phrase=APPROVAL_PHRASE,
         )
@@ -132,3 +133,7 @@ def test_action_layer_end_to_end_decision_chain(monkeypatch, tmp_path: Path) -> 
     assert "locked" in statuses
     assert "needs_approval" in statuses
     assert all("payload" in event for event in events)
+    locked_events = [event for event in events if event["status"] == "locked"]
+    serialized_locked_events = json.dumps(locked_events)
+    assert "api-token-input" not in serialized_locked_events
+    assert "raw-secret-summary" not in serialized_locked_events
