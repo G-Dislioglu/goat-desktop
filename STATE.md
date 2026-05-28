@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage1_stage4_audit_redaction_2026_05_28:
+"Stage-1 Executor redigiert eigene Audit-Requests jetzt ebenfalls, wenn ein Stage-4 Technical Lock erreicht wird. Sensible Labels wie `api-token-input` werden im `stage1_execution`-Audit zu `[redacted]` plus `label_redacted=true`; Action-Gate-Redaction bleibt zusaetzlich aktiv. Zieltests gruen: Stage1-Executor-Subset mit 13 Tests."
+
 stage4_redaction_policy_tests_2026_05_28:
 "Direkte Unit-Tests fuer die zentrale Redaction-Policy ergaenzt. Abgesichert sind stabile Normalnutzer-Labels (`sensibles Feld`, `sensibles Ziel`), Nicht-Mutation der Quelldaten, Text-/Label-/Classification-Redaction und rekursive Kontext-Redaction in verschachtelter Broker-Evidence. Zieltests gruen: Redaction-Policy plus Contract mit 6 Tests."
 

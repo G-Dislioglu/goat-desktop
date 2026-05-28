@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from goat_desktop.audit_log import read_audit_events
@@ -180,6 +181,22 @@ def test_stage4_is_blocked(monkeypatch, tmp_path: Path) -> None:
     assert result.status == "blocked"
     assert result.stage == 4
     assert result.executed is False
+
+
+def test_stage4_audit_redacts_sensitive_label(monkeypatch, tmp_path: Path) -> None:
+    audit_path = tmp_path / "audit.jsonl"
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(audit_path))
+
+    execute_stage1_action(
+        Stage1ExecutionRequest("type", "api-token-input", ACCEPTED, user_approved=True, dry_run=False),
+        backend=RecordingMouseBackend(),
+    )
+
+    events = read_audit_events(audit_path)
+    stage1_event = next(event for event in events if event["event_type"] == "stage1_execution")
+    assert stage1_event["payload"]["request"]["label"] == "[redacted]"
+    assert stage1_event["payload"]["request"]["label_redacted"] is True
+    assert "api-token-input" not in json.dumps(stage1_event)
 
 
 def test_open_menu_stage1_is_not_in_g2_executor_allowlist(monkeypatch, tmp_path: Path) -> None:

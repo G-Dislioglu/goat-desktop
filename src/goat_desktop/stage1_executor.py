@@ -6,6 +6,7 @@ from typing import Protocol
 
 from goat_desktop.action_gate import ActionRequest, ActionStage, evaluate_action_gate
 from goat_desktop.audit_log import append_audit_event
+from goat_desktop.redaction import redact_locked_request_payload
 
 
 class MouseBackend(Protocol):
@@ -228,7 +229,7 @@ def _audit_execution(
         "stage1_execution",
         result.status,
         {
-            "request": asdict(request),
+            "request": _audit_request(request, result),
             "result": result.to_dict(),
             "assumptions": [
                 "run_g2 only executes stage 1 free-navigation actions",
@@ -239,3 +240,10 @@ def _audit_execution(
         },
     )
     return result
+
+
+def _audit_request(request: Stage1ExecutionRequest, result: Stage1ExecutionResult) -> dict:
+    payload = asdict(request)
+    if result.stage == int(ActionStage.TECHNICAL_LOCK):
+        payload = redact_locked_request_payload(payload)
+    return payload
