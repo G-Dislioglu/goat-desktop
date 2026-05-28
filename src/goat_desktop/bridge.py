@@ -13,6 +13,12 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from goat_desktop.broker import LOCAL_GEOMETRY_SOURCES, build_candidate, verify_candidate
 from goat_desktop.action_gate import ActionStage, classify_action_with_reason
 from goat_desktop.action_preview import build_action_preview
+from goat_desktop.redaction import (
+    REDACTED_VALUE,
+    SENSITIVE_TARGET_LABEL,
+    redact_locked_request_payload,
+    redact_nested_context_values,
+)
 from goat_desktop.screen import capture_active_window, get_active_window
 from goat_desktop.stage1_executor import Stage1ExecutionRequest, execute_stage1_action
 from goat_desktop.stage2_executor import Stage2ExecutionRequest, execute_stage2_text_input
@@ -115,7 +121,7 @@ def create_app(
             "broker_decision": decision,
         }
         if classification.stage_enum == ActionStage.TECHNICAL_LOCK and isinstance(payload.get("context"), dict):
-            response = _redact_context_values(response)
+            response = redact_nested_context_values(response)
         if classification.stage_enum == ActionStage.TECHNICAL_LOCK:
             response = _redact_builder_cue_label(response)
         proposal_emitted = False
@@ -372,18 +378,11 @@ def _builder_cue_classification(payload: dict[str, Any]):
 
 def _builder_cue_popup_payload(payload: dict[str, Any], classification=None) -> dict[str, Any]:
     cue_payload = dict(payload)
-    context = dict(cue_payload.get("context") or {})
     classification = classification or _builder_cue_classification(payload)
-    if classification.stage_enum == ActionStage.TECHNICAL_LOCK and context:
-        cue_payload["context"] = {key: "[redacted]" for key in context}
-        cue_payload["context_redacted"] = True
     if classification.stage_enum == ActionStage.TECHNICAL_LOCK:
+        cue_payload = redact_locked_request_payload(cue_payload, redact_text=True)
         cue_payload["stage4_lock"] = True
-        cue_payload["label"] = "sensibles Ziel"
-        cue_payload["label_redacted"] = True
-        if "text" in cue_payload:
-            cue_payload["text"] = ""
-            cue_payload["text_redacted"] = True
+        cue_payload["label"] = SENSITIVE_TARGET_LABEL
     return cue_payload
 
 
@@ -392,35 +391,16 @@ def _redact_builder_cue_label(response: dict[str, Any]) -> dict[str, Any]:
     broker_decision = dict(redacted.get("broker_decision") or {})
     candidate = dict(broker_decision.get("candidate") or {})
     if candidate:
-        candidate["label"] = "[redacted]"
+        candidate["label"] = REDACTED_VALUE
         raw_evidence = dict(candidate.get("raw_evidence") or {})
         request = dict(raw_evidence.get("request") or {})
         if request:
-            request["label"] = "[redacted]"
-            request["label_redacted"] = True
-            if "text" in request:
-                request["text"] = ""
-                request["text_redacted"] = True
+            request = redact_locked_request_payload(request, redact_text=True)
             raw_evidence["request"] = request
         candidate["raw_evidence"] = raw_evidence
         broker_decision["candidate"] = candidate
     redacted["broker_decision"] = broker_decision
     return redacted
-
-
-def _redact_context_values(value):
-    if isinstance(value, dict):
-        redacted = {}
-        for key, item in value.items():
-            if key == "context" and isinstance(item, dict):
-                redacted[key] = {context_key: "[redacted]" for context_key in item}
-                redacted["context_redacted"] = True
-            else:
-                redacted[key] = _redact_context_values(item)
-        return redacted
-    if isinstance(value, list):
-        return [_redact_context_values(item) for item in value]
-    return value
 
 
 def _safety_is_read_only(safety: dict[str, Any]) -> bool:

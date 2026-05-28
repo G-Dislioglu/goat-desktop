@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_redaction_policy_bridge_2026_05_28:
+"Bridge und Tray nutzen jetzt ebenfalls die zentrale Stage-4-Redaction-Policy. `/builder-cue` verwendet `redact_locked_request_payload`, `redact_nested_context_values`, `SENSITIVE_TARGET_LABEL` und `REDACTED_VALUE`; das Tray nutzt denselben `sensibles Ziel`-Konstantenwert fuer redigierte Stage-4-Lock-Payloads. Zieltests gruen: Bridge/Tray/Action-Gate/Stage2/Action-Preview-Subset mit 101 Tests."
+
 stage4_redaction_policy_core_2026_05_28:
 "Stage-4-Redaction hat jetzt eine zentrale Core-Policy in `goat_desktop.redaction` fuer `[redacted]`, `sensibles Feld`, Kontext-Redaction, Request-Redaction und Classification-Redaction. Action-Gate, Action-Preview und Stage-2 Executor nutzen diese Policy statt lokaler Einzelregeln. Zieltests gruen: Action-Gate/Action-Preview/Stage2-Subset mit 48 Tests."
 

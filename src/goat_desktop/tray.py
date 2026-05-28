@@ -24,6 +24,7 @@ from goat_desktop.livetalk import LiveTalkSession, read_response_aloud, start_wi
 from goat_desktop.livetalk_live import GeminiLiveSession
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
+from goat_desktop.redaction import SENSITIVE_TARGET_LABEL
 from goat_desktop.screen import capture_visible_desktop
 from goat_desktop.stage2_executor import MAX_STAGE2_TEXT_LENGTH
 from goat_desktop.screen_context import (
@@ -1093,7 +1094,7 @@ class GoatTrayApp:
         if message.get("stage4_lock") is True or classification.stage_enum == ActionStage.TECHNICAL_LOCK:
             self.pending_stage4_action = {
                 "action_type": action_type,
-                "label": "sensibles Ziel" if message.get("stage4_lock") is True else label,
+                "label": SENSITIVE_TARGET_LABEL if message.get("stage4_lock") is True else label,
                 "context": context,
             }
         elif _is_stage1_navigation_action(action_type):
