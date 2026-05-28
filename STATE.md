@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage2_text_guard_alignment_2026_05_28:
+"Stage-2 Textfreigabe nutzt jetzt eine gemeinsame Textvalidierung aus dem Executor: whitespace-only Text gilt wie leer und wird in Executor, Bridge und Tray ohne Maus-/Tastatureffekte blockiert. `safe_text_context` wird in Bridge und Tray strikt ausgewertet; Stringwerte wie `false` zaehlen nicht mehr versehentlich als sichere Eingabefreigabe. Zieltests gruen: Stage2-Executor/Action-Preview/Tray-Stage1-UX-Subset mit 87 Tests."
+
 builder_cue_stage_transition_priority_2026_05_28:
 "Builder-Cue-Uebergaenge priorisieren jetzt Technical-Lock und Eingabekontext vor Stage-1-Navigation: Hover/Move auf Suchfeld oder Edit-Kontext bereitet keine Navigation mehr vor, sondern Stage-2-Pruefung bzw. Stage-4-Sperre. Direkte Previews formulieren solche Stage-2-Faelle als Texteingabe statt Mausbewegung. Echte Stage-3-Aktionstypen wie `upload` bleiben trotz Stage-2-aehnlichem Label weiter Review-only. Zieltests gruen: Action-Gate/Action-Preview/Bridge/Tray/Stage1/Stage2-Subset mit 129 Tests."
 

@@ -157,7 +157,7 @@ def execute_stage2_text_input(
             ),
         )
 
-    validation_error = _validate_text(request.text)
+    validation_error = validate_stage2_text(request.text)
     if validation_error:
         return _audit_execution(
             request,
@@ -259,13 +259,24 @@ def _preview(request: Stage2ExecutionRequest, *, include_text: bool = True) -> d
     return preview
 
 
-def _validate_text(text: str) -> str | None:
-    if not text:
+def validate_stage2_text(text: str) -> str | None:
+    if not text.strip():
         return "text input is empty"
     if len(text) > MAX_STAGE2_TEXT_LENGTH:
         return f"text input exceeds {MAX_STAGE2_TEXT_LENGTH} characters"
     if "\n" in text or "\r" in text:
         return "multi-line text input is outside Run G3 scope"
+    return None
+
+
+def stage2_text_guard_code(text: str) -> str | None:
+    validation_error = validate_stage2_text(text)
+    if validation_error == "text input is empty":
+        return "empty"
+    if validation_error == "multi-line text input is outside Run G3 scope":
+        return "multi_line"
+    if validation_error and "exceeds" in validation_error:
+        return "too_long"
     return None
 
 

@@ -216,7 +216,7 @@ def create_app(
     def stage2_text_action(payload: dict[str, Any]) -> dict[str, Any]:
         requested_dry_run = bool(payload.get("dry_run") if "dry_run" in payload else True)
         user_approved = bool(payload.get("user_approved") or False)
-        safe_text_context = bool(payload.get("safe_text_context") or False)
+        safe_text_context = _bool_from_payload(payload.get("safe_text_context"))
         if not requested_dry_run and not user_approved:
             preview = build_action_preview(
                 str(payload.get("action_type") or "type"),
@@ -452,6 +452,14 @@ def _stage2_effects(result: dict[str, Any]) -> dict[str, Any]:
     effects["keyboardActionsExecuted"] = executed
     effects["mayExecuteRealAction"] = executed
     return effects
+
+
+def _bool_from_payload(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes"}
+    return False
 
 
 def _action_preview_context(payload: dict[str, Any]) -> dict[str, Any]:

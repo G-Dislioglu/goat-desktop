@@ -307,6 +307,29 @@ def test_multiline_text_is_blocked(monkeypatch, tmp_path: Path) -> None:
     assert "multi-line" in result.reason
 
 
+def test_whitespace_only_text_is_blocked(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
+    backend = RecordingTextBackend()
+
+    result = execute_stage2_text_input(
+        Stage2ExecutionRequest(
+            "type",
+            "enter text in safe test field",
+            ACCEPTED,
+            "   ",
+            user_approved=True,
+            dry_run=False,
+            safe_text_context=True,
+        ),
+        backend=backend,
+    )
+
+    assert result.status == "blocked"
+    assert result.executed is False
+    assert "empty" in result.reason
+    assert backend.typed == []
+
+
 def test_long_text_is_blocked(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
     result = execute_stage2_text_input(

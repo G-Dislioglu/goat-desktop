@@ -26,7 +26,7 @@ from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
 from goat_desktop.redaction import SENSITIVE_TARGET_LABEL
 from goat_desktop.screen import capture_visible_desktop
-from goat_desktop.stage2_executor import MAX_STAGE2_TEXT_LENGTH
+from goat_desktop.stage2_executor import MAX_STAGE2_TEXT_LENGTH, stage2_text_guard_code
 from goat_desktop.screen_context import (
     VISION_CONTEXT_PROMPT,
     build_chat_context,
@@ -122,6 +122,14 @@ def _normalized_stage1_action_type(action_type: str) -> str:
     return "hover"
 
 
+def _bool_from_message(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes"}
+    return False
+
+
 def _pending_action_hint(
     stage1_action: dict | None,
     stage2_action: dict | None,
@@ -205,13 +213,7 @@ def _stage2_preview_message(stage2_action: dict, preview: dict) -> str:
 
 def _stage2_text_guard(stage2_action: dict) -> str | None:
     text = str(stage2_action.get("text") or "")
-    if not text.strip():
-        return "empty"
-    if "\n" in text or "\r" in text:
-        return "multi_line"
-    if len(text) > MAX_STAGE2_TEXT_LENGTH:
-        return "too_long"
-    return None
+    return stage2_text_guard_code(text)
 
 
 def _stage2_approve_label(stage2_action: dict) -> str:
@@ -1142,7 +1144,7 @@ class GoatTrayApp:
                 "action_type": "type" if not _is_stage2_text_action(action_type) else action_type,
                 "label": str(message.get("label") or "Eingabefeld"),
                 "text": str(message.get("text") or ""),
-                "safe_text_context": bool(message.get("safe_text_context") or False),
+                "safe_text_context": _bool_from_message(message.get("safe_text_context")),
             }
         elif _is_stage1_navigation_action(action_type):
             self.pending_stage1_action = {
@@ -1398,7 +1400,7 @@ class GoatTrayApp:
             "text": str(payload.get("text") or ""),
             "dry_run": False,
             "user_approved": True,
-            "safe_text_context": bool(payload.get("safe_text_context") or False),
+            "safe_text_context": _bool_from_message(payload.get("safe_text_context")),
         }
         request = urllib.request.Request(
             "http://127.0.0.1:8765/action/stage2/text",
