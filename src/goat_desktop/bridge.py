@@ -116,6 +116,8 @@ def create_app(
         }
         if classification.stage_enum == ActionStage.TECHNICAL_LOCK and isinstance(payload.get("context"), dict):
             response = _redact_context_values(response)
+        if classification.stage_enum == ActionStage.TECHNICAL_LOCK:
+            response = _redact_builder_cue_label(response)
         proposal_emitted = False
         if decision["status"] == "accept" and dispatch_builder_cue is not None:
             cue_payload = _builder_cue_popup_payload(payload, classification)
@@ -375,8 +377,29 @@ def _builder_cue_popup_payload(payload: dict[str, Any], classification=None) -> 
     if classification.stage_enum == ActionStage.TECHNICAL_LOCK and context:
         cue_payload["context"] = {key: "[redacted]" for key in context}
         cue_payload["context_redacted"] = True
+    if classification.stage_enum == ActionStage.TECHNICAL_LOCK:
         cue_payload["stage4_lock"] = True
+        cue_payload["label"] = "sensibles Ziel"
+        cue_payload["label_redacted"] = True
     return cue_payload
+
+
+def _redact_builder_cue_label(response: dict[str, Any]) -> dict[str, Any]:
+    redacted = dict(response)
+    broker_decision = dict(redacted.get("broker_decision") or {})
+    candidate = dict(broker_decision.get("candidate") or {})
+    if candidate:
+        candidate["label"] = "[redacted]"
+        raw_evidence = dict(candidate.get("raw_evidence") or {})
+        request = dict(raw_evidence.get("request") or {})
+        if request:
+            request["label"] = "[redacted]"
+            request["label_redacted"] = True
+            raw_evidence["request"] = request
+        candidate["raw_evidence"] = raw_evidence
+        broker_decision["candidate"] = candidate
+    redacted["broker_decision"] = broker_decision
+    return redacted
 
 
 def _redact_context_values(value):

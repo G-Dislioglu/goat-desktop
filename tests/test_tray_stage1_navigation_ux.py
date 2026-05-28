@@ -547,7 +547,7 @@ def test_redacted_sensitive_context_cue_lock_signal_is_enough() -> None:
     assert fake.pending_stage2_action is None
     assert fake.pending_stage4_action == {
         "action_type": "type",
-        "label": "Login Feld",
+        "label": "sensibles Ziel",
         "context": {"automation_id": "[redacted]", "control_type": "[redacted]"},
     }
     assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
@@ -582,8 +582,7 @@ def test_accepted_sensitive_type_cue_turns_into_locked_popup() -> None:
     assert fake.popup.review_status_value.text() == "Gesperrt - selbst erledigen"
     assert fake.popup.review_status_value.isHidden() is False
     assert fake.popup.maya_value.text() == (
-        "GOAT fuehrt das nicht aus: Text in Passwortfeld eingeben. "
-        "Bitte erledige sensible Eingaben selbst im Programm."
+        "GOAT fuehrt das nicht aus: Text in sensibles Feld eingeben. Bitte erledige sensible Eingaben selbst im Programm."
     )
     assert fake.popup.cue_approve.text() == "Verstanden"
     assert fake.popup.cue_approve.enabled is True

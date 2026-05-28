@@ -27,7 +27,7 @@ def build_action_preview(
             context=preview_context,
         )
     )
-    target = _target_name(label)
+    target = "sensibles Feld" if gate.stage == 4 else _target_name(label)
     action_kind = _action_kind(action_type)
     preview_text = "" if gate.stage == 4 else text
     action_text = _plain_action(action_type, target, preview_text, preview_context)
@@ -39,6 +39,7 @@ def build_action_preview(
         "title": _title_for_gate(gate.stage, gate.status),
         "message": _message_for_gate(gate.stage, gate.status, action_text, review_guidance),
         "actionText": action_text,
+        "targetRedacted": gate.stage == 4,
         "reviewGuidance": review_guidance,
         "reviewStatus": _review_status_for_gate(gate.stage, gate.status),
         "primaryButton": _primary_button_for_gate(gate.stage, gate.status, action_kind),

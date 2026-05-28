@@ -105,3 +105,17 @@ def test_stage4_audit_redacts_sensitive_context(monkeypatch, tmp_path: Path) -> 
     assert payload["classification"]["normalized_text"] == "[redacted]"
     assert payload["classification"]["normalized_text_redacted"] is True
     assert "api-token-input" not in json.dumps(events)
+
+
+def test_stage4_audit_redacts_sensitive_label(monkeypatch, tmp_path: Path) -> None:
+    audit_path = tmp_path / "audit.jsonl"
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(audit_path))
+
+    evaluate_action_gate(ActionRequest("type", "api-token-input", ACCEPTED, user_approved=True))
+
+    events = read_audit_events(audit_path)
+    payload = events[0]["payload"]
+    assert payload["request"]["label"] == "[redacted]"
+    assert payload["request"]["label_redacted"] is True
+    assert payload["classification"]["normalized_text"] == "[redacted]"
+    assert "api-token-input" not in json.dumps(events)

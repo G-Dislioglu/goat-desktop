@@ -308,9 +308,12 @@ def _audit_decision(
 
 def _audit_request(request: ActionRequest, classification: ActionClassification) -> dict[str, Any]:
     payload = asdict(request)
-    if classification.stage_enum == ActionStage.TECHNICAL_LOCK and payload.get("context"):
-        payload["context"] = {key: "[redacted]" for key in payload["context"]}
-        payload["context_redacted"] = True
+    if classification.stage_enum == ActionStage.TECHNICAL_LOCK:
+        payload["label"] = "[redacted]"
+        payload["label_redacted"] = True
+        if payload.get("context"):
+            payload["context"] = {key: "[redacted]" for key in payload["context"]}
+            payload["context_redacted"] = True
     return payload
 
 

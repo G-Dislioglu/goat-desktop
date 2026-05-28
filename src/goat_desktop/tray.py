@@ -1093,7 +1093,7 @@ class GoatTrayApp:
         if message.get("stage4_lock") is True or classification.stage_enum == ActionStage.TECHNICAL_LOCK:
             self.pending_stage4_action = {
                 "action_type": action_type,
-                "label": label,
+                "label": "sensibles Ziel" if message.get("stage4_lock") is True else label,
                 "context": context,
             }
         elif _is_stage1_navigation_action(action_type):

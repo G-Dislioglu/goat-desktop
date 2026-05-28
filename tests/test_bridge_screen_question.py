@@ -164,6 +164,39 @@ def test_builder_cue_redacts_sensitive_context_before_popup_dispatch(monkeypatch
     assert "api-token-input" not in str(emitted.payloads[0])
 
 
+def test_builder_cue_redacts_sensitive_label_before_popup_dispatch(monkeypatch) -> None:
+    emitted = FakeSignal()
+    monkeypatch.setattr(
+        bridge,
+        "get_active_window",
+        lambda: WindowInfo(hwnd=1, title="Test Window", rect=[0, 0, 300, 200], foreground=True),
+    )
+    endpoint = _endpoint_for(create_app(dispatch_builder_cue=emitted.emit), "/builder-cue")
+
+    body = endpoint(
+        {
+            "source": "test_cue",
+            "action_type": "type",
+            "label": "api-token-input",
+            "text": "private",
+            "safe_text_context": True,
+            "bbox": [20, 20, 120, 50],
+        }
+    )
+
+    assert body["ok"] is True
+    assert emitted.payloads[0]["stage4_lock"] is True
+    assert emitted.payloads[0]["label"] == "sensibles Ziel"
+    assert emitted.payloads[0]["label_redacted"] is True
+    assert emitted.payloads[0]["broker_response"]["broker_decision"]["candidate"]["label"] == "[redacted]"
+    assert (
+        emitted.payloads[0]["broker_response"]["broker_decision"]["candidate"]["raw_evidence"]["request"]["label"]
+        == "[redacted]"
+    )
+    assert "api-token-input" not in str(body)
+    assert "api-token-input" not in str(emitted.payloads[0])
+
+
 def test_builder_cue_rejects_missing_bbox_without_dispatch(monkeypatch) -> None:
     emitted = FakeSignal()
     monkeypatch.setattr(

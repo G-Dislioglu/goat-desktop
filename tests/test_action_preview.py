@@ -135,11 +135,14 @@ def test_stage4_preview_locks_sensitive_actions() -> None:
     assert preview["status"] == "locked"
     assert preview["title"] == "Bitte selbst erledigen"
     assert preview["message"] == "Das wirkt sensibel. GOAT fuehrt das nicht aus."
-    assert preview["actionText"] == "Text in Passwortfeld eingeben"
+    assert preview["actionText"] == "Text in sensibles Feld eingeben"
+    assert preview["targetRedacted"] is True
     assert preview["primaryButton"] == "Verstanden"
     assert preview["mayExecute"] is False
     assert "secret" not in preview["message"]
     assert "secret" not in preview["actionText"]
+    assert "Passwortfeld" not in preview["message"]
+    assert "Passwortfeld" not in preview["actionText"]
 
 
 def test_preview_stops_when_target_is_not_accepted() -> None:

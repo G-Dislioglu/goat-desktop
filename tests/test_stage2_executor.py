@@ -242,9 +242,13 @@ def test_stage4_is_blocked(monkeypatch, tmp_path: Path) -> None:
     assert result.preview["text"] == ""
     assert result.preview["text_length"] == 0
     assert result.preview["text_redacted"] is True
+    assert result.preview["label"] == "sensibles Feld"
+    assert result.preview["label_redacted"] is True
 
     events = read_audit_events(tmp_path / "audit.jsonl")
     stage2_event = next(event for event in events if event["event_type"] == "stage2_execution")
+    assert stage2_event["payload"]["request"]["label"] == "[redacted]"
+    assert stage2_event["payload"]["request"]["label_redacted"] is True
     assert stage2_event["payload"]["request"]["text"] == ""
     assert stage2_event["payload"]["request"]["text_redacted"] is True
     assert "ultra-private-value" not in json.dumps(events)
@@ -271,6 +275,8 @@ def test_stage4_context_is_blocked_and_redacted(monkeypatch, tmp_path: Path) -> 
     assert result.executed is False
     assert result.preview["text"] == ""
     assert result.preview["text_redacted"] is True
+    assert result.preview["label"] == "sensibles Feld"
+    assert result.preview["label_redacted"] is True
 
     events = read_audit_events(tmp_path / "audit.jsonl")
     stage2_event = next(event for event in events if event["event_type"] == "stage2_execution")

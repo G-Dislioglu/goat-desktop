@@ -246,7 +246,7 @@ def execute_stage2_text_input(
 
 def _preview(request: Stage2ExecutionRequest, *, include_text: bool = True) -> dict:
     preview = {
-        "label": request.label,
+        "label": request.label if include_text else "sensibles Feld",
         "text": request.text if include_text else "",
         "text_length": len(request.text) if include_text else 0,
         "requires_user_approval": True,
@@ -254,6 +254,7 @@ def _preview(request: Stage2ExecutionRequest, *, include_text: bool = True) -> d
     }
     if not include_text:
         preview["text_redacted"] = True
+        preview["label_redacted"] = True
     return preview
 
 
@@ -313,6 +314,8 @@ def _audit_execution(
 def _audit_request(request: Stage2ExecutionRequest, result: Stage2ExecutionResult) -> dict:
     payload = asdict(request)
     if result.stage == int(ActionStage.TECHNICAL_LOCK):
+        payload["label"] = "[redacted]"
+        payload["label_redacted"] = True
         payload["text"] = ""
         payload["text_redacted"] = True
         if payload.get("context"):
