@@ -48,7 +48,7 @@ def test_stage3_preview_requires_clear_approval() -> None:
     preview = build_action_preview("click", "Kaufen", ACCEPTED, dry_run=True)
 
     assert preview["title"] == "Wichtige Aktion braucht Freigabe"
-    assert preview["primaryButton"] == "Freigeben"
+    assert preview["primaryButton"] == "Freigabe pruefen"
     assert "braucht deine klare Freigabe" in preview["message"]
     assert preview["requiresUserApproval"] is True
 

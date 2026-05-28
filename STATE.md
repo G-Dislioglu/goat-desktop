@@ -453,3 +453,6 @@ action_completion_verified_status_2026_05_27:
 
 stage3_review_no_execution_effects_2026_05_27:
 "Stage-3 Review-Grenze weiter verstaerkt. `/action/stage3/review` liefert selbst nach korrekter Freigabephrase weiterhin `executed=false`, `completion_verified=false`, `mayExecuteRealAction=false` und effects alle false. Damit sind wichtige Aktionen wie Kaufen, Speichern, Senden, Deploy oder Loeschen sichtbar als Review/Freigabe behandelbar, aber ohne OS-Ausfuehrung im aktuellen GOAT Desktop. Tests decken Stage-3 API, Audit und Integration ab."
+
+stage3_popup_review_main_path_2026_05_28:
+"Stage-3 Builder-Cues sind jetzt im Popup-Hauptpfad sichtbar, bleiben aber review-only. Action-Typen wie `click`, `send`, `save` oder `kaufen` erzeugen nach lokaler Zielpruefung `Schritt 2: Wichtige Aktion braucht Freigabe`; der Button heisst `Verstanden`, nicht `Ausfuehren`. Beim Quittieren wird nur der Pending-State geloescht und GOAT meldet `Nicht ausgefuehrt`; es startet kein Stage-1-/Stage-2-Worker und keine Stage-3-OS-Ausfuehrung. Action-Preview nutzt fuer Stage 3 `Freigabe pruefen`. Verifiziert: compileall gruen, Full Suite `233 passed`, `/healthz` `Bildschirm bereit`, live `/builder-cue` Stage-3 `send` accepted mit `popupProposalEmitted=true`, effects alle false. Keine Screenshots oder Audioartefakte erzeugt."

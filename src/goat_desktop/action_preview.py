@@ -115,7 +115,7 @@ def _primary_button_for_gate(stage: int, status: str, action_kind: str = "other"
         return "Navigieren"
     if stage == 2:
         return "Eingabe ausfuehren"
-    return "Freigeben"
+    return "Freigabe pruefen"
 
 
 def _reason_for_gate(status: str) -> str:
