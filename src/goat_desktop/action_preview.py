@@ -29,9 +29,9 @@ def build_action_preview(
         )
     )
     target = SENSITIVE_FIELD_LABEL if gate.stage == 4 else _target_name(label)
-    action_kind = _action_kind(action_type)
+    action_kind = _preview_action_kind(gate.stage, action_type)
     preview_text = "" if gate.stage == 4 else text
-    action_text = _plain_action(action_type, target, preview_text, preview_context)
+    action_text = _plain_action_for_kind(action_kind, action_type, target, preview_text, preview_context)
     review_guidance = _stage3_review_guidance(f"{action_type} {target}".strip().lower(), gate.stage, gate.status)
     return {
         "ok": gate.status not in {"stop", "locked"},
@@ -70,6 +70,21 @@ def _action_kind(action_type: str) -> str:
     if "type" in normalized or "text" in normalized or "input" in normalized:
         return "type"
     return "other"
+
+
+def _preview_action_kind(stage: int, action_type: str) -> str:
+    action_kind = _action_kind(action_type)
+    if stage == 2 and action_kind in {"move", "scroll", "other"}:
+        return "type"
+    return action_kind
+
+
+def _plain_action_for_kind(action_kind: str, action_type: str, target: str, text: str, context: dict[str, Any]) -> str:
+    if action_kind == "type":
+        preview_text = text.strip()
+        suffix = f": \"{preview_text}\"" if preview_text else ""
+        return f"Text in {target} eingeben{suffix}"
+    return _plain_action(action_type, target, text, context)
 
 
 def _plain_action(action_type: str, target: str, text: str, context: dict[str, Any]) -> str:

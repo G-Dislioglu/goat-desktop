@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+builder_cue_stage_transition_priority_2026_05_28:
+"Builder-Cue-Uebergaenge priorisieren jetzt Technical-Lock und Eingabekontext vor Stage-1-Navigation: Hover/Move auf Suchfeld oder Edit-Kontext bereitet keine Navigation mehr vor, sondern Stage-2-Pruefung bzw. Stage-4-Sperre. Direkte Previews formulieren solche Stage-2-Faelle als Texteingabe statt Mausbewegung. Echte Stage-3-Aktionstypen wie `upload` bleiben trotz Stage-2-aehnlichem Label weiter Review-only. Zieltests gruen: Action-Gate/Action-Preview/Bridge/Tray/Stage1/Stage2-Subset mit 129 Tests."
+
 stage1_builder_cue_input_hardening_2026_05_28:
 "Stage-1 Builder-Cue-Eingang ist robuster: `/builder-cue` weist ungueltige oder nullwertige `scroll_amount` bei Scroll-Cues ohne Popup-Dispatch ab, und das Tray normalisiert Stage-1-Aktionstypen kanonisch zu `hover`, `move` oder `scroll`. Direkte In-App-Payloads mit kaputtem Scrollwert fallen defensiv auf `-360` zurueck, statt den Popup-Pfad abzubrechen. Zieltests gruen: Bridge/Tray/Stage1/Gate-Subset mit 85 Tests."
 

@@ -48,6 +48,14 @@ def test_stage2_preview_names_text_before_execution() -> None:
     assert preview["mayExecute"] is False
 
 
+def test_stage2_input_label_overrides_hover_preview_copy() -> None:
+    preview = build_action_preview("hover", "Suchfeld", ACCEPTED, text="StepStack", dry_run=True)
+
+    assert preview["stage"] == 2
+    assert preview["message"] == 'GOAT will Text in Suchfeld eingeben: "StepStack". Bitte pruefe die Eingabe vor dem Ausfuehren.'
+    assert preview["primaryButton"] == "Eingabe ausfuehren"
+
+
 def test_stage3_preview_requires_clear_approval() -> None:
     preview = build_action_preview("click", "Kaufen", ACCEPTED, dry_run=True)
 

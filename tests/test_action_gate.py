@@ -28,6 +28,26 @@ def test_stage_1_hover_to_consequential_label_stays_navigation(monkeypatch, tmp_
     assert decision.allowed_to_execute is False
 
 
+def test_stage_2_input_label_overrides_hover_navigation(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
+
+    decision = evaluate_action_gate(ActionRequest("hover", "Suchfeld", ACCEPTED))
+
+    assert decision.stage == 2
+    assert decision.status == "preview"
+    assert decision.requires_user_approval is True
+
+
+def test_stage_3_action_type_stays_consequential_even_with_stage2_label(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
+
+    decision = evaluate_action_gate(ActionRequest("upload", "Datei hochladen", ACCEPTED))
+
+    assert decision.stage == 3
+    assert decision.status == "needs_approval"
+    assert decision.requires_user_approval is True
+
+
 def test_stage_1_move_action_is_navigation(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
 

@@ -185,6 +185,22 @@ def classify_action_with_reason(
             reason="sensitive-field or secret-like term matched",
             normalized_text=text,
         )
+    stage3_action_term = _first_matching_term(action_text, STAGE_3_TERMS)
+    if stage3_action_term is not None:
+        return ActionClassification(
+            stage_enum=ActionStage.HARD_APPROVAL,
+            matched_term=stage3_action_term,
+            reason="consequential-action type matched",
+            normalized_text=text,
+        )
+    stage2_term = _first_matching_term(text, STAGE_2_TERMS)
+    if stage2_term is not None:
+        return ActionClassification(
+            stage_enum=ActionStage.LIGHT_APPROVAL,
+            matched_term=stage2_term,
+            reason="light-input or selection term matched",
+            normalized_text=text,
+        )
     nav_term = _first_matching_term(action_text, STAGE_1_TERMS)
     if nav_term is not None:
         return ActionClassification(
@@ -195,7 +211,6 @@ def classify_action_with_reason(
         )
     for stage, terms, reason in [
         (ActionStage.HARD_APPROVAL, STAGE_3_TERMS, "consequential-action term matched"),
-        (ActionStage.LIGHT_APPROVAL, STAGE_2_TERMS, "light-input or selection term matched"),
         (ActionStage.FREE_NAVIGATION, STAGE_1_TERMS, "free-navigation term matched"),
     ]:
         term = _first_matching_term(text, terms)

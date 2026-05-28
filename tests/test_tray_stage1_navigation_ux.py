@@ -249,6 +249,32 @@ def test_accepted_scroll_cue_turns_into_scroll_preview() -> None:
     assert fake.popup.cue_approve.enabled is True
 
 
+def test_hover_cue_on_input_label_prepares_stage2_not_stage1() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {
+            "action_type": "hover",
+            "label": "Suchfeld",
+            "text": "StepStack",
+            "safe_text_context": True,
+            "bbox": [10, 20, 110, 80],
+        },
+    )
+
+    assert fake.pending_stage1_action is None
+    assert fake.pending_stage2_action == {
+        "action_type": "type",
+        "label": "Suchfeld",
+        "text": "StepStack",
+        "safe_text_context": True,
+    }
+    assert fake.popup.target_value.text() == "Eingabefeld: Suchfeld"
+    assert fake.popup.screen_context_value.text() == "Schritt 1: Eingabefeld pruefen"
+    assert fake.popup.maya_value.text() == "Danach kannst du die Eingabe freigeben."
+
+
 def test_scroll_cue_with_bad_amount_falls_back_to_safe_default() -> None:
     fake = FakeTray()
     GoatTrayApp.receive_builder_cue(
@@ -543,6 +569,33 @@ def test_sensitive_context_cue_is_locked_before_stage2() -> None:
     assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
     assert fake.popup.cue_approve.text() == "Pruefen"
     assert fake.popup.cue_approve.enabled is True
+
+
+def test_hover_cue_with_sensitive_context_locks_before_stage1() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {
+            "action_type": "hover",
+            "label": "Login Feld",
+            "text": "private",
+            "safe_text_context": True,
+            "bbox": [10, 20, 110, 80],
+            "context": {"input_type": "password", "control_type": "Edit"},
+        },
+    )
+
+    assert fake.pending_stage1_action is None
+    assert fake.pending_stage2_action is None
+    assert fake.pending_stage3_action is None
+    assert fake.pending_stage4_action == {
+        "action_type": "hover",
+        "label": "Login Feld",
+        "context": {"input_type": "password", "control_type": "Edit"},
+    }
+    assert fake.popup.target_value.text() == "Zielvorschlag: Login Feld"
+    assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
 
 
 def test_sensitive_aria_context_cue_is_locked_before_stage2() -> None:

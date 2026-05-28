@@ -1137,18 +1137,18 @@ class GoatTrayApp:
                 "label": SENSITIVE_TARGET_LABEL if message.get("stage4_lock") is True else label,
                 "context": context,
             }
+        elif classification.stage_enum == ActionStage.LIGHT_APPROVAL:
+            self.pending_stage2_action = {
+                "action_type": "type" if not _is_stage2_text_action(action_type) else action_type,
+                "label": str(message.get("label") or "Eingabefeld"),
+                "text": str(message.get("text") or ""),
+                "safe_text_context": bool(message.get("safe_text_context") or False),
+            }
         elif _is_stage1_navigation_action(action_type):
             self.pending_stage1_action = {
                 "action_type": _normalized_stage1_action_type(action_type),
                 "label": label,
                 "scroll_amount": _stage1_scroll_amount(message),
-            }
-        elif _is_stage2_text_action(action_type):
-            self.pending_stage2_action = {
-                "action_type": action_type,
-                "label": str(message.get("label") or "Eingabefeld"),
-                "text": str(message.get("text") or ""),
-                "safe_text_context": bool(message.get("safe_text_context") or False),
             }
         else:
             self.pending_stage3_action = {

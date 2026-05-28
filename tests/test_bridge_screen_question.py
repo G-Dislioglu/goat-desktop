@@ -168,6 +168,36 @@ def test_builder_cue_redacts_sensitive_context_before_popup_dispatch(monkeypatch
     assert "private-context-value" not in str(emitted.payloads[0])
 
 
+def test_builder_cue_redacts_sensitive_context_even_for_hover_cue(monkeypatch) -> None:
+    emitted = FakeSignal()
+    monkeypatch.setattr(
+        bridge,
+        "get_active_window",
+        lambda: WindowInfo(hwnd=1, title="Test Window", rect=[0, 0, 300, 200], foreground=True),
+    )
+    endpoint = _endpoint_for(create_app(dispatch_builder_cue=emitted.emit), "/builder-cue")
+
+    body = endpoint(
+        {
+            "source": "test_cue",
+            "action_type": "hover",
+            "label": "Login Feld",
+            "text": "private-context-value",
+            "safe_text_context": True,
+            "bbox": [20, 20, 120, 50],
+            "context": {"automation_id": "api-token-input", "control_type": "Edit"},
+        }
+    )
+
+    assert body["ok"] is True
+    assert body["dispatch"]["popupProposalEmitted"] is True
+    assert emitted.payloads[0]["stage4_lock"] is True
+    assert emitted.payloads[0]["label"] == "sensibles Ziel"
+    assert emitted.payloads[0]["context"] == {"automation_id": "[redacted]", "control_type": "[redacted]"}
+    assert "api-token-input" not in str(body)
+    assert "private-context-value" not in str(emitted.payloads[0])
+
+
 def test_builder_cue_redacts_sensitive_label_before_popup_dispatch(monkeypatch) -> None:
     emitted = FakeSignal()
     monkeypatch.setattr(
