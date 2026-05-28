@@ -24,6 +24,7 @@ from goat_desktop.livetalk_live import GeminiLiveSession
 from goat_desktop.overlay import BallOverlay
 from goat_desktop.popup import GoatPopup
 from goat_desktop.screen import capture_visible_desktop
+from goat_desktop.stage2_executor import MAX_STAGE2_TEXT_LENGTH
 from goat_desktop.screen_context import (
     VISION_CONTEXT_PROMPT,
     build_chat_context,
@@ -162,14 +163,39 @@ def _stage3_review_step_title(preview: dict) -> str:
 def _stage2_preview_message(stage2_action: dict, preview: dict) -> str:
     if not stage2_action.get("safe_text_context"):
         return "Ich tippe hier noch nicht. Sag mir genauer, welches Feld das ist, oder zeig es deutlicher."
-    if not _stage2_has_text(stage2_action):
+    text_guard = _stage2_text_guard(stage2_action)
+    if text_guard == "empty":
         return "Ich tippe hier noch nicht. Mir fehlt noch der Text, den ich eintragen soll."
+    if text_guard == "multi_line":
+        return "Mehrzeilige Texte tippe ich noch nicht automatisch. Bitte gib mir eine kurze einzeilige Eingabe."
+    if text_guard == "too_long":
+        return f"Der Text ist zu lang. Ich tippe aktuell hoechstens {MAX_STAGE2_TEXT_LENGTH} Zeichen automatisch."
     message = str(preview.get("message") or "Bitte pruefe die Eingabe.")
     return f"{message} Klicke nur auf Ausfuehren, wenn Feld und Text stimmen."
 
 
-def _stage2_has_text(stage2_action: dict) -> bool:
-    return bool(str(stage2_action.get("text") or "").strip())
+def _stage2_text_guard(stage2_action: dict) -> str | None:
+    text = str(stage2_action.get("text") or "")
+    if not text.strip():
+        return "empty"
+    if "\n" in text or "\r" in text:
+        return "multi_line"
+    if len(text) > MAX_STAGE2_TEXT_LENGTH:
+        return "too_long"
+    return None
+
+
+def _stage2_approve_label(stage2_action: dict) -> str:
+    if not stage2_action.get("safe_text_context"):
+        return "Nicht sicher"
+    text_guard = _stage2_text_guard(stage2_action)
+    if text_guard == "empty":
+        return "Kein Text"
+    if text_guard == "multi_line":
+        return "Mehrzeilig"
+    if text_guard == "too_long":
+        return "Zu lang"
+    return "Ausfuehren"
 
 
 def _stage1_preview_message(preview: dict) -> str:
@@ -1209,15 +1235,10 @@ class GoatTrayApp:
             self.popup.maya_value.setText(_stage2_preview_message(self.pending_stage2_action, preview))
             _set_review_status(self.popup)
             safe_text_context = bool(self.pending_stage2_action.get("safe_text_context"))
-            has_text = _stage2_has_text(self.pending_stage2_action)
-            if not safe_text_context:
-                approve_label = "Nicht sicher"
-            elif not has_text:
-                approve_label = "Kein Text"
-            else:
-                approve_label = "Ausfuehren"
+            text_guard = _stage2_text_guard(self.pending_stage2_action)
+            approve_label = _stage2_approve_label(self.pending_stage2_action)
             self.popup.cue_approve.setText(approve_label)
-            self.popup.cue_approve.setEnabled(bool(preview.get("ok")) and safe_text_context and has_text)
+            self.popup.cue_approve.setEnabled(bool(preview.get("ok")) and safe_text_context and text_guard is None)
             self.popup.cue_reject.setEnabled(True)
             return
         self.pending_stage1_action["broker_decision"] = broker_decision

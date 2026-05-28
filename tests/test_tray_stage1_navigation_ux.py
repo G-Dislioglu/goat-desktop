@@ -396,6 +396,54 @@ def test_stage2_preview_without_text_disables_execute() -> None:
     assert fake.popup.review_status_value.visible is False
 
 
+def test_stage2_preview_with_multiline_text_disables_execute() -> None:
+    fake = FakeTray()
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {"action_type": "type", "label": "Suchfeld", "text": "Zeile 1\nZeile 2", "safe_text_context": True, "bbox": [10, 20, 110, 80]},
+    )
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "ok",
+            "response": {
+                "safety_state": "accept",
+                "broker_decision": {"status": "accept", "final_bbox": [10, 20, 110, 80]},
+            },
+        },
+    )
+
+    assert fake.popup.maya_value.text() == (
+        "Mehrzeilige Texte tippe ich noch nicht automatisch. Bitte gib mir eine kurze einzeilige Eingabe."
+    )
+    assert fake.popup.cue_approve.text() == "Mehrzeilig"
+    assert fake.popup.cue_approve.enabled is False
+
+
+def test_stage2_preview_with_too_long_text_disables_execute() -> None:
+    fake = FakeTray()
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {"action_type": "type", "label": "Suchfeld", "text": "x" * 121, "safe_text_context": True, "bbox": [10, 20, 110, 80]},
+    )
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "ok",
+            "response": {
+                "safety_state": "accept",
+                "broker_decision": {"status": "accept", "final_bbox": [10, 20, 110, 80]},
+            },
+        },
+    )
+
+    assert fake.popup.maya_value.text() == "Der Text ist zu lang. Ich tippe aktuell hoechstens 120 Zeichen automatisch."
+    assert fake.popup.cue_approve.text() == "Zu lang"
+    assert fake.popup.cue_approve.enabled is False
+
+
 def test_builder_stage3_cue_shows_review_before_any_execution() -> None:
     fake = FakeTray()
 

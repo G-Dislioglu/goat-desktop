@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage2_popup_text_bounds_2026_05_28:
+"Stage-2 Popup spiegelt jetzt die Executor-Grenzen fuer Texteingaben vor der Freigabe: leere, mehrzeilige und zu lange Texte zeigen klare Normalnutzer-Meldungen und deaktivierte Buttons (`Kein Text`, `Mehrzeilig`, `Zu lang`). Dadurch bekommt der Nutzer keine scheinbare Ausfuehrfreigabe fuer Eingaben, die der Executor spaeter blockieren wuerde. Zieltests gruen: Stage-2 Popup/Executor-Subset mit 43 Tests."
+
 stage2_empty_text_popup_block_2026_05_28:
 "Stage-2 Texteingabe blockiert leere Eingaben jetzt bereits im Popup-Hauptpfad. Wenn ein Builder-Cue zwar ein sicheres Eingabefeld meldet, aber keinen nicht-leeren Text liefert, zeigt GOAT `Ich tippe hier noch nicht. Mir fehlt noch der Text, den ich eintragen soll.`, der Button heisst `Kein Text` und bleibt deaktiviert. Dadurch entsteht keine scheinbare Ausfuehrfreigabe fuer leere Texte; Executor-Guards bleiben zusaetzlich bestehen. Zieltests gruen: Stage-2 Popup/Executor-Subset mit 41 Tests."
 
