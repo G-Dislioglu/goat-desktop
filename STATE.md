@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_lock_copy_alignment_2026_05_28:
+"Stage-4 Sperrpfad nutzt in Action-Preview, Bridge-Preview und Tray jetzt einheitlich `Gesperrt - selbst erledigen`/`Gesperrt - bitte selbst im Programm erledigen`. Der Lock-Popup-Text lautet `Gesperrt: ... Bitte erledige das selbst im Programm.`, und der Abschluss nach `Verstanden` heisst `Sperre verstanden` mit `Ich habe nichts ausgefuehrt...`. Redaction und Non-Execution bleiben unveraendert. Zieltests gruen: Action-Preview/Tray/Stage2/Stage3/Stage4-Contract-Subset mit 102 Tests."
+
 stage3_review_result_language_2026_05_28:
 "Stage-3 Review-Sprache/Audit trennt jetzt `Review nicht freigegeben`, `Review verstanden. Keine Aktion ausgefuehrt.`, `Review geprueft. Keine Aktion ausgefuehrt.` und Stage-4-Sperre. Stage-3-Result/Audit enthaelt `user_message`, bleibt immer `executed=false`, `completion_verified=false`, `mayExecuteRealAction=false`; sensible Stage-4-Payloads bleiben redigiert. Das Popup schliesst Stage-3 jetzt als `Review verstanden` mit Hinweis `nur geprueft und nichts ausgefuehrt`. Zieltests gruen: Stage3/Tray/Action-Preview/Integration/Stage4-Contract-Subset mit 89 Tests."
 

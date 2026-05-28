@@ -142,8 +142,8 @@ def test_stage4_preview_locks_sensitive_actions() -> None:
     assert preview["ok"] is False
     assert preview["stage"] == 4
     assert preview["status"] == "locked"
-    assert preview["title"] == "Bitte selbst erledigen"
-    assert preview["message"] == "Das wirkt sensibel. GOAT fuehrt das nicht aus."
+    assert preview["title"] == "Gesperrt - selbst erledigen"
+    assert preview["message"] == "Das ist gesperrt. Bitte erledige es selbst im Programm."
     assert preview["actionText"] == "Text in sensibles Feld eingeben"
     assert preview["targetRedacted"] is True
     assert preview["primaryButton"] == "Verstanden"
@@ -337,7 +337,7 @@ def test_bridge_stage2_preview_required_flags_sensitive_input_without_secret() -
     assert body["preview"]["readyToApprove"] is False
     assert body["preview"]["previewBlockingReason"] == "locked"
     assert body["preview"]["targetRedacted"] is True
-    assert body["reason"] == "Das wirkt sensibel. GOAT fuehrt das nicht aus."
+    assert body["reason"] == "Das ist gesperrt. Bitte erledige es selbst im Programm."
     assert body["effects"]["desktopActionsExecuted"] is False
     assert body["effects"]["keyboardActionsExecuted"] is False
     assert "super-secret-value" not in json.dumps(body)

@@ -563,7 +563,7 @@ def test_sensitive_type_cue_is_locked_before_stage2() -> None:
     }
     assert fake.popup.target_value.text() == "Zielvorschlag: Passwortfeld"
     assert fake.popup.screen_context_value.text() == "Schritt 1: Ziel pruefen"
-    assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
+    assert fake.popup.maya_value.text() == "Gesperrt - bitte selbst im Programm erledigen."
     assert fake.popup.cue_approve.text() == "Pruefen"
     assert fake.popup.cue_approve.enabled is True
 
@@ -592,7 +592,7 @@ def test_sensitive_context_cue_is_locked_before_stage2() -> None:
         "context": {"input_type": "password", "control_type": "Edit"},
     }
     assert fake.popup.target_value.text() == "Zielvorschlag: Login Feld"
-    assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
+    assert fake.popup.maya_value.text() == "Gesperrt - bitte selbst im Programm erledigen."
     assert fake.popup.cue_approve.text() == "Pruefen"
     assert fake.popup.cue_approve.enabled is True
 
@@ -621,7 +621,7 @@ def test_hover_cue_with_sensitive_context_locks_before_stage1() -> None:
         "context": {"input_type": "password", "control_type": "Edit"},
     }
     assert fake.popup.target_value.text() == "Zielvorschlag: Login Feld"
-    assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
+    assert fake.popup.maya_value.text() == "Gesperrt - bitte selbst im Programm erledigen."
 
 
 def test_sensitive_aria_context_cue_is_locked_before_stage2() -> None:
@@ -645,7 +645,7 @@ def test_sensitive_aria_context_cue_is_locked_before_stage2() -> None:
         "label": "Code Feld",
         "context": {"aria_label": "2FA code"},
     }
-    assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
+    assert fake.popup.maya_value.text() == "Gesperrt - bitte selbst im Programm erledigen."
 
 
 def test_redacted_sensitive_context_cue_lock_signal_is_enough() -> None:
@@ -672,7 +672,7 @@ def test_redacted_sensitive_context_cue_lock_signal_is_enough() -> None:
         "label": "sensibles Ziel",
         "context": {"automation_id": "[redacted]", "control_type": "[redacted]"},
     }
-    assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
+    assert fake.popup.maya_value.text() == "Gesperrt - bitte selbst im Programm erledigen."
 
 
 def test_accepted_sensitive_type_cue_turns_into_locked_popup() -> None:
@@ -700,11 +700,11 @@ def test_accepted_sensitive_type_cue_turns_into_locked_popup() -> None:
     )
 
     assert fake.pending_stage4_action["broker_decision"] == {"status": "accept", "final_bbox": [10, 20, 110, 80]}
-    assert fake.popup.screen_context_value.text() == "Schritt 2: Bitte selbst erledigen"
+    assert fake.popup.screen_context_value.text() == "Schritt 2: Gesperrt - selbst erledigen"
     assert fake.popup.review_status_value.text() == "Gesperrt - selbst erledigen"
     assert fake.popup.review_status_value.isHidden() is False
     assert fake.popup.maya_value.text() == (
-        "GOAT fuehrt das nicht aus: Text in sensibles Feld eingeben. Bitte erledige sensible Eingaben selbst im Programm."
+        "Gesperrt: Text in sensibles Feld eingeben. Bitte erledige das selbst im Programm."
     )
     assert fake.popup.cue_approve.text() == "Verstanden"
     assert fake.popup.cue_approve.enabled is True
@@ -724,8 +724,8 @@ def test_sensitive_type_ack_closes_without_execution() -> None:
 
     assert fake.pending_builder_cue is None
     assert fake.pending_stage4_action is None
-    assert fake.popup.screen_context_value.text() == "Sperre geschlossen"
-    assert fake.popup.maya_value.text() == "Ich habe nichts ausgefuehrt. Bitte erledige sensible Eingaben selbst im Programm."
+    assert fake.popup.screen_context_value.text() == "Sperre verstanden"
+    assert fake.popup.maya_value.text() == "Ich habe nichts ausgefuehrt. Bitte erledige das selbst im Programm."
     assert fake.popup.review_status_value.isHidden() is True
     assert fake.popup.cue_approve.enabled is False
 

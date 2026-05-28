@@ -143,7 +143,7 @@ def _pending_action_hint(
     if stage3_action:
         return "Danach zeigt GOAT dir die wichtige Aktion nur zur Pruefung."
     if stage4_action:
-        return "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
+        return "Gesperrt - bitte selbst im Programm erledigen."
     return "Nur mit deiner Freigabe geht es weiter."
 
 
@@ -244,7 +244,7 @@ def _stage3_review_message(preview: dict) -> str:
 
 def _stage4_locked_message(preview: dict) -> str:
     action_text = str(preview.get("actionText") or "ein sensibles Feld bearbeiten")
-    return f"GOAT fuehrt das nicht aus: {action_text}. Bitte erledige sensible Eingaben selbst im Programm."
+    return f"Gesperrt: {action_text}. Bitte erledige das selbst im Programm."
 
 
 def _set_review_status(popup: object, text: str = "") -> None:
@@ -1212,8 +1212,8 @@ class GoatTrayApp:
         if self.pending_stage4_action and self.pending_stage4_action.get("broker_decision"):
             self.pending_builder_cue = None
             self.pending_stage4_action = None
-            self.popup.screen_context_value.setText("Sperre geschlossen")
-            self.popup.maya_value.setText("Ich habe nichts ausgefuehrt. Bitte erledige sensible Eingaben selbst im Programm.")
+            self.popup.screen_context_value.setText("Sperre verstanden")
+            self.popup.maya_value.setText("Ich habe nichts ausgefuehrt. Bitte erledige das selbst im Programm.")
             _set_review_status(self.popup)
             self.popup.cue_approve.setText("Pruefen")
             self.popup.cue_approve.setEnabled(False)
