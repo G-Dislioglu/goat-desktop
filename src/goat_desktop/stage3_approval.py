@@ -30,6 +30,7 @@ class Stage3ApprovalResult:
     approval_required: bool
     preview: dict
     gate_decision: dict
+    user_message: str = ""
 
     def to_dict(self) -> dict:
         result = asdict(self)
@@ -176,6 +177,7 @@ def _preview(request: Stage3ApprovalRequest, *, locked: bool = False) -> dict:
 
 
 def _audit_review(request: Stage3ApprovalRequest, result: Stage3ApprovalResult) -> Stage3ApprovalResult:
+    result = _with_user_message(result)
     append_audit_event(
         "stage3_approval",
         result.status,
@@ -191,6 +193,33 @@ def _audit_review(request: Stage3ApprovalRequest, result: Stage3ApprovalResult) 
         },
     )
     return result
+
+
+def _with_user_message(result: Stage3ApprovalResult) -> Stage3ApprovalResult:
+    if result.user_message:
+        return result
+    return Stage3ApprovalResult(
+        status=result.status,
+        executed=result.executed,
+        stage=result.stage,
+        reason=result.reason,
+        approval_required=result.approval_required,
+        preview=result.preview,
+        gate_decision=result.gate_decision,
+        user_message=_stage3_user_message(result),
+    )
+
+
+def _stage3_user_message(result: Stage3ApprovalResult) -> str:
+    if result.status == "approved_not_executed":
+        return "Review verstanden. Keine Aktion ausgefuehrt."
+    if result.status == "approved_dry_run":
+        return "Review geprueft. Keine Aktion ausgefuehrt."
+    if result.status == "locked":
+        return "Gesperrt. Bitte selbst erledigen."
+    if result.status in {"needs_approval", "approval_phrase_mismatch"}:
+        return "Review nicht freigegeben."
+    return "Review nicht ausgefuehrt."
 
 
 def _audit_request(request: Stage3ApprovalRequest, result: Stage3ApprovalResult) -> dict:

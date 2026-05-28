@@ -1202,8 +1202,8 @@ class GoatTrayApp:
         if self.pending_stage3_action and self.pending_stage3_action.get("broker_decision"):
             self.pending_builder_cue = None
             self.pending_stage3_action = None
-            self.popup.screen_context_value.setText("Review geschlossen")
-            self.popup.maya_value.setText("Ich habe nichts ausgefuehrt. Bitte entscheide selbst im Programm, ob du weitermachst.")
+            self.popup.screen_context_value.setText("Review verstanden")
+            self.popup.maya_value.setText("Ich habe nur geprueft und nichts ausgefuehrt. Bitte entscheide selbst im Programm.")
             _set_review_status(self.popup)
             self.popup.cue_approve.setText("Pruefen")
             self.popup.cue_approve.setEnabled(False)

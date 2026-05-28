@@ -26,6 +26,7 @@ def test_stage3_without_approval_needs_approval(monkeypatch, tmp_path: Path) -> 
     assert result.status == "needs_approval"
     assert result.executed is False
     assert result.stage == 3
+    assert result.user_message == "Review nicht freigegeben."
     assert result.preview["approval_phrase_required"] == APPROVAL_PHRASE
 
 
@@ -45,6 +46,7 @@ def test_stage3_wrong_phrase_blocks(monkeypatch, tmp_path: Path) -> None:
 
     assert result.status == "approval_phrase_mismatch"
     assert result.executed is False
+    assert result.user_message == "Review nicht freigegeben."
 
 
 def test_stage3_correct_phrase_approves_but_does_not_execute(monkeypatch, tmp_path: Path) -> None:
@@ -65,6 +67,7 @@ def test_stage3_correct_phrase_approves_but_does_not_execute(monkeypatch, tmp_pa
     assert result.status == "approved_not_executed"
     assert result.executed is False
     assert result.approval_required is False
+    assert result.user_message == "Review verstanden. Keine Aktion ausgefuehrt."
     body = result.to_dict()
     assert body["completion_verified"] is False
     assert body["mayExecuteRealAction"] is False
@@ -90,6 +93,7 @@ def test_stage3_dry_run_approval_does_not_execute(monkeypatch, tmp_path: Path) -
 
     assert result.status == "approved_dry_run"
     assert result.executed is False
+    assert result.user_message == "Review geprueft. Keine Aktion ausgefuehrt."
 
 
 def test_broker_uncertain_stops(monkeypatch, tmp_path: Path) -> None:
@@ -127,6 +131,7 @@ def test_stage4_remains_locked(monkeypatch, tmp_path: Path) -> None:
     assert result.status == "locked"
     assert result.executed is False
     assert result.stage == 4
+    assert result.user_message == "Gesperrt. Bitte selbst erledigen."
     assert result.preview["label"] == "sensibles Feld"
     assert result.preview["label_redacted"] is True
     assert result.preview["consequence_summary"] == ""
@@ -155,6 +160,7 @@ def test_stage4_audit_redacts_sensitive_request(monkeypatch, tmp_path: Path) -> 
     assert stage3_event["payload"]["request"]["consequence_summary"] == ""
     assert stage3_event["payload"]["request"]["consequence_summary_redacted"] is True
     assert stage3_event["payload"]["result"]["preview"]["label"] == "sensibles Feld"
+    assert stage3_event["payload"]["result"]["user_message"] == "Gesperrt. Bitte selbst erledigen."
     assert "api-token-input" not in json.dumps(stage3_event)
     assert "raw-secret-summary" not in json.dumps(stage3_event)
 
@@ -176,6 +182,7 @@ def test_stage2_is_blocked_by_stage3_review(monkeypatch, tmp_path: Path) -> None
     assert result.status == "blocked"
     assert result.stage == 2
     assert result.executed is False
+    assert result.user_message == "Review nicht ausgefuehrt."
 
 
 def test_stage3_audit_contains_scope(monkeypatch, tmp_path: Path) -> None:
@@ -197,6 +204,7 @@ def test_stage3_audit_contains_scope(monkeypatch, tmp_path: Path) -> None:
     assert events[-1]["event_type"] == "stage3_approval"
     assert events[-1]["status"] == "approved_not_executed"
     assert events[-1]["payload"]["result"]["executed"] is False
+    assert events[-1]["payload"]["result"]["user_message"] == "Review verstanden. Keine Aktion ausgefuehrt."
     assert "run_g4 validates hard approval only and executes no stage 3 OS action" in events[-1]["payload"][
         "assumptions"
     ]

@@ -829,10 +829,10 @@ def test_stage3_review_acknowledge_does_not_start_stage1_or_stage2_execution() -
     assert fake.pending_stage1_action is None
     assert fake.pending_stage2_action is None
     assert fake.pending_stage3_action is None
-    assert fake.popup.screen_context_value.text() == "Review geschlossen"
+    assert fake.popup.screen_context_value.text() == "Review verstanden"
     assert fake.popup.review_status_value.isHidden() is True
     assert fake.popup.maya_value.text() == (
-        "Ich habe nichts ausgefuehrt. Bitte entscheide selbst im Programm, ob du weitermachst."
+        "Ich habe nur geprueft und nichts ausgefuehrt. Bitte entscheide selbst im Programm."
     )
     assert fake.popup.cue_approve.text() == "Pruefen"
     assert fake.popup.cue_approve.enabled is False

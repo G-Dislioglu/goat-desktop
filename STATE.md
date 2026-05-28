@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage3_review_result_language_2026_05_28:
+"Stage-3 Review-Sprache/Audit trennt jetzt `Review nicht freigegeben`, `Review verstanden. Keine Aktion ausgefuehrt.`, `Review geprueft. Keine Aktion ausgefuehrt.` und Stage-4-Sperre. Stage-3-Result/Audit enthaelt `user_message`, bleibt immer `executed=false`, `completion_verified=false`, `mayExecuteRealAction=false`; sensible Stage-4-Payloads bleiben redigiert. Das Popup schliesst Stage-3 jetzt als `Review verstanden` mit Hinweis `nur geprueft und nichts ausgefuehrt`. Zieltests gruen: Stage3/Tray/Action-Preview/Integration/Stage4-Contract-Subset mit 89 Tests."
+
 stage2_result_language_2026_05_28:
 "Stage-2 Ergebnis-Sprache trennt jetzt klar `Eingabe nicht freigegeben`, `Text nicht eingetragen` und `Text eingetragen`. Das Tray zeigt fuer fehlende Freigabe einen eigenen Titel statt generischem Ausfuehrungsfehler; Backend-/Verifikationsfehler bleiben `Text nicht eingetragen`. Stage-2 Executor-Result/Audit enthaelt zusaetzlich `user_message` mit derselben Normalnutzer-Zusammenfassung. Zieltests gruen: Stage2-Executor/Action-Preview/Tray/Integration/Stage4-Contract-Subset mit 94 Tests."
 
