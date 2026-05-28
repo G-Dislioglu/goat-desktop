@@ -8,14 +8,17 @@ from goat_desktop.action_gate import ActionRequest, evaluate_action_gate
 from goat_desktop.audit_log import read_audit_events
 from goat_desktop.bridge import create_app
 from goat_desktop.screen import WindowInfo
+from goat_desktop.stage1_executor import Stage1ExecutionRequest, execute_stage1_action
 from goat_desktop.stage2_executor import Stage2ExecutionRequest, execute_stage2_text_input
+from goat_desktop.stage3_approval import APPROVAL_PHRASE, Stage3ApprovalRequest, review_stage3_action
 
 
 ACCEPTED = {"status": "accept", "final_bbox": [20, 20, 120, 50], "fusion_path": "test"}
 RAW_LABEL = "api-token-input"
 RAW_TEXT = "raw-secret-text-value"
+RAW_SUMMARY = "raw-secret-summary-value"
 RAW_CONTEXT = {"automation_id": "api-token-input", "aria_label": "2FA code"}
-RAW_VALUES = [RAW_LABEL, RAW_TEXT, "2FA code"]
+RAW_VALUES = [RAW_LABEL, RAW_TEXT, RAW_SUMMARY, "2FA code"]
 
 
 class FakeSignal:
@@ -31,6 +34,9 @@ def test_stage4_redaction_contract_blocks_raw_values_across_surfaces(monkeypatch
     monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(audit_path))
 
     gate = evaluate_action_gate(ActionRequest("type", RAW_LABEL, ACCEPTED, user_approved=True, context=RAW_CONTEXT))
+    stage1 = execute_stage1_action(
+        Stage1ExecutionRequest("type", RAW_LABEL, ACCEPTED, user_approved=True, dry_run=False)
+    )
     stage2 = execute_stage2_text_input(
         Stage2ExecutionRequest(
             "type",
@@ -41,6 +47,16 @@ def test_stage4_redaction_contract_blocks_raw_values_across_surfaces(monkeypatch
             dry_run=False,
             safe_text_context=True,
             context=RAW_CONTEXT,
+        )
+    )
+    stage3 = review_stage3_action(
+        Stage3ApprovalRequest(
+            "type",
+            RAW_LABEL,
+            ACCEPTED,
+            RAW_SUMMARY,
+            user_approved=True,
+            approval_phrase=APPROVAL_PHRASE,
         )
     )
 
@@ -65,14 +81,20 @@ def test_stage4_redaction_contract_blocks_raw_values_across_surfaces(monkeypatch
 
     surfaces = {
         "gate_decision": gate.to_dict(),
+        "stage1_response": stage1.to_dict(),
         "stage2_response": stage2.to_dict(),
+        "stage3_response": stage3.to_dict(),
         "audit_events": read_audit_events(audit_path),
         "builder_response": builder_response,
         "popup_payload": emitted.payloads[0],
     }
 
     assert gate.status == "locked"
+    assert stage1.status == "blocked"
     assert stage2.status == "blocked"
+    assert stage3.status == "locked"
+    assert stage3.preview["label"] == "sensibles Feld"
+    assert stage3.preview["consequence_summary"] == ""
     assert emitted.payloads[0]["stage4_lock"] is True
     assert emitted.payloads[0]["label"] == "sensibles Ziel"
     assert emitted.payloads[0]["text"] == ""

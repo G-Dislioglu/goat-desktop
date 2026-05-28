@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_redaction_contract_all_layers_2026_05_28:
+"Der zentrale Stage-4-Redaction-Contract umfasst jetzt alle Action-Layer: Action-Gate, Stage-1, Stage-2, Stage-3, Audit-Events, `/builder-cue` Response und Popup-Payload. Mit denselben Rohwerten fuer Label/Text/Summary/Context wird geprueft, dass keine rohen Secret-Werte in den serialisierten Oberflaechen auftauchen. Zieltest gruen: Stage4-Redaction-Contract mit 1 Test."
+
 stage3_stage4_audit_redaction_2026_05_28:
 "Stage-3 Review redigiert Stage-4 Technical-Lock-Daten jetzt in Preview und eigenem Audit. Sensible Labels werden als `sensibles Feld` angezeigt bzw. im Audit `[redacted]`, und `consequence_summary` wird bei Stage-4 geleert plus `consequence_summary_redacted=true`. Die zentrale Redaction-Policy deckt Stage-3-Payloads jetzt direkt ab. Zieltests gruen: Stage3/Redaction-Policy-Subset mit 15 Tests."
 
