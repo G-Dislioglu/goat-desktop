@@ -15,6 +15,12 @@ from PyQt6.QtGui import QAction, QIcon, QPainter, QPixmap
 from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from goat_desktop.action_gate import ActionStage, classify_action_with_reason
+from goat_desktop.action_copy import (
+    STAGE4_LOCK_ACK_MESSAGE,
+    STAGE4_LOCK_ACK_TITLE,
+    STAGE4_LOCK_HINT,
+    STAGE4_LOCK_TITLE,
+)
 from goat_desktop.action_preview import build_action_preview
 from goat_desktop.builder_bridge import BuilderBridgeClient
 from goat_desktop.bridge import CueDispatcher, LocalBridge
@@ -143,7 +149,7 @@ def _pending_action_hint(
     if stage3_action:
         return "Danach zeigt GOAT dir die wichtige Aktion nur zur Pruefung."
     if stage4_action:
-        return "Gesperrt - bitte selbst im Programm erledigen."
+        return STAGE4_LOCK_HINT
     return "Nur mit deiner Freigabe geht es weiter."
 
 
@@ -1212,8 +1218,8 @@ class GoatTrayApp:
         if self.pending_stage4_action and self.pending_stage4_action.get("broker_decision"):
             self.pending_builder_cue = None
             self.pending_stage4_action = None
-            self.popup.screen_context_value.setText("Sperre verstanden")
-            self.popup.maya_value.setText("Ich habe nichts ausgefuehrt. Bitte erledige das selbst im Programm.")
+            self.popup.screen_context_value.setText(STAGE4_LOCK_ACK_TITLE)
+            self.popup.maya_value.setText(STAGE4_LOCK_ACK_MESSAGE)
             _set_review_status(self.popup)
             self.popup.cue_approve.setText("Pruefen")
             self.popup.cue_approve.setEnabled(False)
@@ -1317,7 +1323,7 @@ class GoatTrayApp:
             )
             self.popup.screen_context_value.setText(_execution_step_title(preview))
             self.popup.maya_value.setText(_stage4_locked_message(preview))
-            _set_review_status(self.popup, "Gesperrt - selbst erledigen")
+            _set_review_status(self.popup, STAGE4_LOCK_TITLE)
             self.popup.cue_approve.setText("Verstanden")
             self.popup.cue_approve.setEnabled(True)
             self.popup.cue_reject.setEnabled(True)

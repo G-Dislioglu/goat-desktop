@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from goat_desktop.action_gate import ActionRequest, evaluate_action_gate
+from goat_desktop.action_copy import STAGE4_LOCK_HINT, STAGE4_LOCK_MESSAGE, STAGE4_LOCK_TITLE
 from goat_desktop.redaction import SENSITIVE_FIELD_LABEL
 
 
@@ -146,7 +147,7 @@ def _stage3_review_guidance(normalized: str, stage: int, status: str) -> str:
 
 def _title_for_gate(stage: int, status: str) -> str:
     if status == "locked":
-        return "Gesperrt - selbst erledigen"
+        return STAGE4_LOCK_TITLE
     if status == "stop":
         return "Ziel nicht sicher"
     if stage == 1:
@@ -164,7 +165,7 @@ def _review_status_for_gate(stage: int, status: str) -> str:
 
 def _message_for_gate(stage: int, status: str, action_text: str, review_guidance: str = "") -> str:
     if status == "locked":
-        return "Das ist gesperrt. Bitte erledige es selbst im Programm."
+        return STAGE4_LOCK_MESSAGE
     if status == "stop":
         return "Das Ziel ist nicht sicher genug erkannt. Bitte erst neu markieren."
     if stage == 1:
@@ -192,7 +193,7 @@ def _reason_for_gate(status: str, stage: int) -> str:
         return "Erst Eingabe pruefen, dann freigeben."
     reasons = {
         "stop": "Ziel wurde nicht sicher bestaetigt.",
-        "locked": "Gesperrt - bitte selbst erledigen.",
+        "locked": STAGE4_LOCK_HINT,
         "preview": "Erst Vorschau, dann Ausfuehrung.",
         "needs_approval": "Ausdrueckliche Freigabe erforderlich.",
         "dry_run_ready": "Testmodus: keine echte Aktion.",

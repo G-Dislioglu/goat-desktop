@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 
 from goat_desktop.action_gate import ActionRequest, ActionStage, evaluate_action_gate
+from goat_desktop.action_copy import STAGE4_LOCK_HINT
 from goat_desktop.audit_log import append_audit_event
 from goat_desktop.redaction import SENSITIVE_FIELD_LABEL, redact_locked_stage3_payload
 
@@ -216,7 +217,7 @@ def _stage3_user_message(result: Stage3ApprovalResult) -> str:
     if result.status == "approved_dry_run":
         return "Review geprueft. Keine Aktion ausgefuehrt."
     if result.status == "locked":
-        return "Gesperrt. Bitte selbst erledigen."
+        return STAGE4_LOCK_HINT
     if result.status in {"needs_approval", "approval_phrase_mismatch"}:
         return "Review nicht freigegeben."
     return "Review nicht ausgefuehrt."

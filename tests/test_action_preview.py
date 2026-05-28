@@ -144,6 +144,7 @@ def test_stage4_preview_locks_sensitive_actions() -> None:
     assert preview["status"] == "locked"
     assert preview["title"] == "Gesperrt - selbst erledigen"
     assert preview["message"] == "Das ist gesperrt. Bitte erledige es selbst im Programm."
+    assert preview["reason"] == "Gesperrt - bitte selbst im Programm erledigen."
     assert preview["actionText"] == "Text in sensibles Feld eingeben"
     assert preview["targetRedacted"] is True
     assert preview["primaryButton"] == "Verstanden"

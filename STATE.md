@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_lock_copy_single_source_2026_05_28:
+"Stage-4 Sperrtexte haben jetzt eine gemeinsame Quelle in `action_copy.py`: Preview, Tray-Popup, Tray-Abschluss und Stage-3-Lock-Result/Audit nutzen dieselben Normalnutzertexte fuer `Gesperrt - selbst erledigen`, `Gesperrt - bitte selbst im Programm erledigen` und `Sperre verstanden`. Das beseitigt den letzten kuerzeren Stage-3-Lock-Resulttext, ohne Redaction oder Non-Execution zu lockern. Zieltests gruen: Action-Preview/Stage3/Tray/Stage4-Contract-Subset mit 88 Tests."
+
 stage4_lock_copy_alignment_2026_05_28:
 "Stage-4 Sperrpfad nutzt in Action-Preview, Bridge-Preview und Tray jetzt einheitlich `Gesperrt - selbst erledigen`/`Gesperrt - bitte selbst im Programm erledigen`. Der Lock-Popup-Text lautet `Gesperrt: ... Bitte erledige das selbst im Programm.`, und der Abschluss nach `Verstanden` heisst `Sperre verstanden` mit `Ich habe nichts ausgefuehrt...`. Redaction und Non-Execution bleiben unveraendert. Zieltests gruen: Action-Preview/Tray/Stage2/Stage3/Stage4-Contract-Subset mit 102 Tests."
 

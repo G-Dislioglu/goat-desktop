@@ -131,7 +131,7 @@ def test_stage4_remains_locked(monkeypatch, tmp_path: Path) -> None:
     assert result.status == "locked"
     assert result.executed is False
     assert result.stage == 4
-    assert result.user_message == "Gesperrt. Bitte selbst erledigen."
+    assert result.user_message == "Gesperrt - bitte selbst im Programm erledigen."
     assert result.preview["label"] == "sensibles Feld"
     assert result.preview["label_redacted"] is True
     assert result.preview["consequence_summary"] == ""
@@ -160,7 +160,7 @@ def test_stage4_audit_redacts_sensitive_request(monkeypatch, tmp_path: Path) -> 
     assert stage3_event["payload"]["request"]["consequence_summary"] == ""
     assert stage3_event["payload"]["request"]["consequence_summary_redacted"] is True
     assert stage3_event["payload"]["result"]["preview"]["label"] == "sensibles Feld"
-    assert stage3_event["payload"]["result"]["user_message"] == "Gesperrt. Bitte selbst erledigen."
+    assert stage3_event["payload"]["result"]["user_message"] == "Gesperrt - bitte selbst im Programm erledigen."
     assert "api-token-input" not in json.dumps(stage3_event)
     assert "raw-secret-summary" not in json.dumps(stage3_event)
 

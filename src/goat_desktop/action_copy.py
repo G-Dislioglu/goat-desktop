@@ -1,0 +1,5 @@
+STAGE4_LOCK_TITLE = "Gesperrt - selbst erledigen"
+STAGE4_LOCK_MESSAGE = "Das ist gesperrt. Bitte erledige es selbst im Programm."
+STAGE4_LOCK_HINT = "Gesperrt - bitte selbst im Programm erledigen."
+STAGE4_LOCK_ACK_TITLE = "Sperre verstanden"
+STAGE4_LOCK_ACK_MESSAGE = "Ich habe nichts ausgefuehrt. Bitte erledige das selbst im Programm."
