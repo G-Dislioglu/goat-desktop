@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from goat_desktop.action_gate import ActionRequest, classify_action, evaluate_action_gate
@@ -81,3 +82,26 @@ def test_audit_log_contains_lineage(monkeypatch, tmp_path: Path) -> None:
     assert events[0]["event_type"] == "action_gate_needs_approval"
     assert "assumptions" in events[0]["payload"]
     assert events[0]["payload"]["request"]["broker_decision"]["status"] == "accept"
+
+
+def test_stage4_audit_redacts_sensitive_context(monkeypatch, tmp_path: Path) -> None:
+    audit_path = tmp_path / "audit.jsonl"
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(audit_path))
+
+    evaluate_action_gate(
+        ActionRequest(
+            "type",
+            "Login Feld",
+            ACCEPTED,
+            user_approved=True,
+            context={"automation_id": "api-token-input", "control_type": "Edit"},
+        )
+    )
+
+    events = read_audit_events(audit_path)
+    payload = events[0]["payload"]
+    assert payload["request"]["context"] == {"automation_id": "[redacted]", "control_type": "[redacted]"}
+    assert payload["request"]["context_redacted"] is True
+    assert payload["classification"]["normalized_text"] == "[redacted]"
+    assert payload["classification"]["normalized_text_redacted"] is True
+    assert "api-token-input" not in json.dumps(events)

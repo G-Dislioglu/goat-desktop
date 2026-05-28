@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_context_audit_redaction_2026_05_28:
+"Stage-4-Audits redigieren sensible Kontextwerte jetzt im Action-Gate und Stage-2-Executor. Wenn Kontext-/UIA-Metadaten wie `automation_id=api-token-input` einen Technical Lock ausloesen, werden Kontextwerte in Audit-Requests zu `[redacted]`, `context_redacted=true`, und `classification.normalized_text` wird ebenfalls redigiert. Zieltests gruen: Action-Gate/Stage2/Action-Preview-Subset mit 47 Tests."
+
 stage4_context_stage2_bridge_lock_2026_05_28:
 "Stage-2 Executor und `/action/stage2/text` beruecksichtigen jetzt Kontext-/UIA-Metadaten bei der Gate-Klassifikation. Direkte Stage-2-Aufrufe mit z.B. `context.input_type=password` oder `context.automation_id=api-token-input` werden Stage-4-locked, redigieren den sensiblen Text in Preview/Audit und rufen kein Text-Backend auf. Zieltests gruen: Action-Preview/Stage2/Tray/Classification-Subset mit 91 Tests."
 

@@ -291,9 +291,9 @@ def _audit_decision(
         decision.audit_event_type,
         decision.status,
         {
-            "request": asdict(request),
+            "request": _audit_request(request, classification),
             "decision": decision.to_dict(),
-            "classification": classification.to_dict(),
+            "classification": _audit_classification(classification),
             "assumptions": [
                 "broker_decision must be accept before any action gate can pass",
                 "unknown action labels are classified as stage 3",
@@ -304,6 +304,22 @@ def _audit_decision(
         },
     )
     return decision
+
+
+def _audit_request(request: ActionRequest, classification: ActionClassification) -> dict[str, Any]:
+    payload = asdict(request)
+    if classification.stage_enum == ActionStage.TECHNICAL_LOCK and payload.get("context"):
+        payload["context"] = {key: "[redacted]" for key in payload["context"]}
+        payload["context_redacted"] = True
+    return payload
+
+
+def _audit_classification(classification: ActionClassification) -> dict[str, Any]:
+    payload = classification.to_dict()
+    if classification.stage_enum == ActionStage.TECHNICAL_LOCK:
+        payload["normalized_text"] = "[redacted]"
+        payload["normalized_text_redacted"] = True
+    return payload
 
 
 def _normalize_text(text: str) -> str:

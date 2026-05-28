@@ -315,4 +315,7 @@ def _audit_request(request: Stage2ExecutionRequest, result: Stage2ExecutionResul
     if result.stage == int(ActionStage.TECHNICAL_LOCK):
         payload["text"] = ""
         payload["text_redacted"] = True
+        if payload.get("context"):
+            payload["context"] = {key: "[redacted]" for key in payload["context"]}
+            payload["context_redacted"] = True
     return payload

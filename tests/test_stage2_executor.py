@@ -261,7 +261,7 @@ def test_stage4_context_is_blocked_and_redacted(monkeypatch, tmp_path: Path) -> 
             user_approved=True,
             dry_run=False,
             safe_text_context=True,
-            context={"input_type": "password", "control_type": "Edit"},
+            context={"automation_id": "api-token-input", "control_type": "Edit"},
         ),
         backend=RecordingTextBackend(),
     )
@@ -276,8 +276,10 @@ def test_stage4_context_is_blocked_and_redacted(monkeypatch, tmp_path: Path) -> 
     stage2_event = next(event for event in events if event["event_type"] == "stage2_execution")
     assert stage2_event["payload"]["request"]["text"] == ""
     assert stage2_event["payload"]["request"]["text_redacted"] is True
-    assert stage2_event["payload"]["request"]["context"] == {"input_type": "password", "control_type": "Edit"}
+    assert stage2_event["payload"]["request"]["context"] == {"automation_id": "[redacted]", "control_type": "[redacted]"}
+    assert stage2_event["payload"]["request"]["context_redacted"] is True
     assert "context-private-value" not in json.dumps(events)
+    assert "api-token-input" not in json.dumps(events)
 
 
 def test_multiline_text_is_blocked(monkeypatch, tmp_path: Path) -> None:
