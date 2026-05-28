@@ -7,6 +7,7 @@ from goat_desktop.redaction import (
     redact_context,
     redact_locked_classification_payload,
     redact_locked_request_payload,
+    redact_locked_stage3_payload,
     redact_nested_context_values,
 )
 
@@ -47,6 +48,17 @@ def test_locked_classification_redacts_normalized_text() -> None:
     assert redacted["stage"] == 4
     assert redacted["normalized_text"] == "[redacted]"
     assert redacted["normalized_text_redacted"] is True
+
+
+def test_locked_stage3_payload_redacts_consequence_summary() -> None:
+    redacted = redact_locked_stage3_payload(
+        {"action_type": "type", "label": "api-token-input", "consequence_summary": "raw-secret-summary"}
+    )
+
+    assert redacted["label"] == "[redacted]"
+    assert redacted["label_redacted"] is True
+    assert redacted["consequence_summary"] == ""
+    assert redacted["consequence_summary_redacted"] is True
 
 
 def test_nested_context_redaction_is_recursive() -> None:

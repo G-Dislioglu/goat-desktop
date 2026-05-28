@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage3_stage4_audit_redaction_2026_05_28:
+"Stage-3 Review redigiert Stage-4 Technical-Lock-Daten jetzt in Preview und eigenem Audit. Sensible Labels werden als `sensibles Feld` angezeigt bzw. im Audit `[redacted]`, und `consequence_summary` wird bei Stage-4 geleert plus `consequence_summary_redacted=true`. Die zentrale Redaction-Policy deckt Stage-3-Payloads jetzt direkt ab. Zieltests gruen: Stage3/Redaction-Policy-Subset mit 15 Tests."
+
 stage1_stage4_audit_redaction_2026_05_28:
 "Stage-1 Executor redigiert eigene Audit-Requests jetzt ebenfalls, wenn ein Stage-4 Technical Lock erreicht wird. Sensible Labels wie `api-token-input` werden im `stage1_execution`-Audit zu `[redacted]` plus `label_redacted=true`; Action-Gate-Redaction bleibt zusaetzlich aktiv. Zieltests gruen: Stage1-Executor-Subset mit 13 Tests."
 

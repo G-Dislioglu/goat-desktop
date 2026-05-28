@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from goat_desktop.audit_log import read_audit_events
@@ -126,6 +127,36 @@ def test_stage4_remains_locked(monkeypatch, tmp_path: Path) -> None:
     assert result.status == "locked"
     assert result.executed is False
     assert result.stage == 4
+    assert result.preview["label"] == "sensibles Feld"
+    assert result.preview["label_redacted"] is True
+    assert result.preview["consequence_summary"] == ""
+    assert result.preview["consequence_summary_redacted"] is True
+
+
+def test_stage4_audit_redacts_sensitive_request(monkeypatch, tmp_path: Path) -> None:
+    audit_path = tmp_path / "audit.jsonl"
+    monkeypatch.setenv("GOAT_AUDIT_LOG_PATH", str(audit_path))
+
+    review_stage3_action(
+        Stage3ApprovalRequest(
+            "type",
+            "api-token-input",
+            ACCEPTED,
+            "This would type raw-secret-summary.",
+            user_approved=True,
+            approval_phrase=APPROVAL_PHRASE,
+        )
+    )
+
+    events = read_audit_events(audit_path)
+    stage3_event = next(event for event in events if event["event_type"] == "stage3_approval")
+    assert stage3_event["payload"]["request"]["label"] == "[redacted]"
+    assert stage3_event["payload"]["request"]["label_redacted"] is True
+    assert stage3_event["payload"]["request"]["consequence_summary"] == ""
+    assert stage3_event["payload"]["request"]["consequence_summary_redacted"] is True
+    assert stage3_event["payload"]["result"]["preview"]["label"] == "sensibles Feld"
+    assert "api-token-input" not in json.dumps(stage3_event)
+    assert "raw-secret-summary" not in json.dumps(stage3_event)
 
 
 def test_stage2_is_blocked_by_stage3_review(monkeypatch, tmp_path: Path) -> None:

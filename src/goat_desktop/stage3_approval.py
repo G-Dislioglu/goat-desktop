@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass
 
 from goat_desktop.action_gate import ActionRequest, ActionStage, evaluate_action_gate
 from goat_desktop.audit_log import append_audit_event
+from goat_desktop.redaction import SENSITIVE_FIELD_LABEL, redact_locked_stage3_payload
 
 
 APPROVAL_PHRASE = "I approve this stage 3 action"
@@ -58,7 +59,7 @@ def review_stage3_action(request: Stage3ApprovalRequest) -> Stage3ApprovalResult
         dry_run=request.dry_run,
     )
     gate_decision = evaluate_action_gate(gate_request)
-    preview = _preview(request)
+    preview = _preview(request, locked=gate_decision.stage == int(ActionStage.TECHNICAL_LOCK))
 
     if gate_decision.stage == int(ActionStage.TECHNICAL_LOCK):
         return _audit_review(
@@ -158,14 +159,20 @@ def review_stage3_action(request: Stage3ApprovalRequest) -> Stage3ApprovalResult
     )
 
 
-def _preview(request: Stage3ApprovalRequest) -> dict:
-    return {
+def _preview(request: Stage3ApprovalRequest, *, locked: bool = False) -> dict:
+    preview = {
         "label": request.label,
         "action_type": request.action_type,
         "consequence_summary": request.consequence_summary,
         "approval_phrase_required": APPROVAL_PHRASE,
         "broker_decision": request.broker_decision,
     }
+    if locked:
+        preview["label"] = SENSITIVE_FIELD_LABEL
+        preview["label_redacted"] = True
+        preview["consequence_summary"] = ""
+        preview["consequence_summary_redacted"] = True
+    return preview
 
 
 def _audit_review(request: Stage3ApprovalRequest, result: Stage3ApprovalResult) -> Stage3ApprovalResult:
@@ -173,7 +180,7 @@ def _audit_review(request: Stage3ApprovalRequest, result: Stage3ApprovalResult) 
         "stage3_approval",
         result.status,
         {
-            "request": asdict(request),
+            "request": _audit_request(request, result),
             "result": result.to_dict(),
             "assumptions": [
                 "run_g4 validates hard approval only and executes no stage 3 OS action",
@@ -184,3 +191,10 @@ def _audit_review(request: Stage3ApprovalRequest, result: Stage3ApprovalResult) 
         },
     )
     return result
+
+
+def _audit_request(request: Stage3ApprovalRequest, result: Stage3ApprovalResult) -> dict:
+    payload = asdict(request)
+    if result.stage == int(ActionStage.TECHNICAL_LOCK):
+        payload = redact_locked_stage3_payload(payload)
+    return payload

@@ -25,6 +25,14 @@ def redact_locked_request_payload(payload: dict[str, Any], *, redact_text: bool 
     return redacted
 
 
+def redact_locked_stage3_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    redacted = redact_locked_request_payload(payload)
+    if "consequence_summary" in redacted:
+        redacted["consequence_summary"] = ""
+        redacted["consequence_summary_redacted"] = True
+    return redacted
+
+
 def redact_locked_classification_payload(payload: dict[str, Any]) -> dict[str, Any]:
     redacted = dict(payload)
     redacted["normalized_text"] = REDACTED_VALUE
