@@ -454,7 +454,7 @@ def _no_action_effects() -> dict[str, Any]:
 
 def _stage1_effects(result: dict[str, Any]) -> dict[str, Any]:
     effects = _no_action_effects()
-    executed = bool(result.get("executed"))
+    executed = bool(result.get("executed")) and bool(result.get("completion_verified", result.get("executed")))
     action_type = str(result.get("action_type") or "")
     effects["desktopActionsExecuted"] = executed
     effects["mouseActionsExecuted"] = executed and action_type in {"hover", "move", "scroll"}
@@ -464,7 +464,7 @@ def _stage1_effects(result: dict[str, Any]) -> dict[str, Any]:
 
 def _stage2_effects(result: dict[str, Any]) -> dict[str, Any]:
     effects = _no_action_effects()
-    executed = bool(result.get("executed"))
+    executed = bool(result.get("executed")) and bool(result.get("completion_verified", result.get("executed")))
     effects["desktopActionsExecuted"] = executed
     effects["mouseActionsExecuted"] = executed
     effects["keyboardActionsExecuted"] = executed

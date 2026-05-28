@@ -225,6 +225,14 @@ def test_stage1_effects_treat_move_as_mouse_navigation() -> None:
     assert effects["keyboardActionsExecuted"] is False
 
 
+def test_stage1_effects_require_completion_verification() -> None:
+    effects = _stage1_effects({"executed": True, "completion_verified": False, "action_type": "move"})
+
+    assert effects["desktopActionsExecuted"] is False
+    assert effects["mouseActionsExecuted"] is False
+    assert effects["mayExecuteRealAction"] is False
+
+
 def test_bridge_stage2_requires_user_approval_for_real_text_input() -> None:
     endpoint = _endpoint_for(create_app(), "/action/stage2/text")
 

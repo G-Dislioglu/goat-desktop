@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage_result_contract_alignment_2026_05_28:
+"Stage-1/Stage-2 Executor-Results sind an Stage-3 angeglichen: Stage-1 liefert jetzt `user_message` und direkte `effects`, Stage-2 liefert direkte `effects`; Audit-Resultate enthalten diese Felder ebenfalls. Bridge-Effekte werten `executed=true` nur noch als echte Maus-/Tastatur-/Desktopwirkung, wenn `completion_verified` nicht false ist. Zieltests gruen: Stage1/Stage2/Stage3/Action-Preview-Subset mit 72 Tests."
+
 stage4_lock_copy_single_source_2026_05_28:
 "Stage-4 Sperrtexte haben jetzt eine gemeinsame Quelle in `action_copy.py`: Preview, Tray-Popup, Tray-Abschluss und Stage-3-Lock-Result/Audit nutzen dieselben Normalnutzertexte fuer `Gesperrt - selbst erledigen`, `Gesperrt - bitte selbst im Programm erledigen` und `Sperre verstanden`. Das beseitigt den letzten kuerzeren Stage-3-Lock-Resulttext, ohne Redaction oder Non-Execution zu lockern. Zieltests gruen: Action-Preview/Stage3/Tray/Stage4-Contract-Subset mit 88 Tests."
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
 from goat_desktop.action_gate import ActionRequest, ActionStage, evaluate_action_gate
 from goat_desktop.audit_log import append_audit_event
@@ -114,7 +114,9 @@ class Stage2ExecutionResult:
     user_message: str = ""
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        result = asdict(self)
+        result["effects"] = _stage2_effects(result)
+        return result
 
 
 def execute_stage2_text_input(
@@ -353,6 +355,18 @@ def _stage2_user_message(result: Stage2ExecutionResult) -> str:
     if "safe_text_context" in reason or "freigeben" in reason or "approval" in reason or "preview" in reason or "dry_run" in reason:
         return "Eingabe nicht freigegeben."
     return "Text nicht eingetragen."
+
+
+def _stage2_effects(result: dict[str, Any]) -> dict[str, bool]:
+    executed = bool(result.get("executed")) and bool(result.get("completion_verified"))
+    return {
+        "providerCallsMade": False,
+        "desktopActionsExecuted": executed,
+        "mouseActionsExecuted": executed,
+        "keyboardActionsExecuted": executed,
+        "tradingActionsExecuted": False,
+        "mayExecuteRealAction": executed,
+    }
 
 
 def _audit_request(request: Stage2ExecutionRequest, result: Stage2ExecutionResult) -> dict:

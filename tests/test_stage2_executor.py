@@ -71,6 +71,7 @@ def test_stage2_without_approval_returns_preview(monkeypatch, tmp_path: Path) ->
     assert result.executed is False
     assert result.completion_verified is False
     assert result.user_message == "Eingabe nicht freigegeben."
+    assert result.to_dict()["effects"]["keyboardActionsExecuted"] is False
     assert result.preview["text"] == "hello"
     assert backend.typed == []
 
@@ -119,6 +120,10 @@ def test_stage2_executes_after_approval_and_safe_context(monkeypatch, tmp_path: 
     assert result.user_message == "Text eingetragen."
     assert result.stage == 2
     assert result.target == {"x": 140, "y": 220}
+    body = result.to_dict()
+    assert body["effects"]["desktopActionsExecuted"] is True
+    assert body["effects"]["mouseActionsExecuted"] is True
+    assert body["effects"]["keyboardActionsExecuted"] is True
     assert backend.moves == [(140, 220)]
     assert backend.clicks == 1
     assert backend.typed == ["GOAT safe input"]
@@ -398,6 +403,7 @@ def test_stage2_audit_contains_scope(monkeypatch, tmp_path: Path) -> None:
     assert events[-1]["status"] == "executed"
     assert events[-1]["payload"]["result"]["completion_verified"] is True
     assert events[-1]["payload"]["result"]["user_message"] == "Text eingetragen."
+    assert events[-1]["payload"]["result"]["effects"]["keyboardActionsExecuted"] is True
     assert "run_g3 only executes stage 2 text input after explicit preview approval" in events[-1]["payload"][
         "assumptions"
     ]

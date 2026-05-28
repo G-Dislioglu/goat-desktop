@@ -55,7 +55,12 @@ def test_stage1_scroll_executes_when_gate_allows(monkeypatch, tmp_path: Path) ->
     assert result.status == "executed"
     assert result.executed is True
     assert result.completion_verified is True
+    assert result.user_message == "Navigation ausgefuehrt."
     assert result.stage == 1
+    body = result.to_dict()
+    assert body["effects"]["desktopActionsExecuted"] is True
+    assert body["effects"]["mouseActionsExecuted"] is True
+    assert body["effects"]["keyboardActionsExecuted"] is False
     assert backend.scrolls == [-240]
     assert backend.moves == []
 
@@ -110,7 +115,11 @@ def test_stage1_hover_verifies_pointer_position_after_move(monkeypatch, tmp_path
     assert result.status == "failed"
     assert result.executed is False
     assert result.completion_verified is False
+    assert result.user_message == "Navigation nicht ausgefuehrt."
     assert result.target == {"x": 120, "y": 220}
+    body = result.to_dict()
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert body["effects"]["mouseActionsExecuted"] is False
     assert "pointer verification failed" in result.reason
 
 
@@ -255,4 +264,7 @@ def test_execution_audit_contains_stage1_scope(monkeypatch, tmp_path: Path) -> N
     assert events[-1]["event_type"] == "stage1_execution"
     assert events[-1]["status"] == "executed"
     assert events[-1]["payload"]["result"]["completion_verified"] is True
+    assert events[-1]["payload"]["result"]["user_message"] == "Navigation ausgefuehrt."
+    assert events[-1]["payload"]["result"]["effects"]["mouseActionsExecuted"] is True
+    assert events[-1]["payload"]["result"]["effects"]["keyboardActionsExecuted"] is False
     assert "run_g2 only executes stage 1 free-navigation actions" in events[-1]["payload"]["assumptions"]

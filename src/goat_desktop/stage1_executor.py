@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from ctypes import Structure, byref, c_long, windll
-from typing import Protocol
+from typing import Any, Protocol
 
 from goat_desktop.action_gate import ActionRequest, ActionStage, evaluate_action_gate
 from goat_desktop.audit_log import append_audit_event
@@ -53,9 +53,12 @@ class Stage1ExecutionResult:
     gate_decision: dict
     target: dict | None = None
     completion_verified: bool = False
+    user_message: str = ""
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        result = asdict(self)
+        result["effects"] = _stage1_effects(result)
+        return result
 
 
 def execute_stage1_action(
@@ -233,6 +236,7 @@ def _audit_execution(
     request: Stage1ExecutionRequest,
     result: Stage1ExecutionResult,
 ) -> Stage1ExecutionResult:
+    result = _with_user_message(result)
     append_audit_event(
         "stage1_execution",
         result.status,
@@ -248,6 +252,41 @@ def _audit_execution(
         },
     )
     return result
+
+
+def _with_user_message(result: Stage1ExecutionResult) -> Stage1ExecutionResult:
+    if result.user_message:
+        return result
+    return Stage1ExecutionResult(
+        status=result.status,
+        executed=result.executed,
+        action_type=result.action_type,
+        stage=result.stage,
+        reason=result.reason,
+        gate_decision=result.gate_decision,
+        target=result.target,
+        completion_verified=result.completion_verified,
+        user_message=_stage1_user_message(result),
+    )
+
+
+def _stage1_user_message(result: Stage1ExecutionResult) -> str:
+    if result.executed and result.completion_verified:
+        return "Navigation ausgefuehrt."
+    return "Navigation nicht ausgefuehrt."
+
+
+def _stage1_effects(result: dict[str, Any]) -> dict[str, bool]:
+    executed = bool(result.get("executed")) and bool(result.get("completion_verified"))
+    action_type = str(result.get("action_type") or "")
+    return {
+        "providerCallsMade": False,
+        "desktopActionsExecuted": executed,
+        "mouseActionsExecuted": executed and action_type in {"hover", "move", "scroll"},
+        "keyboardActionsExecuted": False,
+        "tradingActionsExecuted": False,
+        "mayExecuteRealAction": executed,
+    }
 
 
 def _audit_request(request: Stage1ExecutionRequest, result: Stage1ExecutionResult) -> dict:
