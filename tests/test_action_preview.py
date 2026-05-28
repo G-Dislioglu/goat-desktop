@@ -279,6 +279,51 @@ def test_bridge_stage2_real_text_input_reports_mouse_and_keyboard_effect(monkeyp
     assert calls == [("move_to", (60, 50)), ("click_left", None), ("type_text", "StepStack")]
 
 
+@pytest.mark.parametrize(
+    ("text", "reason_fragment"),
+    [
+        ("Zeile 1\nZeile 2", "multi-line"),
+        ("x" * 121, "exceeds"),
+    ],
+)
+def test_bridge_stage2_invalid_text_has_no_mouse_or_keyboard_effects(monkeypatch, text: str, reason_fragment: str) -> None:
+    calls: list[str] = []
+
+    class FakeTextInputBackend:
+        def move_to(self, _x: int, _y: int) -> None:
+            calls.append("move_to")
+
+        def click_left(self) -> None:
+            calls.append("click_left")
+
+        def type_text(self, _text: str) -> None:
+            calls.append("type_text")
+
+    monkeypatch.setattr(stage2_executor, "Win32TextInputBackend", FakeTextInputBackend)
+    endpoint = _endpoint_for(create_app(), "/action/stage2/text")
+
+    body = endpoint(
+        {
+            "action_type": "type",
+            "label": "Suchfeld",
+            "text": text,
+            "broker_decision": ACCEPTED,
+            "safe_text_context": True,
+            "dry_run": False,
+            "user_approved": True,
+        }
+    )
+
+    assert body["status"] == "blocked"
+    assert body["executed"] is False
+    assert body["completion_verified"] is False
+    assert reason_fragment in body["reason"]
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert body["effects"]["mouseActionsExecuted"] is False
+    assert body["effects"]["keyboardActionsExecuted"] is False
+    assert calls == []
+
+
 def test_bridge_stage3_review_never_reports_real_execution() -> None:
     endpoint = _endpoint_for(create_app(), "/action/stage3/review")
 

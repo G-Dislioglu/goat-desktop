@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage2_invalid_text_bridge_effects_2026_05_28:
+"Stage-2 Bridge-Regression fuer ungueltige Texte ergaenzt: Mehrzeilige und zu lange Texte bleiben selbst bei `dry_run=false`, `user_approved=true` und `safe_text_context=true` blockiert, melden `completion_verified=false` und setzen keine Desktop-, Maus- oder Tastatureffekte. Fake-Backend wird dabei nicht aufgerufen."
+
 stage2_popup_text_bounds_2026_05_28:
 "Stage-2 Popup spiegelt jetzt die Executor-Grenzen fuer Texteingaben vor der Freigabe: leere, mehrzeilige und zu lange Texte zeigen klare Normalnutzer-Meldungen und deaktivierte Buttons (`Kein Text`, `Mehrzeilig`, `Zu lang`). Dadurch bekommt der Nutzer keine scheinbare Ausfuehrfreigabe fuer Eingaben, die der Executor spaeter blockieren wuerde. Zieltests gruen: Stage-2 Popup/Executor-Subset mit 43 Tests."
 
