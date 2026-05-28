@@ -53,32 +53,69 @@ def test_stage3_preview_requires_clear_approval() -> None:
     assert preview["primaryButton"] == "Freigabe pruefen"
     assert preview["message"] == (
         "GOAT will Kauf, Zahlung oder Buchung ueber Kaufen ausloesen. "
-        "Das kann Folgen haben und braucht deine klare Freigabe."
+        "Das kann Folgen haben und braucht deine klare Freigabe. "
+        "Pruefe Betrag, Anbieter und Verpflichtung selbst, bevor du im Programm bestaetigst."
     )
+    assert preview["reviewGuidance"] == "Pruefe Betrag, Anbieter und Verpflichtung selbst, bevor du im Programm bestaetigst."
     assert preview["requiresUserApproval"] is True
 
 
 @pytest.mark.parametrize(
-    ("action_type", "label", "expected_action_text"),
+    ("action_type", "label", "expected_action_text", "expected_guidance"),
     [
-        ("send", "Senden Button", "etwas ueber Senden Button senden oder teilen"),
-        ("save", "Speichern", "Speichern oder Anwenden von Aenderungen ueber Speichern ausloesen"),
-        ("click", "Kaufen", "Kauf, Zahlung oder Buchung ueber Kaufen ausloesen"),
-        ("delete", "Loeschen", "Loeschen oder Abbrechen ueber Loeschen ausloesen"),
-        ("deploy", "Manual Deploy", "Deploy oder Veroeffentlichung ueber Manual Deploy ausloesen"),
+        (
+            "send",
+            "Senden Button",
+            "etwas ueber Senden Button senden oder teilen",
+            "Pruefe Empfaenger, Inhalt und Sichtbarkeit selbst, bevor du im Programm sendest.",
+        ),
+        (
+            "save",
+            "Speichern",
+            "Speichern oder Anwenden von Aenderungen ueber Speichern ausloesen",
+            "Pruefe selbst, ob diese Aenderungen so gespeichert oder angewendet werden sollen.",
+        ),
+        (
+            "click",
+            "Kaufen",
+            "Kauf, Zahlung oder Buchung ueber Kaufen ausloesen",
+            "Pruefe Betrag, Anbieter und Verpflichtung selbst, bevor du im Programm bestaetigst.",
+        ),
+        (
+            "delete",
+            "Loeschen",
+            "Loeschen oder Abbrechen ueber Loeschen ausloesen",
+            "Pruefe selbst, ob du das wirklich entfernen, abbrechen oder beenden willst.",
+        ),
+        (
+            "deploy",
+            "Manual Deploy",
+            "Deploy oder Veroeffentlichung ueber Manual Deploy ausloesen",
+            "Pruefe Umgebung, Version und Folgen selbst, bevor du im Programm fortfaehrst.",
+        ),
+        (
+            "upload",
+            "Datei hochladen",
+            "Datei oder Inhalt mit Datei hochladen auswaehlen oder hochladen",
+            "Pruefe Datei, Ziel und Freigabe selbst, bevor du im Programm hochlaedst.",
+        ),
     ],
 )
 def test_stage3_preview_names_consequential_action_type(
     action_type: str,
     label: str,
     expected_action_text: str,
+    expected_guidance: str,
 ) -> None:
     preview = build_action_preview(action_type, label, ACCEPTED, dry_run=True)
 
     assert preview["stage"] == 3
     assert preview["title"] == "Wichtige Aktion braucht Freigabe"
     assert preview["actionText"] == expected_action_text
-    assert preview["message"] == f"GOAT will {expected_action_text}. Das kann Folgen haben und braucht deine klare Freigabe."
+    assert preview["reviewGuidance"] == expected_guidance
+    assert preview["message"] == (
+        f"GOAT will {expected_action_text}. Das kann Folgen haben und braucht deine klare Freigabe. {expected_guidance}"
+    )
     assert preview["primaryButton"] == "Freigabe pruefen"
     assert preview["mayExecute"] is False
     assert preview["effects"]["desktopActionsExecuted"] is False

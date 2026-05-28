@@ -465,3 +465,6 @@ scan_001_recovery_packet_2026_05_28:
 
 stage3_review_specific_copy_2026_05_28:
 "Stage-3 Review-UX konkretisiert: Action-Preview benennt wichtige Aktionen nun spezifisch fuer Senden/Teilen, Speichern/Anwenden, Kaufen/Zahlen/Buchen, Loeschen/Abbrechen, Deploy/Veroeffentlichen und Hochladen. Popup bleibt review-only mit Button `Verstanden`; Stage 3 bekommt weiterhin kein `Ausfuehren` und keine OS-Ausfuehrung. Tests decken die neuen Texte plus no-effects ab."
+
+stage3_review_guidance_copy_2026_05_28:
+"Stage-3 Review-Texte enthalten jetzt zusaetzlich kurze Handlungsempfehlungen je Aktionstyp, z.B. Empfaenger/Inhalt/Sichtbarkeit bei Senden, Betrag/Anbieter/Verpflichtung bei Kaufen, Umgebung/Version/Folgen bei Deploy, Datei/Ziel/Freigabe bei Upload und Entfernen/Abbrechen/Beenden bei Loeschen. Die Empfehlung ist rein informativ (`reviewGuidance`) und aendert keine Berechtigung: `mayExecute=false`, effects false, Popup weiter `Verstanden`, keine Stage-3-OS-Ausfuehrung."

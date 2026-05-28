@@ -30,13 +30,15 @@ def build_action_preview(
     target = _target_name(label)
     action_kind = _action_kind(action_type)
     action_text = _plain_action(action_type, target, text, preview_context)
+    review_guidance = _stage3_review_guidance(f"{action_type} {target}".strip().lower(), gate.stage, gate.status)
     return {
         "ok": gate.status not in {"stop", "locked"},
         "status": gate.status,
         "stage": gate.stage,
         "title": _title_for_gate(gate.stage, gate.status),
-        "message": _message_for_gate(gate.stage, gate.status, action_text),
+        "message": _message_for_gate(gate.stage, gate.status, action_text, review_guidance),
         "actionText": action_text,
+        "reviewGuidance": review_guidance,
         "primaryButton": _primary_button_for_gate(gate.stage, gate.status, action_kind),
         "secondaryButton": "Abbrechen",
         "requiresUserApproval": gate.requires_user_approval,
@@ -97,10 +99,30 @@ def _stage3_action_text(normalized: str, target: str) -> str:
     if any(term in normalized for term in ("send", "submit", "absenden", "share", "teilen", "invite", "einladen")):
         return f"etwas ueber {target} senden oder teilen"
     if any(term in normalized for term in ("upload", "hochladen", "attach", "anhaengen")):
-        return f"Datei oder Inhalt ueber {target} hochladen"
+        return f"Datei oder Inhalt mit {target} auswaehlen oder hochladen"
     if any(term in normalized for term in ("sign", "unterschreiben", "transfer", "ueberweisen", "refund", "rueckerstatten")):
         return f"verbindliche Aktion ueber {target} ausloesen"
     return ""
+
+
+def _stage3_review_guidance(normalized: str, stage: int, status: str) -> str:
+    if stage != 3 or status in {"locked", "stop"}:
+        return ""
+    if any(term in normalized for term in ("deploy", "release", "veroeffentlichen")):
+        return "Pruefe Umgebung, Version und Folgen selbst, bevor du im Programm fortfaehrst."
+    if any(term in normalized for term in ("delete", "loeschen", "stornieren", "kuendigen", "cancel")):
+        return "Pruefe selbst, ob du das wirklich entfernen, abbrechen oder beenden willst."
+    if any(term in normalized for term in ("purchase", "kaufen", "pay", "bezahlen", "order", "bestellen", "book", "buchen")):
+        return "Pruefe Betrag, Anbieter und Verpflichtung selbst, bevor du im Programm bestaetigst."
+    if any(term in normalized for term in ("save", "speichern", "apply", "anwenden")):
+        return "Pruefe selbst, ob diese Aenderungen so gespeichert oder angewendet werden sollen."
+    if any(term in normalized for term in ("send", "submit", "absenden", "share", "teilen", "invite", "einladen")):
+        return "Pruefe Empfaenger, Inhalt und Sichtbarkeit selbst, bevor du im Programm sendest."
+    if any(term in normalized for term in ("upload", "hochladen", "attach", "anhaengen")):
+        return "Pruefe Datei, Ziel und Freigabe selbst, bevor du im Programm hochlaedst."
+    if any(term in normalized for term in ("sign", "unterschreiben", "transfer", "ueberweisen", "refund", "rueckerstatten")):
+        return "Pruefe alle rechtlichen oder finanziellen Folgen selbst, bevor du im Programm bestaetigst."
+    return "Pruefe die Folgen selbst und fuehre die Aktion nur aus, wenn du sicher bist."
 
 
 def _title_for_gate(stage: int, status: str) -> str:
@@ -115,7 +137,7 @@ def _title_for_gate(stage: int, status: str) -> str:
     return "Wichtige Aktion braucht Freigabe"
 
 
-def _message_for_gate(stage: int, status: str, action_text: str) -> str:
+def _message_for_gate(stage: int, status: str, action_text: str, review_guidance: str = "") -> str:
     if status == "locked":
         return "Das wirkt sensibel. GOAT fuehrt das nicht aus."
     if status == "stop":
@@ -124,7 +146,8 @@ def _message_for_gate(stage: int, status: str, action_text: str) -> str:
         return f"GOAT will {action_text}. Dabei wird nichts geklickt und nichts getippt."
     if stage == 2:
         return f"GOAT will {action_text}. Bitte pruefe die Eingabe vor dem Ausfuehren."
-    return f"GOAT will {action_text}. Das kann Folgen haben und braucht deine klare Freigabe."
+    guidance = f" {review_guidance}" if review_guidance else ""
+    return f"GOAT will {action_text}. Das kann Folgen haben und braucht deine klare Freigabe.{guidance}"
 
 
 def _primary_button_for_gate(stage: int, status: str, action_kind: str = "other") -> str:
