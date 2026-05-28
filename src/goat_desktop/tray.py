@@ -209,7 +209,8 @@ def _stage2_approve_label(stage2_action: dict) -> str:
 
 def _stage1_preview_message(preview: dict) -> str:
     message = str(preview.get("message") or "Bitte pruefe die Aktion.")
-    return f"{message} Klicke nur auf Ausfuehren, wenn das markierte Ziel stimmt."
+    approve_label = str(preview.get("primaryButton") or "Navigieren")
+    return f"{message} Gib {approve_label} nur frei, wenn das markierte Ziel stimmt."
 
 
 def _stage3_review_message(preview: dict) -> str:
@@ -1316,7 +1317,7 @@ class GoatTrayApp:
         self.popup.screen_context_value.setText(_execution_step_title(preview))
         self.popup.maya_value.setText(_stage1_preview_message(preview))
         _set_review_status(self.popup)
-        self.popup.cue_approve.setText("Ausfuehren")
+        self.popup.cue_approve.setText(str(preview.get("primaryButton") or "Navigieren"))
         self.popup.cue_approve.setEnabled(bool(preview.get("ok")))
         self.popup.cue_reject.setEnabled(True)
 

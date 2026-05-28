@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage1_navigation_popup_copy_2026_05_28:
+"Stage-1 Navigation im Popup nutzt jetzt die Preview-Buttons direkt: Hover/Move erscheinen als `Navigieren`, Scroll als `Scrollen`, statt pauschal `Ausfuehren`. Die Freigabe-Copy spricht von Navigation freigeben und bleibt explizit bei `nichts geklickt`/`nichts getippt`, damit Normalnutzer keine Klick- oder Texteingabe-Aktion erwarten. Zieltests gruen: Tray-Stage1-UX plus Action-Preview mit 61 Tests."
+
 action_layer_stage4_redaction_integration_2026_05_28:
 "Action-Layer-Integrationstest prueft jetzt die Stage-4-Redaction im End-to-End-Entscheidungsfluss. Die locked Audit-Events duerfen rohe Secret-Labels wie `api-token-input` und rohe Summaries wie `raw-secret-summary` nicht enthalten. Zieltests gruen: Action-Layer-Integration plus Stage4-Contract mit 2 Tests."
 

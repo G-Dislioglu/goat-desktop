@@ -133,9 +133,9 @@ def test_accepted_stage1_cue_turns_into_navigation_preview() -> None:
     assert fake.popup.review_status_value.isHidden() is True
     assert fake.popup.maya_value.text() == (
         "GOAT will den Mauszeiger auf Senden Button bewegen. Dabei wird nichts geklickt und nichts getippt. "
-        "Klicke nur auf Ausfuehren, wenn das markierte Ziel stimmt."
+        "Gib Navigieren nur frei, wenn das markierte Ziel stimmt."
     )
-    assert fake.popup.cue_approve.text() == "Ausfuehren"
+    assert fake.popup.cue_approve.text() == "Navigieren"
     assert fake.popup.cue_approve.enabled is True
 
 
@@ -225,9 +225,9 @@ def test_accepted_scroll_cue_turns_into_scroll_preview() -> None:
     assert fake.popup.screen_context_value.text() == "Schritt 2: GOAT kann dich navigieren"
     assert fake.popup.maya_value.text() == (
         "GOAT will auf der Seite nach oben scrollen. Dabei wird nichts geklickt und nichts getippt. "
-        "Klicke nur auf Ausfuehren, wenn das markierte Ziel stimmt."
+        "Gib Scrollen nur frei, wenn das markierte Ziel stimmt."
     )
-    assert fake.popup.cue_approve.text() == "Ausfuehren"
+    assert fake.popup.cue_approve.text() == "Scrollen"
     assert fake.popup.cue_approve.enabled is True
 
 
