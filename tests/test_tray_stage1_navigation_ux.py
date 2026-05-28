@@ -527,6 +527,32 @@ def test_sensitive_aria_context_cue_is_locked_before_stage2() -> None:
     assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
 
 
+def test_redacted_sensitive_context_cue_lock_signal_is_enough() -> None:
+    fake = FakeTray()
+
+    GoatTrayApp.receive_builder_cue(
+        fake,
+        {
+            "action_type": "type",
+            "label": "Login Feld",
+            "text": "private",
+            "safe_text_context": True,
+            "bbox": [10, 20, 110, 80],
+            "context": {"automation_id": "[redacted]", "control_type": "[redacted]"},
+            "context_redacted": True,
+            "stage4_lock": True,
+        },
+    )
+
+    assert fake.pending_stage2_action is None
+    assert fake.pending_stage4_action == {
+        "action_type": "type",
+        "label": "Login Feld",
+        "context": {"automation_id": "[redacted]", "control_type": "[redacted]"},
+    }
+    assert fake.popup.maya_value.text() == "Das wirkt sensibel. GOAT wird das nicht ausfuehren."
+
+
 def test_accepted_sensitive_type_cue_turns_into_locked_popup() -> None:
     fake = FakeTray()
     GoatTrayApp.receive_builder_cue(

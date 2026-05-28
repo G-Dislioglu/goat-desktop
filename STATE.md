@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_builder_cue_context_redaction_2026_05_28:
+"`/builder-cue` redigiert sensible Kontextwerte jetzt vor Popup-Dispatch und in der mitgegebenen Broker-Response, wenn Kontext-Metadaten Stage-4 ausloesen. Das Popup erhaelt `stage4_lock=true`, redigierte Kontextwerte und keine rohe Evidence wie `api-token-input`, kann aber trotzdem den gesperrten Stage-4-Pfad anzeigen. Zieltests gruen: Bridge/Tray/Action-Gate/Stage2-Subset mit 75 Tests."
+
 stage4_context_audit_redaction_2026_05_28:
 "Stage-4-Audits redigieren sensible Kontextwerte jetzt im Action-Gate und Stage-2-Executor. Wenn Kontext-/UIA-Metadaten wie `automation_id=api-token-input` einen Technical Lock ausloesen, werden Kontextwerte in Audit-Requests zu `[redacted]`, `context_redacted=true`, und `classification.normalized_text` wird ebenfalls redigiert. Zieltests gruen: Action-Gate/Stage2/Action-Preview-Subset mit 47 Tests."
 

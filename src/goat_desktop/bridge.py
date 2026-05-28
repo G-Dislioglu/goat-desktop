@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from goat_desktop.broker import LOCAL_GEOMETRY_SOURCES, build_candidate, verify_candidate
+from goat_desktop.action_gate import ActionStage, classify_action_with_reason
 from goat_desktop.action_preview import build_action_preview
 from goat_desktop.screen import capture_active_window, get_active_window
 from goat_desktop.stage1_executor import Stage1ExecutionRequest, execute_stage1_action
@@ -107,14 +108,17 @@ def create_app(
         window = get_active_window()
         candidate = build_candidate(payload, window)
         decision = verify_candidate(candidate, window)
+        classification = _builder_cue_classification(payload)
         response = {
             "safety_state": decision["status"],
             "anchors": decision["anchors"],
             "broker_decision": decision,
         }
+        if classification.stage_enum == ActionStage.TECHNICAL_LOCK and isinstance(payload.get("context"), dict):
+            response = _redact_context_values(response)
         proposal_emitted = False
         if decision["status"] == "accept" and dispatch_builder_cue is not None:
-            cue_payload = dict(payload)
+            cue_payload = _builder_cue_popup_payload(payload, classification)
             cue_payload["broker_response"] = response
             dispatch_builder_cue(cue_payload)
             proposal_emitted = True
@@ -354,6 +358,40 @@ def _builder_cue_rejected(reason: str) -> dict[str, Any]:
         "dispatch": {"popupProposalEmitted": False},
         "effects": _no_action_effects(),
     }
+
+
+def _builder_cue_classification(payload: dict[str, Any]):
+    return classify_action_with_reason(
+        str(payload.get("action_type") or ""),
+        str(payload.get("label") or ""),
+        dict(payload.get("context") or {}),
+    )
+
+
+def _builder_cue_popup_payload(payload: dict[str, Any], classification=None) -> dict[str, Any]:
+    cue_payload = dict(payload)
+    context = dict(cue_payload.get("context") or {})
+    classification = classification or _builder_cue_classification(payload)
+    if classification.stage_enum == ActionStage.TECHNICAL_LOCK and context:
+        cue_payload["context"] = {key: "[redacted]" for key in context}
+        cue_payload["context_redacted"] = True
+        cue_payload["stage4_lock"] = True
+    return cue_payload
+
+
+def _redact_context_values(value):
+    if isinstance(value, dict):
+        redacted = {}
+        for key, item in value.items():
+            if key == "context" and isinstance(item, dict):
+                redacted[key] = {context_key: "[redacted]" for context_key in item}
+                redacted["context_redacted"] = True
+            else:
+                redacted[key] = _redact_context_values(item)
+        return redacted
+    if isinstance(value, list):
+        return [_redact_context_values(item) for item in value]
+    return value
 
 
 def _safety_is_read_only(safety: dict[str, Any]) -> bool:

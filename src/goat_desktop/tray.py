@@ -1090,7 +1090,7 @@ class GoatTrayApp:
         label = str(message.get("label") or "Ziel")
         context = dict(message.get("context") or {})
         classification = classify_action_with_reason(action_type, label, context)
-        if classification.stage_enum == ActionStage.TECHNICAL_LOCK:
+        if message.get("stage4_lock") is True or classification.stage_enum == ActionStage.TECHNICAL_LOCK:
             self.pending_stage4_action = {
                 "action_type": action_type,
                 "label": label,
