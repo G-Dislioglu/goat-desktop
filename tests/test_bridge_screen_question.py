@@ -144,7 +144,7 @@ def test_builder_cue_redacts_sensitive_context_before_popup_dispatch(monkeypatch
             "source": "test_cue",
             "action_type": "type",
             "label": "Login Feld",
-            "text": "private",
+            "text": "private-context-value",
             "safe_text_context": True,
             "bbox": [20, 20, 120, 50],
             "context": {"automation_id": "api-token-input", "control_type": "Edit"},
@@ -154,6 +154,8 @@ def test_builder_cue_redacts_sensitive_context_before_popup_dispatch(monkeypatch
     assert body["ok"] is True
     assert body["dispatch"]["popupProposalEmitted"] is True
     assert emitted.payloads[0]["stage4_lock"] is True
+    assert emitted.payloads[0]["text"] == ""
+    assert emitted.payloads[0]["text_redacted"] is True
     assert emitted.payloads[0]["context"] == {"automation_id": "[redacted]", "control_type": "[redacted]"}
     assert emitted.payloads[0]["context_redacted"] is True
     assert emitted.payloads[0]["broker_response"]["broker_decision"]["candidate"]["raw_evidence"]["request"]["context"] == {
@@ -161,7 +163,9 @@ def test_builder_cue_redacts_sensitive_context_before_popup_dispatch(monkeypatch
         "control_type": "[redacted]",
     }
     assert "api-token-input" not in str(body)
+    assert "private-context-value" not in str(body)
     assert "api-token-input" not in str(emitted.payloads[0])
+    assert "private-context-value" not in str(emitted.payloads[0])
 
 
 def test_builder_cue_redacts_sensitive_label_before_popup_dispatch(monkeypatch) -> None:
@@ -178,7 +182,7 @@ def test_builder_cue_redacts_sensitive_label_before_popup_dispatch(monkeypatch) 
             "source": "test_cue",
             "action_type": "type",
             "label": "api-token-input",
-            "text": "private",
+            "text": "private-label-value",
             "safe_text_context": True,
             "bbox": [20, 20, 120, 50],
         }
@@ -188,13 +192,22 @@ def test_builder_cue_redacts_sensitive_label_before_popup_dispatch(monkeypatch) 
     assert emitted.payloads[0]["stage4_lock"] is True
     assert emitted.payloads[0]["label"] == "sensibles Ziel"
     assert emitted.payloads[0]["label_redacted"] is True
+    assert emitted.payloads[0]["text"] == ""
+    assert emitted.payloads[0]["text_redacted"] is True
     assert emitted.payloads[0]["broker_response"]["broker_decision"]["candidate"]["label"] == "[redacted]"
     assert (
         emitted.payloads[0]["broker_response"]["broker_decision"]["candidate"]["raw_evidence"]["request"]["label"]
         == "[redacted]"
     )
+    assert emitted.payloads[0]["broker_response"]["broker_decision"]["candidate"]["raw_evidence"]["request"]["text"] == ""
+    assert (
+        emitted.payloads[0]["broker_response"]["broker_decision"]["candidate"]["raw_evidence"]["request"]["text_redacted"]
+        is True
+    )
     assert "api-token-input" not in str(body)
+    assert "private-label-value" not in str(body)
     assert "api-token-input" not in str(emitted.payloads[0])
+    assert "private-label-value" not in str(emitted.payloads[0])
 
 
 def test_builder_cue_rejects_missing_bbox_without_dispatch(monkeypatch) -> None:

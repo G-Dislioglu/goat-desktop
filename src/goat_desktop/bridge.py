@@ -381,6 +381,9 @@ def _builder_cue_popup_payload(payload: dict[str, Any], classification=None) -> 
         cue_payload["stage4_lock"] = True
         cue_payload["label"] = "sensibles Ziel"
         cue_payload["label_redacted"] = True
+        if "text" in cue_payload:
+            cue_payload["text"] = ""
+            cue_payload["text_redacted"] = True
     return cue_payload
 
 
@@ -395,6 +398,9 @@ def _redact_builder_cue_label(response: dict[str, Any]) -> dict[str, Any]:
         if request:
             request["label"] = "[redacted]"
             request["label_redacted"] = True
+            if "text" in request:
+                request["text"] = ""
+                request["text_redacted"] = True
             raw_evidence["request"] = request
         candidate["raw_evidence"] = raw_evidence
         broker_decision["candidate"] = candidate

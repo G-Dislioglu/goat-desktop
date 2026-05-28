@@ -535,7 +535,8 @@ def test_redacted_sensitive_context_cue_lock_signal_is_enough() -> None:
         {
             "action_type": "type",
             "label": "Login Feld",
-            "text": "private",
+            "text": "",
+            "text_redacted": True,
             "safe_text_context": True,
             "bbox": [10, 20, 110, 80],
             "context": {"automation_id": "[redacted]", "control_type": "[redacted]"},

@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_builder_cue_text_redaction_2026_05_28:
+"Stage-4 `/builder-cue` redigiert jetzt auch den vorgeschlagenen Eingabetext vor Popup-Dispatch und in der Broker-Response-Evidence. Bei Technical-Lock-Cues werden `text=''` und `text_redacted=true` gesetzt, sodass weder versehentliche Secret-Labels noch Secret-Textwerte im Popup-Payload oder Response-JSON auftauchen. Zieltests gruen: Bridge/Tray-Subset mit 53 Tests."
+
 stage4_label_redaction_2026_05_28:
 "Stage-4-Locks redigieren sensible Labels jetzt in sichtbaren Previews, Stage-2-Previews, Action-Gate-Audits, Stage-2-Audits und `/builder-cue` Popup-Dispatch/Broker-Response. Statt versehentlich gelieferter Secret-Labels wie `api-token-input` sieht die UI nur `sensibles Feld`/`sensibles Ziel`; `label_redacted=true` markiert die Redaction. Zieltests gruen: Action-Preview/Action-Gate/Stage2/Bridge/Tray-Subset mit 101 Tests."
 
