@@ -5,6 +5,7 @@ from enum import IntEnum
 from typing import Any
 
 from goat_desktop.audit_log import append_audit_event
+from goat_desktop.redaction import redact_locked_classification_payload, redact_locked_request_payload
 
 
 class ActionStage(IntEnum):
@@ -309,19 +310,14 @@ def _audit_decision(
 def _audit_request(request: ActionRequest, classification: ActionClassification) -> dict[str, Any]:
     payload = asdict(request)
     if classification.stage_enum == ActionStage.TECHNICAL_LOCK:
-        payload["label"] = "[redacted]"
-        payload["label_redacted"] = True
-        if payload.get("context"):
-            payload["context"] = {key: "[redacted]" for key in payload["context"]}
-            payload["context_redacted"] = True
+        payload = redact_locked_request_payload(payload)
     return payload
 
 
 def _audit_classification(classification: ActionClassification) -> dict[str, Any]:
     payload = classification.to_dict()
     if classification.stage_enum == ActionStage.TECHNICAL_LOCK:
-        payload["normalized_text"] = "[redacted]"
-        payload["normalized_text_redacted"] = True
+        payload = redact_locked_classification_payload(payload)
     return payload
 
 

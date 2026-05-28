@@ -5,6 +5,7 @@ from typing import Protocol
 
 from goat_desktop.action_gate import ActionRequest, ActionStage, evaluate_action_gate
 from goat_desktop.audit_log import append_audit_event
+from goat_desktop.redaction import SENSITIVE_FIELD_LABEL, redact_locked_request_payload
 
 
 MAX_STAGE2_TEXT_LENGTH = 120
@@ -246,7 +247,7 @@ def execute_stage2_text_input(
 
 def _preview(request: Stage2ExecutionRequest, *, include_text: bool = True) -> dict:
     preview = {
-        "label": request.label if include_text else "sensibles Feld",
+        "label": request.label if include_text else SENSITIVE_FIELD_LABEL,
         "text": request.text if include_text else "",
         "text_length": len(request.text) if include_text else 0,
         "requires_user_approval": True,
@@ -314,11 +315,5 @@ def _audit_execution(
 def _audit_request(request: Stage2ExecutionRequest, result: Stage2ExecutionResult) -> dict:
     payload = asdict(request)
     if result.stage == int(ActionStage.TECHNICAL_LOCK):
-        payload["label"] = "[redacted]"
-        payload["label_redacted"] = True
-        payload["text"] = ""
-        payload["text_redacted"] = True
-        if payload.get("context"):
-            payload["context"] = {key: "[redacted]" for key in payload["context"]}
-            payload["context_redacted"] = True
+        payload = redact_locked_request_payload(payload, redact_text=True)
     return payload

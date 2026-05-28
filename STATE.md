@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_redaction_policy_core_2026_05_28:
+"Stage-4-Redaction hat jetzt eine zentrale Core-Policy in `goat_desktop.redaction` fuer `[redacted]`, `sensibles Feld`, Kontext-Redaction, Request-Redaction und Classification-Redaction. Action-Gate, Action-Preview und Stage-2 Executor nutzen diese Policy statt lokaler Einzelregeln. Zieltests gruen: Action-Gate/Action-Preview/Stage2-Subset mit 48 Tests."
+
 stage4_builder_cue_text_redaction_2026_05_28:
 "Stage-4 `/builder-cue` redigiert jetzt auch den vorgeschlagenen Eingabetext vor Popup-Dispatch und in der Broker-Response-Evidence. Bei Technical-Lock-Cues werden `text=''` und `text_redacted=true` gesetzt, sodass weder versehentliche Secret-Labels noch Secret-Textwerte im Popup-Payload oder Response-JSON auftauchen. Zieltests gruen: Bridge/Tray-Subset mit 53 Tests."
 

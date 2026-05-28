@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from goat_desktop.action_gate import ActionRequest, evaluate_action_gate
+from goat_desktop.redaction import SENSITIVE_FIELD_LABEL
 
 
 def build_action_preview(
@@ -27,7 +28,7 @@ def build_action_preview(
             context=preview_context,
         )
     )
-    target = "sensibles Feld" if gate.stage == 4 else _target_name(label)
+    target = SENSITIVE_FIELD_LABEL if gate.stage == 4 else _target_name(label)
     action_kind = _action_kind(action_type)
     preview_text = "" if gate.stage == 4 else text
     action_text = _plain_action(action_type, target, preview_text, preview_context)
