@@ -1,0 +1,76 @@
+{
+  "task_id": "SCAN-001",
+  "task_name": "GOAT Desktop Recovery Scan",
+  "created": "2026-05-28",
+  "scope": "goat-desktop / read-only repo and local health scan",
+  "mode": "read_only",
+  "task_type": "governance_task",
+  "risk_class": "low",
+  "impact_class": "governance",
+  "goal": "Check the current GOAT Desktop state against governance docs, tests, local health, and the staged action safety model without changing runtime behavior.",
+  "eligible_context": [
+    "AGENTS.md",
+    ".specify/.app-goal.md",
+    ".specify/.recovery-scan.md",
+    "STATE.md",
+    "RADAR.md",
+    "CLAUDE-CONTEXT.md",
+    "GOAT-DESKTOP-VISION.md"
+  ],
+  "excluded_context": [
+    ".env*",
+    "*.key",
+    "*.pem",
+    "*token*",
+    "*secret*"
+  ],
+  "allowed_files": [
+    "review-packets/SCAN-001-result.md"
+  ],
+  "forbidden_files": [
+    ".env*",
+    "STATE.md",
+    "RADAR.md",
+    "CLAUDE-CONTEXT.md",
+    "SESSION-LOG.md",
+    "GOAT-DESKTOP-VISION.md",
+    "docs/run-*.md",
+    "docs/run-*.json",
+    "docs/run-*.jsonl"
+  ],
+  "claims": [
+    "Current branch, commit, remote, and working tree checked",
+    "Stage 1/2/3/4 safety boundaries checked against code and tests",
+    "/builder-cue proposal-only behavior checked",
+    "Test and compile status reported",
+    "Leftover smoke artifacts checked"
+  ],
+  "assumptions": [
+    "No LiveTalk or microphone work during scan",
+    "No real user fields during scan",
+    "No Stage 3 OS execution exists or is tested",
+    "Local bridge health may be checked on 127.0.0.1:8765"
+  ],
+  "dod": [
+    "review-packets/SCAN-001-result.md exists",
+    "Findings are ordered by severity",
+    "Commands and checked commit are listed",
+    "Next 2-4 BP blocks are recommended"
+  ],
+  "required_commands": [
+    "git status --short",
+    "git rev-parse --short HEAD",
+    ".\\.venv\\Scripts\\python.exe -m compileall src tests",
+    ".\\.venv\\Scripts\\python.exe -m pytest -q"
+  ],
+  "optional_commands": [
+    "Invoke-RestMethod -Uri http://127.0.0.1:8765/healthz -TimeoutSec 5"
+  ],
+  "stop_conditions": [
+    "A command would read or print secrets",
+    "A command would start microphone capture",
+    "A command would execute real mouse or keyboard actions outside a controlled test window",
+    "A command would trigger Stage 3 OS execution"
+  ],
+  "baseline_ref": "HEAD"
+}
