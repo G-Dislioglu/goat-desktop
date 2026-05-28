@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage4_redaction_contract_2026_05_28:
+"Zentraler Stage-4-Redaction-Contract ergaenzt. Der Test prueft mit denselben Rohwerten (`label`, `text`, `context`) Action-Gate, Stage-2-Response, lokale Audit-Events, `/builder-cue` Response und Popup-Payload und garantiert, dass rohe Secret-Werte dort nicht auftauchen. Zieltest gruen: `tests/test_stage4_redaction_contract.py` mit 1 Test."
+
 stage4_redaction_policy_bridge_2026_05_28:
 "Bridge und Tray nutzen jetzt ebenfalls die zentrale Stage-4-Redaction-Policy. `/builder-cue` verwendet `redact_locked_request_payload`, `redact_nested_context_values`, `SENSITIVE_TARGET_LABEL` und `REDACTED_VALUE`; das Tray nutzt denselben `sensibles Ziel`-Konstantenwert fuer redigierte Stage-4-Lock-Payloads. Zieltests gruen: Bridge/Tray/Action-Gate/Stage2/Action-Preview-Subset mit 101 Tests."
 
