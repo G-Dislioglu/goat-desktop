@@ -406,7 +406,33 @@ def test_accepted_stage3_cue_turns_into_review_only_popup() -> None:
     assert fake.pending_stage3_action["broker_decision"] == {"status": "accept", "final_bbox": [10, 20, 110, 80]}
     assert fake.popup.screen_context_value.text() == "Schritt 2: Wichtige Aktion braucht Freigabe"
     assert fake.popup.maya_value.text() == (
-        "GOAT will Senden Button bedienen. Das kann Folgen haben und braucht deine klare Freigabe. "
+        "GOAT will etwas ueber Senden Button senden oder teilen. Das kann Folgen haben und braucht deine klare Freigabe. "
+        "GOAT fuehrt wichtige Aktionen hier noch nicht aus."
+    )
+    assert fake.popup.cue_approve.text() == "Verstanden"
+    assert fake.popup.cue_approve.enabled is True
+
+
+def test_accepted_stage3_delete_cue_uses_specific_review_copy() -> None:
+    fake = FakeTray()
+    GoatTrayApp.receive_builder_cue(fake, {"action_type": "delete", "label": "Loeschen", "bbox": [10, 20, 110, 80]})
+
+    GoatTrayApp._finish_builder_cue(
+        fake,
+        {
+            "status": "ok",
+            "response": {
+                "safety_state": "accept",
+                "broker_decision": {"status": "accept", "final_bbox": [10, 20, 110, 80]},
+            },
+        },
+    )
+
+    assert fake.pending_stage1_action is None
+    assert fake.pending_stage2_action is None
+    assert fake.popup.screen_context_value.text() == "Schritt 2: Wichtige Aktion braucht Freigabe"
+    assert fake.popup.maya_value.text() == (
+        "GOAT will Loeschen oder Abbrechen ueber Loeschen ausloesen. Das kann Folgen haben und braucht deine klare Freigabe. "
         "GOAT fuehrt wichtige Aktionen hier noch nicht aus."
     )
     assert fake.popup.cue_approve.text() == "Verstanden"

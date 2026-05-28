@@ -77,9 +77,30 @@ def _plain_action(action_type: str, target: str, text: str, context: dict[str, A
         preview_text = text.strip()
         suffix = f": \"{preview_text}\"" if preview_text else ""
         return f"Text in {target} eingeben{suffix}"
+    stage3_text = _stage3_action_text(normalized, target)
+    if stage3_text:
+        return stage3_text
     if "click" in normalized or "open" in normalized or "select" in normalized:
         return f"{target} auswaehlen"
     return f"{target} bedienen"
+
+
+def _stage3_action_text(normalized: str, target: str) -> str:
+    if any(term in normalized for term in ("deploy", "release", "veroeffentlichen")):
+        return f"Deploy oder Veroeffentlichung ueber {target} ausloesen"
+    if any(term in normalized for term in ("delete", "loeschen", "stornieren", "kuendigen", "cancel")):
+        return f"Loeschen oder Abbrechen ueber {target} ausloesen"
+    if any(term in normalized for term in ("purchase", "kaufen", "pay", "bezahlen", "order", "bestellen", "book", "buchen")):
+        return f"Kauf, Zahlung oder Buchung ueber {target} ausloesen"
+    if any(term in normalized for term in ("save", "speichern", "apply", "anwenden")):
+        return f"Speichern oder Anwenden von Aenderungen ueber {target} ausloesen"
+    if any(term in normalized for term in ("send", "submit", "absenden", "share", "teilen", "invite", "einladen")):
+        return f"etwas ueber {target} senden oder teilen"
+    if any(term in normalized for term in ("upload", "hochladen", "attach", "anhaengen")):
+        return f"Datei oder Inhalt ueber {target} hochladen"
+    if any(term in normalized for term in ("sign", "unterschreiben", "transfer", "ueberweisen", "refund", "rueckerstatten")):
+        return f"verbindliche Aktion ueber {target} ausloesen"
+    return ""
 
 
 def _title_for_gate(stage: int, status: str) -> str:

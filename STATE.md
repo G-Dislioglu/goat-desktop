@@ -462,3 +462,6 @@ goat_governance_bootstrap_additive_2026_05_28:
 
 scan_001_recovery_packet_2026_05_28:
 "SCAN-001 read-only ausgefuehrt und als `review-packets/SCAN-001-result.md` dokumentiert. Ergebnis: keine Safety-Regression in Code/Tests gefunden; Stage 1/2/3/4-Grenzen und `/builder-cue` proposal-only sind durch Tests gedeckt. Finding: neue Governance referenzierte `GOAT-DESKTOP-VISION.md` ohne `docs/`-Pfad; korrigiert auf `docs/GOAT-DESKTOP-VISION.md` und mit `tests/test_governance_contracts.py` abgesichert. Verifiziert: Governance-Tests 2 passed, compileall gruen, Full Suite `235 passed`, `/healthz` `Bildschirm bereit`, keine Smoke-/Audio-/Screenshot-Artefakte."
+
+stage3_review_specific_copy_2026_05_28:
+"Stage-3 Review-UX konkretisiert: Action-Preview benennt wichtige Aktionen nun spezifisch fuer Senden/Teilen, Speichern/Anwenden, Kaufen/Zahlen/Buchen, Loeschen/Abbrechen, Deploy/Veroeffentlichen und Hochladen. Popup bleibt review-only mit Button `Verstanden`; Stage 3 bekommt weiterhin kein `Ausfuehren` und keine OS-Ausfuehrung. Tests decken die neuen Texte plus no-effects ab."

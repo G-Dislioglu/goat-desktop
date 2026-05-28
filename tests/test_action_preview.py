@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 import goat_desktop.stage2_executor as stage2_executor
 from goat_desktop.action_preview import build_action_preview
 from goat_desktop.bridge import create_app
@@ -49,8 +51,39 @@ def test_stage3_preview_requires_clear_approval() -> None:
 
     assert preview["title"] == "Wichtige Aktion braucht Freigabe"
     assert preview["primaryButton"] == "Freigabe pruefen"
-    assert "braucht deine klare Freigabe" in preview["message"]
+    assert preview["message"] == (
+        "GOAT will Kauf, Zahlung oder Buchung ueber Kaufen ausloesen. "
+        "Das kann Folgen haben und braucht deine klare Freigabe."
+    )
     assert preview["requiresUserApproval"] is True
+
+
+@pytest.mark.parametrize(
+    ("action_type", "label", "expected_action_text"),
+    [
+        ("send", "Senden Button", "etwas ueber Senden Button senden oder teilen"),
+        ("save", "Speichern", "Speichern oder Anwenden von Aenderungen ueber Speichern ausloesen"),
+        ("click", "Kaufen", "Kauf, Zahlung oder Buchung ueber Kaufen ausloesen"),
+        ("delete", "Loeschen", "Loeschen oder Abbrechen ueber Loeschen ausloesen"),
+        ("deploy", "Manual Deploy", "Deploy oder Veroeffentlichung ueber Manual Deploy ausloesen"),
+    ],
+)
+def test_stage3_preview_names_consequential_action_type(
+    action_type: str,
+    label: str,
+    expected_action_text: str,
+) -> None:
+    preview = build_action_preview(action_type, label, ACCEPTED, dry_run=True)
+
+    assert preview["stage"] == 3
+    assert preview["title"] == "Wichtige Aktion braucht Freigabe"
+    assert preview["actionText"] == expected_action_text
+    assert preview["message"] == f"GOAT will {expected_action_text}. Das kann Folgen haben und braucht deine klare Freigabe."
+    assert preview["primaryButton"] == "Freigabe pruefen"
+    assert preview["mayExecute"] is False
+    assert preview["effects"]["desktopActionsExecuted"] is False
+    assert preview["effects"]["mouseActionsExecuted"] is False
+    assert preview["effects"]["keyboardActionsExecuted"] is False
 
 
 def test_stage4_preview_locks_sensitive_actions() -> None:
