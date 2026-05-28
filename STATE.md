@@ -474,3 +474,6 @@ stage3_review_status_split_2026_05_28:
 
 stage3_review_visible_chip_2026_05_28:
 "Stage-3 Review-only ist im Popup jetzt als eigene sichtbare Zeile hervorgehoben. `GoatPopup` hat `review_status_value`, standardmaessig verborgen; Stage-3-Review setzt dort `Nur Review - keine Ausfuehrung`, andere Cue-/Fehler-/Stage1-/Stage2-/Abbruchpfade raeumen die Zeile wieder weg. LiveTalk blendet die Review-Zeile ebenfalls aus. Keine Aenderung an Berechtigungen: Stage 3 bleibt review-only, kein Ausfuehren-Button, keine OS-Ausfuehrung."
+
+stage3_review_ack_plain_2026_05_28:
+"Stage-3 Review-Quittierung nach `Verstanden` ist klarer: Statt `Nicht ausgefuehrt` zeigt GOAT nun `Review geschlossen` und sagt `Ich habe nichts ausgefuehrt. Bitte entscheide selbst im Programm, ob du weitermachst.` Pending-State und Review-Chip werden geloescht. Es startet weiterhin kein Stage-1-/Stage-2-Worker und keine Stage-3-OS-Ausfuehrung."
