@@ -327,6 +327,13 @@ def _friendly_stage1_failure_title(response: dict) -> str:
     return "Navigation nicht ausgefuehrt"
 
 
+def _friendly_stage2_failure_title(response: dict) -> str:
+    reason = str(response.get("reason") or "").strip().lower()
+    if "safe_text_context" in reason or "approval" in reason or "preview" in reason or "dry_run" in reason:
+        return "Eingabe nicht freigegeben"
+    return "Text nicht eingetragen"
+
+
 def _friendly_stage2_success_message(response: dict) -> str:
     preview = response.get("preview") if isinstance(response.get("preview"), dict) else {}
     label = str(preview.get("label") or "das Eingabefeld").strip() or "das Eingabefeld"
@@ -1261,7 +1268,7 @@ class GoatTrayApp:
                 _set_review_status(self.popup)
             else:
                 self.popup.screen_context_value.setText(
-                    "Eingabe nicht ausgefuehrt"
+                    _friendly_stage2_failure_title(response)
                     if payload.get("status") == "stage2_done"
                     else _friendly_stage1_failure_title(response)
                 )

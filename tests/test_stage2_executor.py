@@ -70,6 +70,7 @@ def test_stage2_without_approval_returns_preview(monkeypatch, tmp_path: Path) ->
     assert result.status == "preview"
     assert result.executed is False
     assert result.completion_verified is False
+    assert result.user_message == "Eingabe nicht freigegeben."
     assert result.preview["text"] == "hello"
     assert backend.typed == []
 
@@ -92,6 +93,7 @@ def test_stage2_without_safe_context_returns_preview(monkeypatch, tmp_path: Path
     assert result.status == "preview"
     assert result.executed is False
     assert "safe_text_context" in result.reason
+    assert result.user_message == "Eingabe nicht freigegeben."
 
 
 def test_stage2_executes_after_approval_and_safe_context(monkeypatch, tmp_path: Path) -> None:
@@ -114,6 +116,7 @@ def test_stage2_executes_after_approval_and_safe_context(monkeypatch, tmp_path: 
     assert result.status == "executed"
     assert result.executed is True
     assert result.completion_verified is True
+    assert result.user_message == "Text eingetragen."
     assert result.stage == 2
     assert result.target == {"x": 140, "y": 220}
     assert backend.moves == [(140, 220)]
@@ -140,6 +143,7 @@ def test_stage2_backend_failure_is_not_reported_as_executed(monkeypatch, tmp_pat
 
     assert result.status == "failed"
     assert result.executed is False
+    assert result.user_message == "Text nicht eingetragen."
     assert result.completion_verified is False
     assert result.target == {"x": 140, "y": 220}
     assert "text input backend failed" in result.reason
@@ -305,6 +309,7 @@ def test_multiline_text_is_blocked(monkeypatch, tmp_path: Path) -> None:
 
     assert result.status == "blocked"
     assert "multi-line" in result.reason
+    assert result.user_message == "Text nicht eingetragen."
 
 
 def test_whitespace_only_text_is_blocked(monkeypatch, tmp_path: Path) -> None:
@@ -392,6 +397,7 @@ def test_stage2_audit_contains_scope(monkeypatch, tmp_path: Path) -> None:
     assert events[-1]["event_type"] == "stage2_execution"
     assert events[-1]["status"] == "executed"
     assert events[-1]["payload"]["result"]["completion_verified"] is True
+    assert events[-1]["payload"]["result"]["user_message"] == "Text eingetragen."
     assert "run_g3 only executes stage 2 text input after explicit preview approval" in events[-1]["payload"][
         "assumptions"
     ]

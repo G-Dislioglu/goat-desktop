@@ -854,7 +854,7 @@ def test_stage2_failed_execution_uses_plain_user_message() -> None:
         },
     )
 
-    assert fake.popup.screen_context_value.text() == "Eingabe nicht ausgefuehrt"
+    assert fake.popup.screen_context_value.text() == "Eingabe nicht freigegeben"
     assert fake.popup.maya_value.text() == "Ich tippe hier nicht. Sag mir genauer, welches Feld das ist, oder zeig es deutlicher."
     assert fake.popup.cue_approve.enabled is False
 
@@ -870,7 +870,7 @@ def test_stage2_backend_failure_uses_plain_user_message() -> None:
         },
     )
 
-    assert fake.popup.screen_context_value.text() == "Eingabe nicht ausgefuehrt"
+    assert fake.popup.screen_context_value.text() == "Text nicht eingetragen"
     assert fake.popup.maya_value.text() == "Die Eingabe hat nicht geklappt. Ich melde sie nicht als erledigt."
 
 
@@ -885,7 +885,7 @@ def test_stage2_verification_failure_uses_plain_user_message() -> None:
         },
     )
 
-    assert fake.popup.screen_context_value.text() == "Eingabe nicht ausgefuehrt"
+    assert fake.popup.screen_context_value.text() == "Text nicht eingetragen"
     assert fake.popup.maya_value.text() == "Ich bin nicht sicher, ob die Eingabe angekommen ist. Ich melde sie nicht als erledigt."
 
 
@@ -969,7 +969,7 @@ def test_stage2_unverified_completion_is_not_reported_as_done() -> None:
         },
     )
 
-    assert fake.popup.screen_context_value.text() == "Eingabe nicht ausgefuehrt"
+    assert fake.popup.screen_context_value.text() == "Text nicht eingetragen"
     assert fake.popup.maya_value.text() == "Ich bin nicht sicher, ob die Eingabe angekommen ist. Ich melde sie nicht als erledigt."
 
 

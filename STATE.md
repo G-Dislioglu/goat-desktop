@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage2_result_language_2026_05_28:
+"Stage-2 Ergebnis-Sprache trennt jetzt klar `Eingabe nicht freigegeben`, `Text nicht eingetragen` und `Text eingetragen`. Das Tray zeigt fuer fehlende Freigabe einen eigenen Titel statt generischem Ausfuehrungsfehler; Backend-/Verifikationsfehler bleiben `Text nicht eingetragen`. Stage-2 Executor-Result/Audit enthaelt zusaetzlich `user_message` mit derselben Normalnutzer-Zusammenfassung. Zieltests gruen: Stage2-Executor/Action-Preview/Tray/Integration/Stage4-Contract-Subset mit 94 Tests."
+
 stage2_input_release_copy_2026_05_28:
 "Stage-2 UI-Sprache trennt Texteingabe jetzt klar von generischer Ausfuehrung: Action-Preview, Bridge-Preview und Tray-Popup nutzen `Eingabe freigeben` und `vor der Freigabe` statt `Eingabe ausfuehren`/`Ausfuehren`. Der Stage-2 Dry-Run-/Preview-Grund sagt jetzt `Erst Eingabe pruefen, dann freigeben.` Zieltests gruen: Action-Preview/Tray-Stage1-UX/Stage2-Executor-Subset mit 92 Tests."
 

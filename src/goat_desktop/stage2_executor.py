@@ -111,6 +111,7 @@ class Stage2ExecutionResult:
     gate_decision: dict
     target: dict | None = None
     completion_verified: bool = False
+    user_message: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -311,6 +312,7 @@ def _audit_execution(
     request: Stage2ExecutionRequest,
     result: Stage2ExecutionResult,
 ) -> Stage2ExecutionResult:
+    result = _with_user_message(result)
     append_audit_event(
         "stage2_execution",
         result.status,
@@ -326,6 +328,31 @@ def _audit_execution(
         },
     )
     return result
+
+
+def _with_user_message(result: Stage2ExecutionResult) -> Stage2ExecutionResult:
+    if result.user_message:
+        return result
+    return Stage2ExecutionResult(
+        status=result.status,
+        executed=result.executed,
+        stage=result.stage,
+        reason=result.reason,
+        preview=result.preview,
+        gate_decision=result.gate_decision,
+        target=result.target,
+        completion_verified=result.completion_verified,
+        user_message=_stage2_user_message(result),
+    )
+
+
+def _stage2_user_message(result: Stage2ExecutionResult) -> str:
+    reason = result.reason.lower()
+    if result.executed and result.completion_verified:
+        return "Text eingetragen."
+    if "safe_text_context" in reason or "freigeben" in reason or "approval" in reason or "preview" in reason or "dry_run" in reason:
+        return "Eingabe nicht freigegeben."
+    return "Text nicht eingetragen."
 
 
 def _audit_request(request: Stage2ExecutionRequest, result: Stage2ExecutionResult) -> dict:
