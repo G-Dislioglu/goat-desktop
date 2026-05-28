@@ -21,7 +21,7 @@ from goat_desktop.redaction import (
 )
 from goat_desktop.screen import capture_active_window, get_active_window
 from goat_desktop.stage1_executor import Stage1ExecutionRequest, execute_stage1_action
-from goat_desktop.stage2_executor import Stage2ExecutionRequest, execute_stage2_text_input
+from goat_desktop.stage2_executor import MAX_STAGE2_TEXT_LENGTH, Stage2ExecutionRequest, execute_stage2_text_input, validate_stage2_text
 from goat_desktop.stage3_approval import Stage3ApprovalRequest, review_stage3_action
 from goat_desktop.uia_context import build_local_screen_readiness, get_resolver_cache_status
 from goat_desktop.vision_hint import load_vision_hint_config, get_vision_hint
@@ -218,19 +218,37 @@ def create_app(
         user_approved = bool(payload.get("user_approved") or False)
         safe_text_context = _bool_from_payload(payload.get("safe_text_context"))
         if not requested_dry_run and not user_approved:
+            text = str(payload.get("text") or "")
+            validation_error = validate_stage2_text(text)
             preview = build_action_preview(
                 str(payload.get("action_type") or "type"),
                 str(payload.get("label") or ""),
                 dict(payload.get("broker_decision") or {}),
-                text=str(payload.get("text") or ""),
+                text=text,
                 dry_run=True,
                 context=_action_preview_context(payload),
             )
+            preview["safeTextContext"] = safe_text_context
+            if not preview.get("ok"):
+                preview["readyToApprove"] = False
+                preview["previewBlockingReason"] = str(preview.get("status") or "blocked")
+                reason = str(preview.get("message") or "Diese Eingabe fuehre ich nicht aus.")
+            elif validation_error:
+                preview["readyToApprove"] = False
+                preview["textValidationError"] = validation_error
+                reason = _stage2_preview_required_guard_reason(validation_error)
+            elif not safe_text_context:
+                preview["readyToApprove"] = False
+                preview["textValidationError"] = "safe_text_context must be true before stage 2 text input can execute"
+                reason = "Ich tippe hier noch nicht. Sag mir genauer, welches Feld das ist, oder zeig es deutlicher."
+            else:
+                preview["readyToApprove"] = bool(preview.get("ok"))
+                reason = "Bitte pruefe die Eingabe zuerst in GOAT."
             return {
                 "status": "preview_required",
                 "executed": False,
                 "stage": preview.get("stage"),
-                "reason": "Bitte pruefe die Eingabe zuerst in GOAT.",
+                "reason": reason,
                 "preview": preview,
                 "effects": _no_action_effects(),
             }
@@ -460,6 +478,16 @@ def _bool_from_payload(value: Any) -> bool:
     if isinstance(value, str):
         return value.strip().lower() in {"1", "true", "yes"}
     return False
+
+
+def _stage2_preview_required_guard_reason(validation_error: str) -> str:
+    if validation_error == "text input is empty":
+        return "Ich tippe hier noch nicht. Mir fehlt noch der Text, den ich eintragen soll."
+    if validation_error == "multi-line text input is outside Run G3 scope":
+        return "Mehrzeilige Texte tippe ich noch nicht automatisch. Bitte gib mir eine kurze einzeilige Eingabe."
+    if "exceeds" in validation_error:
+        return f"Der Text ist zu lang. Ich tippe aktuell hoechstens {MAX_STAGE2_TEXT_LENGTH} Zeichen automatisch."
+    return "Bitte pruefe die Eingabe zuerst in GOAT."
 
 
 def _action_preview_context(payload: dict[str, Any]) -> dict[str, Any]:

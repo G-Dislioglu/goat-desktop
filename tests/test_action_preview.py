@@ -243,9 +243,103 @@ def test_bridge_stage2_requires_user_approval_for_real_text_input() -> None:
     assert body["reason"] == "Bitte pruefe die Eingabe zuerst in GOAT."
     assert body["preview"]["title"] == "Freigabe fuer Eingabe"
     assert body["preview"]["primaryButton"] == "Eingabe ausfuehren"
+    assert body["preview"]["safeTextContext"] is True
+    assert body["preview"]["readyToApprove"] is True
     assert body["effects"]["desktopActionsExecuted"] is False
     assert body["effects"]["mouseActionsExecuted"] is False
     assert body["effects"]["keyboardActionsExecuted"] is False
+
+
+def test_bridge_stage2_preview_required_flags_unsafe_context() -> None:
+    endpoint = _endpoint_for(create_app(), "/action/stage2/text")
+
+    body = endpoint(
+        {
+            "action_type": "type",
+            "label": "Suchfeld",
+            "text": "StepStack",
+            "broker_decision": ACCEPTED,
+            "safe_text_context": False,
+            "dry_run": False,
+            "user_approved": False,
+        }
+    )
+
+    assert body["status"] == "preview_required"
+    assert body["executed"] is False
+    assert body["reason"] == "Ich tippe hier noch nicht. Sag mir genauer, welches Feld das ist, oder zeig es deutlicher."
+    assert body["preview"]["readyToApprove"] is False
+    assert body["preview"]["safeTextContext"] is False
+    assert "safe_text_context" in body["preview"]["textValidationError"]
+    assert body["effects"]["keyboardActionsExecuted"] is False
+
+
+@pytest.mark.parametrize(
+    ("text", "expected_reason", "validation_fragment"),
+    [
+        ("  ", "Ich tippe hier noch nicht. Mir fehlt noch der Text, den ich eintragen soll.", "empty"),
+        (
+            "Zeile 1\nZeile 2",
+            "Mehrzeilige Texte tippe ich noch nicht automatisch. Bitte gib mir eine kurze einzeilige Eingabe.",
+            "multi-line",
+        ),
+        ("x" * 121, "Der Text ist zu lang. Ich tippe aktuell hoechstens 120 Zeichen automatisch.", "exceeds"),
+    ],
+)
+def test_bridge_stage2_preview_required_flags_invalid_text(
+    text: str,
+    expected_reason: str,
+    validation_fragment: str,
+) -> None:
+    endpoint = _endpoint_for(create_app(), "/action/stage2/text")
+
+    body = endpoint(
+        {
+            "action_type": "type",
+            "label": "Suchfeld",
+            "text": text,
+            "broker_decision": ACCEPTED,
+            "safe_text_context": True,
+            "dry_run": False,
+            "user_approved": False,
+        }
+    )
+
+    assert body["status"] == "preview_required"
+    assert body["executed"] is False
+    assert body["reason"] == expected_reason
+    assert body["preview"]["readyToApprove"] is False
+    assert validation_fragment in body["preview"]["textValidationError"]
+    assert body["effects"]["mouseActionsExecuted"] is False
+    assert body["effects"]["keyboardActionsExecuted"] is False
+
+
+def test_bridge_stage2_preview_required_flags_sensitive_input_without_secret() -> None:
+    endpoint = _endpoint_for(create_app(), "/action/stage2/text")
+
+    body = endpoint(
+        {
+            "action_type": "type",
+            "label": "Passwortfeld",
+            "text": "super-secret-value",
+            "broker_decision": ACCEPTED,
+            "safe_text_context": True,
+            "dry_run": False,
+            "user_approved": False,
+        }
+    )
+
+    assert body["status"] == "preview_required"
+    assert body["executed"] is False
+    assert body["stage"] == 4
+    assert body["preview"]["status"] == "locked"
+    assert body["preview"]["readyToApprove"] is False
+    assert body["preview"]["previewBlockingReason"] == "locked"
+    assert body["preview"]["targetRedacted"] is True
+    assert body["reason"] == "Das wirkt sensibel. GOAT fuehrt das nicht aus."
+    assert body["effects"]["desktopActionsExecuted"] is False
+    assert body["effects"]["keyboardActionsExecuted"] is False
+    assert "super-secret-value" not in json.dumps(body)
 
 
 def test_bridge_stage2_dry_run_remains_read_only() -> None:

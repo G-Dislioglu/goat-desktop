@@ -2,6 +2,9 @@
 
 last_verified_against_code: 2026-05-16
 
+stage2_preview_required_guards_2026_05_28:
+"Stage-2 `/action/stage2/text` zeigt im Preview-Required-Pfad jetzt schon vor User-Freigabe, ob die Eingabe freigabefaehig ist. Die Bridge setzt `preview.readyToApprove=false` fuer unsicheren Kontext, leeren/mehrzeiligen/zu langen Text und gesperrte Stage-4-Faelle; sensible Preview-Required-Antworten bleiben redigiert und fuehren keine Maus-/Tastatureffekte aus. Zieltests gruen: Action-Preview/Stage2/Tray/Stage4-Redaction-Subset mit 93 Tests."
+
 stage2_text_guard_alignment_2026_05_28:
 "Stage-2 Textfreigabe nutzt jetzt eine gemeinsame Textvalidierung aus dem Executor: whitespace-only Text gilt wie leer und wird in Executor, Bridge und Tray ohne Maus-/Tastatureffekte blockiert. `safe_text_context` wird in Bridge und Tray strikt ausgewertet; Stringwerte wie `false` zaehlen nicht mehr versehentlich als sichere Eingabefreigabe. Zieltests gruen: Stage2-Executor/Action-Preview/Tray-Stage1-UX-Subset mit 87 Tests."
 
