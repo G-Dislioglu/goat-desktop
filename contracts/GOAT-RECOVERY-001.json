@@ -1,0 +1,23 @@
+{
+  "task_id": "GOAT-RECOVERY-001",
+  "task_name": "GOAT Desktop Recovery Governance Reset",
+  "created": "2026-05-29",
+  "scope": "goat-desktop governance and next-run control",
+  "mode": "governance_update",
+  "task_type": "recovery_task",
+  "risk_class": "low",
+  "impact_class": "product_direction",
+  "goal": "Stop circular safety/copy loops by making product progress and visible acceptance evidence mandatory for future implementation runs.",
+  "claims": [
+    "RADAR.md names the current tactical next work instead of stale UFO2/run-0 tasks",
+    ".specify/.app-goal.md defines the product progress gate and canonical status rule",
+    "AGENTS.md tells future agents not to spend another run on wording/redaction unless tied to a concrete bug, failing test, or named recovery contract",
+    "README.md no longer presents UFO2 or Python 3.11 as the current stack direction"
+  ],
+  "dod": [
+    "Governance tests assert the recovery guardrails",
+    "No runtime action permissions are expanded",
+    "Next live proof is named as GOAT-LIVE-001"
+  ],
+  "next_contract": "GOAT-LIVE-001"
+}

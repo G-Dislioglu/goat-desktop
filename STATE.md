@@ -570,3 +570,6 @@ stage3_review_visible_chip_2026_05_28:
 
 stage3_review_ack_plain_2026_05_28:
 "Stage-3 Review-Quittierung nach `Verstanden` ist klarer: Statt `Nicht ausgefuehrt` zeigt GOAT nun `Review geschlossen` und sagt `Ich habe nichts ausgefuehrt. Bitte entscheide selbst im Programm, ob du weitermachst.` Pending-State und Review-Chip werden geloescht. Es startet weiterhin kein Stage-1-/Stage-2-Worker und keine Stage-3-OS-Ausfuehrung."
+
+goat_recovery_001_product_progress_gate_2026_05_29:
+"Recovery-Reset nach Governance-Drift angelegt. `RADAR.md` ist jetzt die taktische Next-Work-Datei, `.specify/.app-goal.md` definiert die Produktgrenze, `STATE.md` und `SESSION-LOG.md` bleiben append-only Historie. `README.md` entfernt veraltete Python-3.11-/UFO2-Startannahmen und beschreibt Python 3.12+ plus Slim-Windows-Stack. Neue Contracts `GOAT-RECOVERY-001` und `GOAT-LIVE-001` erzwingen: keine weitere Copy-/Redaction-/Wording-Schleife ohne konkreten Bug, failing Test oder Recovery-Contract; Runtime-Runs brauchen sichtbaren Produktbeweis oder kontrolliertes Acceptance-Artefakt. Naechster Produktbeweis: Builder -> Desktop -> sichtbares Popup, ohne Desktop-/Maus-/Keyboard-Effekte vor User-Freigabe."

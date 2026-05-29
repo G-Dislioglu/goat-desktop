@@ -24,3 +24,39 @@ def test_goat_vision_path_is_canonical_in_governance_docs() -> None:
         text = (ROOT / relative_path).read_text(encoding="utf-8")
         assert "docs/GOAT-DESKTOP-VISION.md" in text
         assert "`GOAT-DESKTOP-VISION.md`" not in text
+
+
+def test_recovery_001_product_progress_gate_is_canonical() -> None:
+    contract = json.loads((ROOT / "contracts" / "GOAT-RECOVERY-001.json").read_text(encoding="utf-8"))
+    assert contract["next_contract"] == "GOAT-LIVE-001"
+
+    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    app_goal = (ROOT / ".specify" / ".app-goal.md").read_text(encoding="utf-8")
+    radar = (ROOT / "RADAR.md").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    for text in [agents, app_goal]:
+        assert "Product Progress Gate" in text
+        assert "GOAT-LIVE-001" in text
+        assert "copy, redaction, or wording" in text
+
+    assert "GOAT-RECOVERY-001" in radar
+    assert "GOAT-LIVE-001" in radar
+    assert "Run 0a" not in radar
+    assert "UFO2 library usage is still an assumption" not in radar
+    assert "Python 3.12 or newer" in readme
+    assert "UFO2 is not the application foundation" in readme
+
+
+def test_live_001_contract_requires_visible_no_effects_proof() -> None:
+    contract = json.loads((ROOT / "contracts" / "GOAT-LIVE-001.json").read_text(encoding="utf-8"))
+    evidence = "\n".join(contract["required_evidence"])
+    forbidden = "\n".join(contract["forbidden_during_proof"])
+
+    assert "popup-visible result" in evidence
+    assert "desktopActions=false" in evidence
+    assert "mouseActions=false" in evidence
+    assert "keyboardActions=false" in evidence
+    assert "mayExecute=false" in evidence
+    assert "secrets in logs" in forbidden
+    assert "unapproved mouse or keyboard effects" in forbidden

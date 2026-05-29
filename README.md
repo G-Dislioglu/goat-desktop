@@ -6,14 +6,25 @@ Canonical spec: [docs/GOAT-DESKTOP-VISION.md](docs/GOAT-DESKTOP-VISION.md)
 
 ## Stack Direction
 
-- Python 3.11
+- Python 3.12 or newer
 - PyQt6 for tray, popup, and overlay
 - FastAPI on `127.0.0.1` for the local bridge
 - `websockets` for outbound Builder connection
-- UFO2 as Windows automation foundation, subject to Run 0b spike verification
+- Slim Windows stack: `mss`, `pywinauto`, local coordinate verification, and narrow Win32 executors
 - PyInstaller for later Windows packaging
 
-No application code belongs in this initial commit. The first implementation step is Run 0b, because the UFO2 library-vs-agent-loop assumption must be tested before product code depends on it.
+UFO2 is not the application foundation. Run 0b rejected the UFO2 agent/library path for this repo because of dependency pins and latency. Current work must advance the visible product path instead of revisiting that decision.
+
+## Product Progress Gate
+
+GOAT Desktop work must produce at least one of these outcomes:
+
+- a visible user-facing capability that can be exercised locally
+- a live acceptance artifact proving Builder -> Desktop -> popup behavior
+- a packaging/startup improvement that makes the product easier to run
+- a narrowly scoped safety fix tied to a concrete bug or failing test
+
+Copy, redaction, wording, or governance-only changes are allowed only when tied to a named bug, contract, or recovery task. They must not replace the next live product proof.
 
 ## Local Builder Cue Proposal
 

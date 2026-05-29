@@ -1,0 +1,33 @@
+{
+  "task_id": "GOAT-LIVE-001",
+  "task_name": "Builder to Desktop Visible Popup Proof",
+  "created": "2026-05-29",
+  "scope": "goat-desktop live or controlled local acceptance",
+  "mode": "acceptance_proof",
+  "task_type": "product_proof",
+  "risk_class": "medium",
+  "impact_class": "user_visible",
+  "goal": "Prove that a Builder-style cue reaches GOAT Desktop and becomes a visible popup proposal without desktop effects before user approval.",
+  "required_evidence": [
+    "checked commit and clean/dirty working tree state",
+    "commands run",
+    "local /healthz result when a bridge is running",
+    "cue source and action_type",
+    "popup-visible result",
+    "desktopActions=false, mouseActions=false, keyboardActions=false, mayExecute=false before approval",
+    "artifact path for the report or screenshot when safe to keep"
+  ],
+  "forbidden_during_proof": [
+    "secrets in logs",
+    "microphone capture",
+    "real user fields",
+    "Stage 3 OS execution",
+    "Stage 4 execution",
+    "unapproved mouse or keyboard effects"
+  ],
+  "dod": [
+    "Acceptance report or controlled proof artifact exists",
+    "Failure mode is visible if Builder env or websocket config is missing",
+    "No action permission is expanded by the proof"
+  ]
+}

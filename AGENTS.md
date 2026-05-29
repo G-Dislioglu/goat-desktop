@@ -9,6 +9,18 @@ GOAT Desktop is a local Windows assistant for normal users. Builder may propose,
 - Prioritize safe mouse and keyboard assistance for normal users.
 - Keep LiveTalk in the background unless the user explicitly asks for it.
 - Prefer small, verifiable changes that preserve the current safety gates.
+- Prefer visible product progress over another wording, redaction, or contract-hardening pass.
+
+## Product Progress Gate
+
+Every implementation run must finish with at least one visible or operational product proof:
+
+- a user-facing local capability that can be exercised
+- a live or controlled acceptance artifact for the changed path
+- a startup, packaging, or connection-status improvement
+- a narrowly scoped safety fix tied to a named bug or failing test
+
+Do not run another copy, redaction, or wording-only loop unless there is a concrete bug, failing test, or named recovery contract. The next tactical target is GOAT-LIVE-001: Builder -> Desktop -> visible popup proposal, with no mouse, keyboard, desktop, trading, or provider effects before approval.
 
 ## Required Start Checks
 
@@ -92,6 +104,8 @@ Get-ChildItem -Path docs,tests,src -Recurse -File -ErrorAction SilentlyContinue 
 - Bundle 2-4 connected BP blocks per run.
 - Keep WLP-style scope discipline for each block.
 - Small commits are fine.
+- If a run is governance-only, name the recovery contract and explain why no live artifact was produced.
+- If a run changes runtime behavior, produce a visible acceptance artifact or a controlled local proof.
 - Give the final report at the end of the run.
 
 ## User Report Format
