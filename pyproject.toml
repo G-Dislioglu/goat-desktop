@@ -17,6 +17,9 @@ dependencies = [
   "websockets>=15,<17",
 ]
 
+[project.scripts]
+goat-desktop = "goat_desktop.__main__:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

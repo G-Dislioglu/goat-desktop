@@ -26,6 +26,26 @@ GOAT Desktop work must produce at least one of these outcomes:
 
 Copy, redaction, wording, or governance-only changes are allowed only when tied to a named bug, contract, or recovery task. They must not replace the next live product proof.
 
+## Local Start
+
+From a checkout on Windows:
+
+```powershell
+.\scripts\start-goat-desktop.ps1
+```
+
+To verify the startup path without opening the GUI:
+
+```powershell
+.\scripts\start-goat-desktop.ps1 -Check
+```
+
+When installed as a Python package, GOAT also exposes:
+
+```powershell
+goat-desktop
+```
+
 ## Local Builder Cue Proposal
 
 `POST /builder-cue` is a local-only proposal path for Builder-style cues. It does not execute desktop actions and does not move the mouse or type text.

@@ -1,0 +1,24 @@
+{
+  "task_id": "GOAT-PACKAGE-001",
+  "task_name": "GOAT Desktop Local Startup Path",
+  "created": "2026-05-29",
+  "scope": "goat-desktop local startup and packaging entry",
+  "mode": "startup_improvement",
+  "task_type": "product_path",
+  "risk_class": "low",
+  "impact_class": "user_visible_startup",
+  "goal": "Make GOAT Desktop startable through a normal local Windows script and an installable Python entry point without changing runtime action permissions.",
+  "claims": [
+    "pyproject.toml exposes goat-desktop as an installable script entry point",
+    "scripts/start-goat-desktop.ps1 starts GOAT Desktop from a checkout by using .venv when available and adding src to PYTHONPATH",
+    "scripts/start-goat-desktop.ps1 -Check verifies the startup path without launching the GUI",
+    "No Stage 1, Stage 2, Stage 3, or Stage 4 permission is expanded"
+  ],
+  "dod": [
+    "Startup contract is covered by tests",
+    "PowerShell -Check mode succeeds locally",
+    "README documents the local start path",
+    "Full test suite passes"
+  ],
+  "next_contract": "GOAT-LIVE-002"
+}

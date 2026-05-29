@@ -576,3 +576,6 @@ goat_recovery_001_product_progress_gate_2026_05_29:
 
 goat_live_001_controlled_proof_2026_05_29:
 "GOAT-LIVE-001 kontrolliert gegen die laufende lokale Bridge bewiesen. `/healthz` meldete `Bildschirm bereit`. `/active-window` lieferte das aktive Codex-Fenster; ein `test_cue` fuer `hover` mit BBox innerhalb des aktiven Fensters wurde an `/builder-cue` gesendet. Ergebnis: ok=true, scope=`local_builder_cue_proposal`, safety_state=accept, requiresPopupApproval=true, dispatch.popupProposalEmitted=true, mayExecute=false, effects desktopActionsExecuted=false, mouseActionsExecuted=false, keyboardActionsExecuted=false, tradingActionsExecuted=false, mayExecuteRealAction=false. Keine Secrets, kein Mikrofon, kein echtes Nutzerfeld, keine Stage-3-/Stage-4-Ausfuehrung. Artefakt: docs/goat-live-001-controlled-proof-2026-05-29.md."
+
+goat_package_001_startup_path_2026_05_29:
+"GOAT-PACKAGE-001 umgesetzt. `pyproject.toml` expose jetzt den installierbaren Script-Entry `goat-desktop = goat_desktop.__main__:main`. `scripts/start-goat-desktop.ps1` startet GOAT Desktop aus einem Checkout, bevorzugt `.venv\\Scripts\\python.exe`, setzt `PYTHONPATH` auf `src` und hat einen `-Check`-Modus, der den Startpfad ohne GUI-Launch verifiziert. README dokumentiert beide Wege. Keine Runtime-Berechtigungen erweitert; Stage 1/2/3/4 bleiben unveraendert."
