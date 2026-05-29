@@ -1,0 +1,23 @@
+{
+  "task_id": "GOAT-LIVE-002",
+  "task_name": "Visible Builder WebSocket Configuration State",
+  "created": "2026-05-29",
+  "scope": "goat-desktop Builder connection status",
+  "mode": "user_visible_status",
+  "task_type": "product_visibility",
+  "risk_class": "low",
+  "impact_class": "user_visible",
+  "goal": "Make missing or pending Builder WebSocket configuration visible in the GOAT Desktop popup so the product no longer appears inert when no Builder cue stream is configured.",
+  "claims": [
+    "Missing GOAT_BUILDER_WS_URL and/or GOAT_BUILDER_TOKEN shows a visible waiting status",
+    "Configured Builder WebSocket startup shows a connecting status before the async bridge reports connected or reconnecting",
+    "No Builder cue, Stage 1, Stage 2, Stage 3, or Stage 4 permission is expanded",
+    "No secret values are displayed"
+  ],
+  "dod": [
+    "Popup status tests cover missing URL, missing token, and missing both",
+    "Connection chip maps waiting status to a plain user state",
+    "Full test suite passes"
+  ],
+  "next_contract": "GOAT-CAPABILITY-001"
+}

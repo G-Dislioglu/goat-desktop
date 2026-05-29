@@ -579,3 +579,6 @@ goat_live_001_controlled_proof_2026_05_29:
 
 goat_package_001_startup_path_2026_05_29:
 "GOAT-PACKAGE-001 umgesetzt. `pyproject.toml` expose jetzt den installierbaren Script-Entry `goat-desktop = goat_desktop.__main__:main`. `scripts/start-goat-desktop.ps1` startet GOAT Desktop aus einem Checkout, bevorzugt `.venv\\Scripts\\python.exe`, setzt `PYTHONPATH` auf `src` und hat einen `-Check`-Modus, der den Startpfad ohne GUI-Launch verifiziert. README dokumentiert beide Wege. Keine Runtime-Berechtigungen erweitert; Stage 1/2/3/4 bleiben unveraendert."
+
+goat_live_002_builder_status_visible_2026_05_29:
+"GOAT-LIVE-002 umgesetzt. Fehlende Builder-WebSocket-Konfiguration ist im Popup sichtbar: ohne `GOAT_BUILDER_WS_URL`/`GOAT_BUILDER_TOKEN` zeigt GOAT `Builder wartet auf URL und Token`, Chip `Status: Wartet`, Haupttext `Builder-Verbindung wartet` und erklaert, welche Konfiguration fuer Builder-Cues fehlt. Teilkonfigurationen benennen das fehlende Teil separat. Bei vorhandener URL+Token zeigt GOAT vor dem async Verbindungsstatus `builder: connecting`. Keine Secrets werden angezeigt, keine Builder-Cue- oder Stage-1/2/3/4-Berechtigung erweitert."

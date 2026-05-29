@@ -157,13 +157,31 @@ def _status_chip_text(connection_text: str) -> str:
     normalized = connection_text.strip().lower()
     if "already running" in normalized or "port_in_use" in normalized or "schon" in normalized:
         return "Status: Schon offen"
+    if "wartet" in normalized or "missing_config" in normalized:
+        return "Status: Wartet"
     if not normalized or normalized in {"lokal", "offline"}:
         return "Status: Bereit"
     if "connected" in normalized or "verbunden" in normalized:
         return "Status: Verbunden"
-    if "reconnecting" in normalized or "verbind" in normalized:
+    if "connecting" in normalized or "reconnecting" in normalized or "verbind" in normalized:
         return "Status: Verbinde neu"
     return "Status: Bereit"
+
+
+def _builder_bridge_missing_config_text(url: str | None, token: str | None) -> str:
+    if not url and not token:
+        return "Builder wartet auf URL und Token"
+    if not url:
+        return "Builder wartet auf URL"
+    return "Builder wartet auf Token"
+
+
+def _builder_bridge_missing_config_guidance(url: str | None, token: str | None) -> str:
+    if not url and not token:
+        return "GOAT ist lokal bereit. Fuer Builder-Cues fehlen GOAT_BUILDER_WS_URL und GOAT_BUILDER_TOKEN."
+    if not url:
+        return "GOAT ist lokal bereit. Fuer Builder-Cues fehlt GOAT_BUILDER_WS_URL."
+    return "GOAT ist lokal bereit. Fuer Builder-Cues fehlt GOAT_BUILDER_TOKEN."
 
 
 def _speech_chip_text(audio_text: str) -> str:
@@ -1100,12 +1118,16 @@ class GoatTrayApp:
         url = os.environ.get("GOAT_BUILDER_WS_URL")
         token = os.environ.get("GOAT_BUILDER_TOKEN")
         if not url or not token:
-            self.popup.connection_value.setText("lokal")
-            self.popup.connection_chip.setText(_status_chip_text("lokal"))
+            status_text = _builder_bridge_missing_config_text(url, token)
+            self.popup.connection_value.setText(status_text)
+            self.popup.connection_chip.setText(_status_chip_text(status_text))
+            self.popup.screen_context_value.setText("Builder-Verbindung wartet")
+            self.popup.maya_value.setText(_builder_bridge_missing_config_guidance(url, token))
             return
         self.builder_bridge = BuilderBridgeClient(url=url, token=token)
         self.builder_bridge.status_changed.connect(self._update_connection_status)
         self.builder_bridge.cue_received.connect(self.receive_builder_cue)
+        self._update_connection_status("builder: connecting")
         self.builder_bridge.start()
 
     def _update_connection_status(self, text: str) -> None:

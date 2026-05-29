@@ -60,3 +60,13 @@ def test_live_001_contract_requires_visible_no_effects_proof() -> None:
     assert "mayExecute=false" in evidence
     assert "secrets in logs" in forbidden
     assert "unapproved mouse or keyboard effects" in forbidden
+
+
+def test_live_002_contract_keeps_builder_status_visible_and_safe() -> None:
+    contract = json.loads((ROOT / "contracts" / "GOAT-LIVE-002.json").read_text(encoding="utf-8"))
+    claims = "\n".join(contract["claims"])
+
+    assert contract["next_contract"] == "GOAT-CAPABILITY-001"
+    assert "Missing GOAT_BUILDER_WS_URL and/or GOAT_BUILDER_TOKEN shows a visible waiting status" in claims
+    assert "No secret values are displayed" in claims
+    assert "No Builder cue, Stage 1, Stage 2, Stage 3, or Stage 4 permission is expanded" in claims

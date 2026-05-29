@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from goat_desktop.tray import GoatTrayApp, _speech_chip_text, _status_chip_text
+from goat_desktop.tray import (
+    GoatTrayApp,
+    _builder_bridge_missing_config_guidance,
+    _builder_bridge_missing_config_text,
+    _speech_chip_text,
+    _status_chip_text,
+)
 
 
 class FakeLabel:
@@ -48,6 +54,7 @@ class FakePopup:
 class FakeTray:
     def __init__(self) -> None:
         self.popup = FakePopup()
+        self.builder_bridge = None
         self.pending_builder_cue = None
         self.pending_stage1_action = None
         self.pending_stage2_action = None
@@ -108,8 +115,36 @@ def test_status_chips_use_plain_user_states() -> None:
     assert fake.popup.connection_value.text() == "builder: connected"
     assert fake.popup.connection_chip.text() == "Status: Verbunden"
     assert _status_chip_text("builder: reconnecting") == "Status: Verbinde neu"
+    assert _status_chip_text("Builder wartet auf URL und Token") == "Status: Wartet"
     assert _status_chip_text("lokal") == "Status: Bereit"
     assert _status_chip_text("already running") == "Status: Schon offen"
+
+
+def test_missing_builder_bridge_config_is_visible(monkeypatch) -> None:
+    fake = FakeTray()
+    monkeypatch.delenv("GOAT_BUILDER_WS_URL", raising=False)
+    monkeypatch.delenv("GOAT_BUILDER_TOKEN", raising=False)
+
+    GoatTrayApp._start_builder_bridge_if_configured(fake)
+
+    assert fake.builder_bridge is None
+    assert fake.popup.connection_value.text() == "Builder wartet auf URL und Token"
+    assert fake.popup.connection_chip.text() == "Status: Wartet"
+    assert fake.popup.screen_context_value.text() == "Builder-Verbindung wartet"
+    assert fake.popup.maya_value.text() == (
+        "GOAT ist lokal bereit. Fuer Builder-Cues fehlen GOAT_BUILDER_WS_URL und GOAT_BUILDER_TOKEN."
+    )
+
+
+def test_partial_builder_bridge_config_names_missing_piece() -> None:
+    assert _builder_bridge_missing_config_text(None, "set") == "Builder wartet auf URL"
+    assert _builder_bridge_missing_config_text("ws://builder", None) == "Builder wartet auf Token"
+    assert _builder_bridge_missing_config_guidance(None, "set") == (
+        "GOAT ist lokal bereit. Fuer Builder-Cues fehlt GOAT_BUILDER_WS_URL."
+    )
+    assert _builder_bridge_missing_config_guidance("ws://builder", None) == (
+        "GOAT ist lokal bereit. Fuer Builder-Cues fehlt GOAT_BUILDER_TOKEN."
+    )
 
 
 def test_bridge_port_in_use_shows_single_instance_message() -> None:

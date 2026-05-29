@@ -4,7 +4,6 @@
 
 Next:
 
-- GOAT-LIVE-002: make missing Builder websocket configuration visible in the UI/status path instead of letting the Builder connection feel inert.
 - GOAT-CAPABILITY-001: choose exactly one next capability after the live proof, preferably connection status in Builder or a controlled harmless Stage-1 click design review.
 
 Completed:
@@ -12,6 +11,7 @@ Completed:
 - GOAT-RECOVERY-001: current control surface reset. `RADAR.md` is the tactical next-work file; `.specify/.app-goal.md` is the product boundary; `STATE.md` and `SESSION-LOG.md` are append-only history.
 - GOAT-LIVE-001: controlled local proof passed on 2026-05-29. `/builder-cue` emitted a visible popup proposal with `mayExecute=false` and no desktop, mouse, keyboard, or trading effects before approval. Artifact: `docs/goat-live-001-controlled-proof-2026-05-29.md`.
 - GOAT-PACKAGE-001: local startup path added. `scripts/start-goat-desktop.ps1` starts from checkout, `-Check` verifies without opening the GUI, and `pyproject.toml` exposes the installable `goat-desktop` entry point.
+- GOAT-LIVE-002: missing Builder WebSocket configuration is visible in the popup as a waiting state. Configured startup shows `builder: connecting` until the async bridge reports connected or reconnecting. No action permission changed.
 
 Risks:
 
